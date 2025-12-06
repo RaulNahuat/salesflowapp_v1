@@ -50,8 +50,8 @@ export const register = async (req, res) => {
 export const login = async (req, res) => {
     const { correo, password } = req.body;
 
-    if (!correo || password) {
-        return res.status(400).json({ success: false, message: 'Por favor, proporciona un correo y una contraseña' })
+    if (!correo || !password) {
+        return res.status(400).json( { success: false, message: 'Por favor, proporciona un correo y una contraseña.' } );
     }
 
     try {

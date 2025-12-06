@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Auth SalesFlowApp</title>
+    <style>
+        body { font-family: sans-serif; max-width: 600px; margin: 2rem auto; padding: 0 1rem; }
+        .card { border: 1px solid #ccc; padding: 1.5rem; border-radius: 8px; margin-bottom: 1rem; }
+        input { display: block; width: 100%; margin-bottom: 0.5rem; padding: 0.5rem; box-sizing: border-box; }
+        button { padding: 0.5rem 1rem; cursor: pointer; }
+        pre { background: #f4f4f4; padding: 1rem; overflow-x: auto; }
+        .status { margin-top: 1rem; font-weight: bold; }
+    </style>
+</head>
+<body>
+    <h1>Test de Autenticación</h1>
+
+    <div class="card">
+        <h2>1. Iniciar Sesión</h2>
+        <input type="email" id="email" placeholder="Correo (ej: admin@test.com)" value="admin@test.com">
+        <input type="password" id="password" placeholder="Contraseña" value="123456">
+        <button onclick="login()">Login</button>
+        <div id="login-result" class="status"></div>
+    </div>
+
+    <div class="card">
+        <h2>2. Probar Ruta Protegida</h2>
+        <p>Intenta acceder a <code>/api/protected</code> (POST) con la cookie.</p>
+        <button onclick="testProtected()">Test /api/protected</button>
+        <div id="protected-result" class="status"></div>
+        <pre id="protected-data"></pre>
+    </div>
+
+    <div class="card">
+        <h2>3. Cerrar Sesión</h2>
+        <button onclick="logout()">Logout</button>
+        <div id="logout-result" class="status"></div>
+    </div>
+
+    <script>
+        async function login() {
+            const email = document.getElementById('email').value;
+            const password = document.getElementById('password').value;
+            const resultDiv = document.getElementById('login-result');
+            
+            try {
+                const response = await fetch('/api/auth/login', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ correo: email, password })
+                });
+                const data = await response.json();
+                
+                if (response.ok) {
+                    resultDiv.style.color = 'green';
+                    resultDiv.textContent = 'Login Exitoso! Cookie establecida.';
+                } else {
+                    resultDiv.style.color = 'red';
+                    resultDiv.textContent = 'Error: ' + (data.message || 'Login fallido');
+                }
+            } catch (error) {
+                resultDiv.style.color = 'red';
+                resultDiv.textContent = 'Error de red: ' + error.message;
+            }
+        }
+
+        async function testProtected() {
+            const resultDiv = document.getElementById('protected-result');
+            const dataPre = document.getElementById('protected-data');
+            
+            try {
+                const response = await fetch('/api/protected', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' }
+                });
+                
+                // Si es un error de auth, puede que no sea JSON lo que devuelve si el middleware falla de cierta forma, 
+                // pero nuestro middleware devuelve JSON.
+                const data = await response.json();
+
+                if (response.ok) {
+                    resultDiv.style.color = 'green';
+                    resultDiv.textContent = 'Acceso Concedido!';
+                    dataPre.textContent = JSON.stringify(data, null, 2);
+                } else {
+                    resultDiv.style.color = 'red';
+                    resultDiv.textContent = 'Acceso Denegado / Error';
+                    dataPre.textContent = JSON.stringify(data, null, 2);
+                }
+            } catch (error) {
+                resultDiv.style.color = 'red';
+                resultDiv.textContent = 'Error de red: ' + error.message;
+                dataPre.textContent = '';
+            }
+        }
+
+        async function logout() {
+            const resultDiv = document.getElementById('logout-result');
+            try {
+                const response = await fetch('/api/auth/logout', { method: 'POST' });
+                const data = await response.json();
+                if (response.ok) {
+                    resultDiv.style.color = 'blue';
+                    resultDiv.textContent = 'Sesión cerrada. Cookie eliminada.';
+                } else {
+                    resultDiv.textContent = 'Error al cerrar sesión';
+                }
+            } catch (e) {
+                resultDiv.textContent = 'Error: ' + e.message;
+            }
+        }
+    </script>
+</body>
+</html>

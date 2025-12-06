@@ -12,12 +12,13 @@ const app = express();
 
 app.use(express.json());
 app.use(cookieParser());
+app.use(express.static('public'));
 
 // ----------------------------------------------------
 // DEFINICIÓN DE ENDPOINTS
 // ----------------------------------------------------
 app.get('/', (req, res) => {
-    res.send('<h1> Bienvenido a la API de SalesFlowApp 🚀 </h1>');
+    res.send('<h1> Bienvenido a la API de SalesFlowApp</h1>');
 });
 
 app.use('/api/auth', authRoutes);
@@ -32,9 +33,9 @@ app.post('/api/auth/logout', (req, res) => {
 
 import { protect } from './middlewares/authMiddleware.js';
 app.post('/api/protected', protect, (req, res) => {
-    res.status(200).json({ 
-        success: true, 
-        message: '¡Acceso Concedido! Esta es una ruta protegida.',
+    res.status(200).json({
+        success: true,
+        message: '¡Acceso Concedido. Accediste correctamente.',
         usuario: { id: req.user.usuario_id, rol: req.user.rol }
     });
 });
