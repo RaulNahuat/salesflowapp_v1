@@ -10,7 +10,19 @@ import { Rifa } from "./Rifa.js";
 import { Boleto } from "./Boleto.js";
 import { Usuario } from "./Usuario.js";
 
+
 // =========== RELACIONES ===========
+
+// USUARIO → DATA
+Usuario.hasMany(Cliente, { foreignKey: "usuario_id" });
+Usuario.hasMany(Producto, { foreignKey: "usuario_id" });
+Usuario.hasMany(Venta, { foreignKey: "usuario_id" });
+Usuario.hasMany(Rifa, { foreignKey: "usuario_id" });
+
+Cliente.belongsTo(Usuario, { foreignKey: "usuario_id" });
+Producto.belongsTo(Usuario, { foreignKey: "usuario_id" });
+Venta.belongsTo(Usuario, { foreignKey: "usuario_id" });
+Rifa.belongsTo(Usuario, { foreignKey: "usuario_id" });
 
 // CLIENTES → ESTATUS
 Cliente.belongsTo(Estatus, { foreignKey: "estatus_id" });

@@ -22,7 +22,7 @@ export const Usuario = sequelize.define("Usuarios", {
   },
   rol: {
     type: DataTypes.STRING(50),
-    defaultValue: "admin",
+    defaultValue: "owner",
   }
 }, {
   tableName: "Usuarios",
