@@ -2,7 +2,7 @@ import * as authService from "../services/authService.js";
 import { Usuario } from "../models/Usuario.js";
 
 const sendTokenResponse = (usuario, statusCode, res) => {
-    const token = authService.generateToken(usuario.usuario_id);
+    const token = authService.generateToken(usuario);
 
     const options = {
         expires: new Date(Date.now() + (parseInt(process.env.JWT_EXPIRES_TIME) || 24) * 60 * 60 * 1000),
@@ -16,6 +16,7 @@ const sendTokenResponse = (usuario, statusCode, res) => {
         .json({
             success: true,
             token,
+            nombre: usuario.nombre,
             rol: usuario.rol
         })
 };
@@ -51,7 +52,7 @@ export const login = async (req, res) => {
     const { correo, password } = req.body;
 
     if (!correo || !password) {
-        return res.status(400).json( { success: false, message: 'Por favor, proporciona un correo y una contraseña.' } );
+        return res.status(400).json({ success: false, message: 'Por favor, proporciona un correo y una contraseña.' });
     }
 
     try {
@@ -74,4 +75,18 @@ export const login = async (req, res) => {
             error: error.message
         });
     }
+}
+
+export const verifyUser = async (req, res) => {
+    const user = req.user;
+
+    res.status(200).json({
+        success: true,
+        user: {
+            id: user.usuario_id,
+            nombre: user.nombre,
+            email: user.correo,
+            rol: user.rol,
+        }
+    });
 }

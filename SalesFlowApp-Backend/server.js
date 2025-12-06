@@ -4,12 +4,22 @@ import { sequelize, testConnection } from './config/db.js';
 import clienteRoutes from './routes/clienteRoutes.js';
 import authRoutes from './routes/authRoutes.js';
 import cookieParser from 'cookie-parser';
+import cors from 'cors';
 
 dotenv.config();
 const PORT = process.env.PORT || 5000;
 
 const app = express();
 
+const allowedOrigins = [process.env.FRONTEND_URL];
+const corsOptions = {
+    origin: allowedOrigins,
+    credentials: true,
+    methods: ['GET', 'POST', 'PUT', 'DELETE'],
+    allowedHeaders: ['Content-Type', 'Authorization']
+}
+
+app.use(cors(corsOptions));
 app.use(express.json());
 app.use(cookieParser());
 app.use(express.static('public'));
