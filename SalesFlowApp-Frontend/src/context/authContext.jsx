@@ -3,11 +3,20 @@ import { login, logout, register, verifyToken } from "../services/authApi";
 
 const AuthContext = createContext(null);
 
+const getErrorMessage = (error) => {
+    if (typeof error === 'string') return error;
+    if (error.response?.data?.message) return error.response.data.message;
+    if (error.response?.data) return error.response.data; // Fallback for other data structures
+    if (error.message) return error.message;
+    return "Error desconocido";
+};
+
 //Estado inicial: no logueado, sin usuario
 const initialState = {
     isLoggedIn: false,
     user: null,
     isLoading: false,
+    error: null,
 };
 
 export const AuthProvider = ({ children }) => {
@@ -22,11 +31,21 @@ export const AuthProvider = ({ children }) => {
                     isLoggedIn: true,
                     user: data,
                     isLoading: false,
+                    error: null
                 });
             } catch (error) {
-                console.error("Error verificando sesión:", error); // Debugging
+                // Solo mostramos error en consola si NO es un 401/403 Y estamos en modo desarrollo
+                if (import.meta.env.DEV && error.response?.status !== 401 && error.response?.status !== 403) {
+                    console.error("Error verificando sesión:", error);
+                }
+
                 // Si falla, nos aseguramos de que no esté logueado
-                setAuthState({ isLoggedIn: false, user: null, isLoading: false });
+                setAuthState({
+                    isLoggedIn: false,
+                    user: null,
+                    isLoading: false,
+                    error: getErrorMessage(error)
+                });
             } finally {
                 setCheckingSession(false);
             }
@@ -45,10 +64,15 @@ export const AuthProvider = ({ children }) => {
                 isLoggedIn: true,
                 user: data,
                 isLoading: false,
+                error: null
             });
             return data;
         } catch (error) {
-            setAuthState(prev => ({ ...prev, isLoading: false, error: 'Credenciales inválidas.' }));
+            setAuthState(prev => ({
+                ...prev,
+                isLoading: false,
+                error: getErrorMessage(error)
+            }));
             throw error;
         }
     };
@@ -63,17 +87,22 @@ export const AuthProvider = ({ children }) => {
                 isLoggedIn: true,
                 user: data,
                 isLoading: false,
+                error: null
             });
             return data;
         } catch (error) {
-            setAuthState(prev => ({ ...prev, isLoading: false, error: error.message || 'Error al registrar.' }));
+            setAuthState(prev => ({
+                ...prev,
+                isLoading: false,
+                error: getErrorMessage(error)
+            }));
             throw error;
         }
     };
 
     const signOut = async () => {
         await logout();
-        setAuthState({ isLoggedIn: false, user: null, isLoading: false });
+        setAuthState({ isLoggedIn: false, user: null, isLoading: false, error: null });
     };
 
     const value = {

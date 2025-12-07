@@ -1,5 +1,7 @@
 import express from 'express';
 import dotenv from 'dotenv';
+import helmet from 'helmet';
+import rateLimit from 'express-rate-limit';
 import { sequelize, testConnection } from './config/db.js';
 import clienteRoutes from './routes/clienteRoutes.js';
 import authRoutes from './routes/authRoutes.js';
@@ -22,6 +24,18 @@ const corsOptions = {
 app.use(cors(corsOptions));
 app.use(express.json());
 app.use(cookieParser());
+app.use(helmet());
+
+const limiter = rateLimit({
+    windowMs: 15 * 60 * 1000,
+    max: 100, //
+    message: 'Demasiadas solicitudes desde esta IP, por favor inténtalo de nuevo después de 15 minutos',
+    standardHeaders: true,
+    legacyHeaders: false,
+});
+
+app.use('/api', limiter);
+
 app.use(express.static('public'));
 
 // ----------------------------------------------------
@@ -65,5 +79,23 @@ const startServer = async () => {
         console.log(`Server running on port ${PORT}`);
     });
 };
+
+// ----------------------------------------------------
+// MIDDLEWARE DE MANEJO DE ERRORES GLOBAL
+// ----------------------------------------------------
+app.use((err, req, res, next) => {
+    console.error(err.stack); // Siempre loguear en el servidor para debug interno
+
+    const statusCode = err.statusCode || 500;
+    const message = process.env.NODE_ENV === 'production'
+        ? 'Ocurrió un error en el servidor. Por favor intente más tarde.'
+        : err.message;
+
+    res.status(statusCode).json({
+        success: false,
+        message: message,
+        stack: process.env.NODE_ENV === 'production' ? null : err.stack,
+    });
+});
 
 startServer();

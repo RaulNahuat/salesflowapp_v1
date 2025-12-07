@@ -9,7 +9,7 @@ const RegisterForm = () => {
     const [correo, setCorreo] = useState('');
     const [password, setPassword] = useState('');
     const [uiError, setUiError] = useState('');
-    const { register, isLoading } = useAuth();
+    const { register, isLoading, error } = useAuth();
 
     const handleSubmit = async (e) => {
         e.preventDefault();
@@ -20,9 +20,13 @@ const RegisterForm = () => {
             console.log('Usuario registrado');
         } catch (error) {
             console.error('Error al registrar:', error);
-            setUiError(error.message || 'Error al registrar. Verifica tus credenciales');
+            // Fallback local si el error no viene del contexto (raro)
+            if (!error) setUiError(error.message || 'Error al registrar. Verifica tus credenciales');
         }
     };
+
+    // Combinar error global con error local, priorizando el global si existe
+    const displayError = error || uiError;
 
     return (
         <div className="flex justify-center items-center min-h-screen bg-gray-100">
@@ -34,9 +38,9 @@ const RegisterForm = () => {
                     Regístrate para administrar tus ventas
                 </p>
 
-                {uiError && (
+                {displayError && (
                     <p className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-6">
-                        {uiError}
+                        {displayError}
                     </p>
                 )}
 
@@ -46,7 +50,10 @@ const RegisterForm = () => {
                         <input
                             type="text"
                             value={nombre}
-                            onChange={(e) => setNombre(e.target.value)}
+                            onChange={(e) => {
+                                setNombre(e.target.value);
+                                if (uiError) setUiError('');
+                            }}
                             placeholder="Nombre"
                             className="w-full pl-10 p-3 border border-transparent bg-white/70 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 transition"
                             disabled={isLoading}
@@ -57,7 +64,10 @@ const RegisterForm = () => {
                         <input
                             type="email"
                             value={correo}
-                            onChange={(e) => setCorreo(e.target.value)}
+                            onChange={(e) => {
+                                setCorreo(e.target.value);
+                                if (uiError) setUiError('');
+                            }}
                             placeholder="Correo electrónico"
                             className="w-full pl-10 p-3 border border-transparent bg-white/70 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 transition"
                             disabled={isLoading}
@@ -68,7 +78,10 @@ const RegisterForm = () => {
                         <input
                             type="password"
                             value={password}
-                            onChange={(e) => setPassword(e.target.value)}
+                            onChange={(e) => {
+                                setPassword(e.target.value);
+                                if (uiError) setUiError('');
+                            }}
                             placeholder="Contraseña"
                             className="w-full pl-10 p-3 border border-transparent bg-white/70 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 transition"
                             disabled={isLoading}

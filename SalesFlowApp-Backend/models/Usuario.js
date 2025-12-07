@@ -28,3 +28,9 @@ export const Usuario = sequelize.define("Usuarios", {
   tableName: "Usuarios",
   timestamps: false
 });
+
+Usuario.prototype.toJSON = function () {
+  const values = Object.assign({}, this.get());
+  delete values.password_hash;
+  return values;
+};
