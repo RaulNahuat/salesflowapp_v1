@@ -1,5 +1,5 @@
 import { createContext, useState, useContext, useEffect } from "react";
-import { login, logout, register, verifyToken } from "../services/authApi";
+import { login as authServiceLogin, logout as authServiceLogout, register as authServiceRegister, verifyToken } from "../services/authApi";
 
 const AuthContext = createContext(null);
 
@@ -27,24 +27,31 @@ export const AuthProvider = ({ children }) => {
         const checkSession = async () => {
             try {
                 const data = await verifyToken();
-                setAuthState({
-                    isLoggedIn: true,
-                    user: data,
-                    isLoading: false,
-                    error: null
-                });
-            } catch (error) {
-                // Solo mostramos error en consola si NO es un 401/403 Y estamos en modo desarrollo
-                if (import.meta.env.DEV && error.response?.status !== 401 && error.response?.status !== 403) {
-                    console.error("Error verificando sesión:", error);
-                }
 
-                // Si falla, nos aseguramos de que no esté logueado
+                if (data.user) {
+                    setAuthState({
+                        isLoggedIn: true,
+                        user: data.user,
+                        isLoading: false,
+                        error: null
+                    });
+                } else {
+                    // No hay sesión activa (respuesta silenciosa)
+                    setAuthState({
+                        isLoggedIn: false,
+                        user: null,
+                        isLoading: false,
+                        error: null
+                    });
+                }
+            } catch (error) {
+                // Solo loguear errores reales de red o servidor, no de autenticación
+                console.error("Error verificando sesión:", error);
                 setAuthState({
                     isLoggedIn: false,
                     user: null,
                     isLoading: false,
-                    error: getErrorMessage(error)
+                    error: null
                 });
             } finally {
                 setCheckingSession(false);
@@ -54,15 +61,15 @@ export const AuthProvider = ({ children }) => {
         checkSession();
     }, []);
 
-    const signIn = async (correo, password) => {
+    const login = async (email, password) => {
         setAuthState(prev => ({ ...prev, isLoading: true, error: null }));
 
         try {
-            const data = await login(correo, password);
+            const data = await authServiceLogin(email, password);
 
             setAuthState({
                 isLoggedIn: true,
-                user: data,
+                user: data.user,
                 isLoading: false,
                 error: null
             });
@@ -77,15 +84,16 @@ export const AuthProvider = ({ children }) => {
         }
     };
 
-    const registerUser = async (nombre, correo, password) => {
+    const registerUser = async (userData) => {
         setAuthState(prev => ({ ...prev, isLoading: true, error: null }));
+        const { firstName, lastName, email, phone, password, businessName } = userData;
 
         try {
-            const data = await register(nombre, correo, password);
+            const data = await authServiceRegister(firstName, lastName, email, phone, password, businessName);
 
             setAuthState({
                 isLoggedIn: true,
-                user: data,
+                user: data.user,
                 isLoading: false,
                 error: null
             });
@@ -100,17 +108,17 @@ export const AuthProvider = ({ children }) => {
         }
     };
 
-    const signOut = async () => {
-        await logout();
+    const logout = async () => {
+        await authServiceLogout();
         setAuthState({ isLoggedIn: false, user: null, isLoading: false, error: null });
     };
 
     const value = {
         ...authState,
         checkingSession, // Exponer estado de carga inicial
-        signIn,
-        signOut,
-        register: registerUser,
+        login,
+        logout,
+        registerUser,
     };
 
     return (

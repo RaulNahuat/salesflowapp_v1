@@ -13,6 +13,7 @@ import RaffleTicketModel from './RaffleTicket.js';
 import SaleModel from './Sale.js';
 import SaleDetailModel from './SaleDetail.js';
 import UserModel from './User.js';
+import ClientModel from './Client.js';
 
 const db = {};
 db.Sequelize = Sequelize;
@@ -30,6 +31,7 @@ db.RaffleTicket = RaffleTicketModel(sequelize, DataTypes);
 db.Sale = SaleModel(sequelize, DataTypes);
 db.SaleDetail = SaleDetailModel(sequelize, DataTypes);
 db.User = UserModel(sequelize, DataTypes);
+db.Client = ClientModel(sequelize, DataTypes);
 
 // --- ASOCIACIONES ---
 
@@ -38,6 +40,7 @@ db.Business.hasMany(db.Product);
 db.Business.hasMany(db.Sale);
 db.Business.hasMany(db.Raffle);
 db.Business.hasMany(db.BusinessMember);
+db.Business.hasMany(db.Client);
 
 // Usuarios y Negocios
 db.User.hasMany(db.BusinessMember);

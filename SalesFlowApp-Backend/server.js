@@ -2,6 +2,7 @@ import express from 'express';
 import dotenv from 'dotenv';
 import helmet from 'helmet';
 import rateLimit from 'express-rate-limit';
+import db from './models/index.js';
 import { sequelize, testConnection } from './config/db.js';
 // import clienteRoutes from './routes/clienteRoutes.js';
 import authRoutes from './routes/authRoutes.js';
@@ -63,6 +64,21 @@ app.post('/api/auth/logout', (req, res) => {
     res.status(200).json({ success: true, message: 'Sesión cerrada correctamente.' });
 });
 
+import productRoutes from './routes/productRoutes.js';
+app.use('/api/products', productRoutes);
+
+import businessRoutes from './routes/businessRoutes.js';
+app.use('/api/business', businessRoutes);
+
+import dashboardRoutes from './routes/dashboardRoutes.js';
+app.use('/api/dashboard', dashboardRoutes);
+
+import clientRoutes from './routes/clientRoutes.js';
+app.use('/api/clients', clientRoutes);
+
+import workerRoutes from './routes/workerRoutes.js';
+app.use('/api/workers', workerRoutes);
+
 import { protect } from './middlewares/authMiddleware.js';
 app.post('/api/protected', protect, (req, res) => {
     res.status(200).json({
@@ -82,8 +98,14 @@ app.post('/api/protected', protect, (req, res) => {
 // ----------------------------------------------------
 const startServer = async () => {
     await testConnection();
-    await sequelize.sync({ force: false });
-    console.log('Base de datos sincronizada');
+
+    // Sync removed to prevent startup error. We will patch DB manually if needed.
+    // if (db.BusinessMember) {
+    //    await db.BusinessMember.sync({ alter: true });
+    // }
+
+    await sequelize.sync(); // alter: true disabled to prevent ER_TOO_MANY_KEYS
+    console.log('Base de datos sincronizada correctamente');
 
     // await seedEstatus();
     console.log('Estatus seed completado');

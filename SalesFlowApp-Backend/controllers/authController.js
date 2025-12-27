@@ -2,7 +2,7 @@ import authService from "../services/authService.js";
 
 const register = async (req, res) => {
     try {
-        const { user, token } = await authService.register(req.body);
+        const { user, token, role } = await authService.register(req.body);
 
         res.cookie('token', token, {
             httpOnly: true,
@@ -14,12 +14,26 @@ const register = async (req, res) => {
         res.json({
             success: true,
             message: 'Usuario registrado exitosamente',
-            user: { id: user.id, email: user.email, firstName: user.firstName, lastName: user.lastName }
+            user: {
+                id: user.id,
+                email: user.email,
+                firstName: user.firstName,
+                lastName: user.lastName,
+                role: role
+            }
         });
     } catch (error) {
+        console.error("Register Error:", error); // Log full error
+
+        // Extract specific Sequelize validation message if available
+        let errorMessage = error.message;
+        if (error.errors && error.errors.length > 0) {
+            errorMessage = error.errors[0].message;
+        }
+
         res.status(400).json({
             success: false,
-            error: error.message
+            message: errorMessage
         });
     }
 };
@@ -27,7 +41,7 @@ const register = async (req, res) => {
 const login = async (req, res) => {
     try {
         const { email, password } = req.body; // Changed from phone to email
-        const { user, token } = await authService.login(email, password);
+        const { user, token, role, permissions } = await authService.login(email, password);
 
         res.cookie('token', token, {
             httpOnly: true,
@@ -39,12 +53,19 @@ const login = async (req, res) => {
         res.json({
             success: true,
             message: 'Inicio de sesión exitoso',
-            user: { id: user.id, firstName: user.firstName, lastName: user.lastName, email: user.email }
+            user: {
+                id: user.id,
+                firstName: user.firstName,
+                lastName: user.lastName,
+                email: user.email,
+                role: role,
+                permissions: permissions
+            }
         });
     } catch (error) {
         res.status(401).json({
             success: false,
-            error: error.message
+            message: error.message // Changed from 'error' to 'message' to match frontend expectation
         });
     }
 };
@@ -56,27 +77,34 @@ const logout = (req, res) => {
 
 const verifyToken = async (req, res) => {
     try {
-        // Token is usually in cookies, but authMiddleware checks it.
-        // We can double check or just return the user info verified by middleware if we use it here?
-        // But verifyToken route might be called without middleware?
-        // Usually verifyToken endpoint just returns the user if the token in cookie is valid.
-        // Let's use the explicit service call or rely on middleware.
-        // If we use middleware on this route, req.userId is set.
-        // If we call service.verifyToken(token), we get user.
-
         const token = req.cookies.token;
-        if (!token) throw new Error("No token provided");
+        if (!token) return res.json({ success: true, user: null });
 
         const user = await authService.verifyToken(token);
 
+        // Check if account is inactive (handled in service or here)
+        if (user.status === 'inactive') {
+            res.clearCookie('token');
+            return res.json({ success: true, user: null });
+        }
+
         res.json({
             success: true,
-            user: { id: user.id, firstName: user.firstName, lastName: user.lastName, email: user.email }
+            user: {
+                id: user.id,
+                firstName: user.firstName,
+                lastName: user.lastName,
+                email: user.email,
+                role: user.role,
+                permissions: user.permissions
+            }
         });
     } catch (error) {
-        res.status(401).json({
-            success: false,
-            error: error.message
+        // Silent fail: return null user
+        res.clearCookie('token'); // Clear invalid token
+        res.json({
+            success: true,
+            user: null
         });
     }
 };

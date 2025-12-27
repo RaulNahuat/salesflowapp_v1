@@ -1,9 +1,10 @@
 import db from "../models/index.js";
 import jwt from "jsonwebtoken";
 import bcrypt from "bcryptjs";
+import crypto from "crypto";
 
 const register = async (userData) => {
-    const { firstName, lastName, email, phone, password } = userData;
+    const { firstName, lastName, email, phone, password, businessName } = userData;
     // Check if user exists
     const existingUser = await db.User.findOne({
         where: {
@@ -15,62 +16,116 @@ const register = async (userData) => {
         throw new Error("El usuario ya existe con ese correo o teléfono");
     }
 
-    const newUser = await db.User.create({
-        firstName,
-        lastName,
-        email,
-        phone,
-        password
-    });
+    // Transaction to ensure data integrity
+    const t = await db.sequelize.transaction();
 
-    // Generate token immediately after registration
-    const token = jwt.sign(
-        { userId: newUser.id },
-        process.env.JWT_SECRET,
-        { expiresIn: '24h' }
-    );
+    try {
+        const newUser = await db.User.create({
+            firstName,
+            lastName,
+            email,
+            phone,
+            password
+        }, { transaction: t });
 
-    return { user: newUser, token };
+        // Determine Business Name
+        const nameToUse = businessName || `Negocio de ${firstName}`;
+
+        // Generate Clean Slug
+        let baseSlug = nameToUse.toLowerCase()
+            .replace(/[^\w\s-]/g, '') // Remove non-word chars
+            .replace(/\s+/g, '-')     // Replace spaces with -
+            .replace(/^-+|-+$/g, ''); // Trim -
+
+        let slug = baseSlug;
+        let counter = 1;
+
+        // Check for uniqueness
+        while (await db.Business.findOne({ where: { slug }, transaction: t })) {
+            slug = `${baseSlug}-${counter}`;
+            counter++;
+        }
+
+        const newBusiness = await db.Business.create({
+            name: nameToUse,
+            slug: slug
+        }, { transaction: t });
+
+        // Link User to Business as Owner
+        await db.BusinessMember.create({
+            UserId: newUser.id,
+            BusinessId: newBusiness.id,
+            role: 'owner',
+            localAlias: firstName,
+            accessToken: crypto.randomBytes(32).toString('hex')
+        }, { transaction: t });
+
+        await t.commit();
+
+        // Generate token
+        const token = jwt.sign(
+            { userId: newUser.id, businessId: newBusiness.id, role: 'owner' },
+            process.env.JWT_SECRET,
+            { expiresIn: '24h' }
+        );
+
+        return { user: newUser, token, role: 'owner' };
+
+    } catch (error) {
+        await t.rollback();
+        throw error;
+    }
 };
 
 const login = async (email, password) => {
-    // Busca por email (campo 'email' en modelo User)
-    const user = await db.User.findOne({ where: { email } });
-    if (!user) {
-        throw new Error("Credenciales inválidas");
-    }
-
-    const isMatch = await user.comparePassword(password);
-    if (!isMatch) {
-        throw new Error("Credenciales inválidas");
-    }
-
-    // Prepare token payload
-    const payload = { userId: user.id };
-
-    // Optional: Add role/business info if available
-    /* 
     try {
-        const membership = await db.Membership.findOne({
-            where: { userId: user.id }
-        });
-        if (membership) {
-            payload.businessId = membership.businessId;
-            payload.role = membership.role;
+        const user = await db.User.findOne({ where: { email } });
+        if (!user) {
+            throw new Error("Credenciales inválidas");
         }
-    } catch (e) {
-        // Continue without membership info if table/relation missing
-        console.warn("Could not fetch membership info", e);
+
+        const isMatch = await user.comparePassword(password);
+        if (!isMatch) {
+            throw new Error("Credenciales inválidas");
+        }
+
+        // Fetch user's business
+        const member = await db.BusinessMember.findOne({
+            where: { UserId: user.id }
+        });
+
+        // Validar que el usuario tenga un negocio asociado
+        let businessId = null;
+        let role = null;
+        let permissions = null;
+
+        if (member) {
+            if (member.status === 'inactive') {
+                throw new Error("Tu cuenta ha sido desactivada por el administrador.");
+            }
+            businessId = member.BusinessId;
+            role = member.role;
+            permissions = member.permissions;
+        }
+
+        const payload = { userId: user.id, businessId, role };
+
+        const token = jwt.sign(
+            payload,
+            process.env.JWT_SECRET,
+            { expiresIn: '24h' }
+        );
+
+        return { user, token, role, permissions };
+    } catch (error) {
+        // If it's a known error (has a message we threw), rethrow it
+        if (error.message === "Credenciales inválidas" || error.message.includes("desactivada")) {
+            throw error;
+        }
+        // Otherwise log it and throw a generic one
+        console.error("Login Service Error:", error);
+        throw new Error("Error interno del servidor. Por favor intente más tarde.");
     }
-    */
-
-    const token = jwt.sign(
-        payload,
-        process.env.JWT_SECRET,
-        { expiresIn: '24h' }
-    );
-
-    return { user, token };
 }
 
 const verifyToken = async (token) => {
@@ -88,7 +143,20 @@ const verifyToken = async (token) => {
             throw new Error("Usuario no encontrado");
         }
 
-        return user;
+        // Fetch Member details to get permissions
+        const member = await db.BusinessMember.findOne({
+            where: { UserId: user.id }
+        });
+
+        // Attach role/perms to user object
+        const userWithRole = user.toJSON();
+        if (member) {
+            userWithRole.role = member.role;
+            userWithRole.permissions = member.permissions;
+            userWithRole.status = member.status;
+        }
+
+        return userWithRole;
     } catch (error) {
         throw new Error("Token inválido o expirado");
     }

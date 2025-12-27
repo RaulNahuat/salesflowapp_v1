@@ -16,6 +16,14 @@ export default (sequelize, DataTypes) => {
         localAlias: {
             type: DataTypes.STRING,
             unique: true
+        },
+        permissions: {
+            type: DataTypes.JSON,
+            defaultValue: { pos: true, products: false, reports: false, settings: false }
+        },
+        status: {
+            type: DataTypes.ENUM('active', 'inactive'),
+            defaultValue: 'active'
         }
     });
 };

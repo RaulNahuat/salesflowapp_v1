@@ -12,6 +12,10 @@ export default (sequelize, DataTypes) => {
         description: {
             type: DataTypes.TEXT
         },
+        imageUrl: {
+            type: DataTypes.STRING,
+            allowNull: true
+        },
         costPrice: {
             type: DataTypes.DECIMAL(10, 2),
             defaultValue: 0

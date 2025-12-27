@@ -1,13 +1,13 @@
 import axios from "axios";
 
-const API_URL = `${import.meta.env.VITE_API_URL}/clients`;
+const API_URL = `${import.meta.env.VITE_API_URL}/products`;
 
 const api = axios.create({
     baseURL: API_URL,
     withCredentials: true,
 });
 
-export const getClients = async () => {
+export const getProducts = async () => {
     try {
         const response = await api.get("/");
         return response.data;
@@ -16,7 +16,7 @@ export const getClients = async () => {
     }
 };
 
-export const getClient = async (id) => {
+export const getProduct = async (id) => {
     try {
         const response = await api.get(`/${id}`);
         return response.data;
@@ -25,25 +25,25 @@ export const getClient = async (id) => {
     }
 };
 
-export const createClient = async (clientData) => {
+export const createProduct = async (productData) => {
     try {
-        const response = await api.post("/", clientData);
+        const response = await api.post("/", productData);
         return response.data;
     } catch (error) {
         throw error.response?.data || error;
     }
 };
 
-export const updateClient = async (id, clientData) => {
+export const updateProduct = async (id, productData) => {
     try {
-        const response = await api.put(`/${id}`, clientData);
+        const response = await api.put(`/${id}`, productData);
         return response.data;
     } catch (error) {
         throw error.response?.data || error;
     }
 };
 
-export const deleteClient = async (id) => {
+export const deleteProduct = async (id) => {
     try {
         const response = await api.delete(`/${id}`);
         return response.data;
@@ -52,12 +52,12 @@ export const deleteClient = async (id) => {
     }
 };
 
-const clientApi = {
-    getClients,
-    getClient,
-    createClient,
-    updateClient,
-    deleteClient
+const productApi = {
+    getProducts,
+    getProduct,
+    createProduct,
+    updateProduct,
+    deleteProduct
 };
 
-export default clientApi;
+export default productApi;

@@ -1,110 +1,212 @@
 import React, { useState } from 'react';
 import { useAuth } from '../../context/authContext';
-import { Link } from 'react-router-dom';
-import { HiMail, HiLockClosed, HiUser } from "react-icons/hi";
-
+import { useNavigate, Link } from 'react-router-dom';
+import { toast } from 'react-hot-toast';
+import AuthLayout from '../../layout/AuthLayout';
+import { FaUser, FaEnvelope, FaLock, FaPhone, FaSpinner, FaArrowRight } from 'react-icons/fa';
 
 const RegisterForm = () => {
-    const [nombre, setNombre] = useState('');
-    const [correo, setCorreo] = useState('');
-    const [password, setPassword] = useState('');
-    const [uiError, setUiError] = useState('');
-    const { register, isLoading, error } = useAuth();
+    const [userData, setUserData] = useState({
+        firstName: '',
+        lastName: '',
+        businessName: '',
+        email: '',
+        phone: '',
+        password: ''
+    });
+    const [error, setError] = useState('');
+    const [loading, setLoading] = useState(false);
+
+    const { registerUser } = useAuth();
+    const navigate = useNavigate();
+
+    const handleChange = (e) => {
+        setUserData({
+            ...userData,
+            [e.target.name]: e.target.value
+        });
+        if (error) setError('');
+    };
 
     const handleSubmit = async (e) => {
         e.preventDefault();
-        setUiError('');
+        setError('');
+        setLoading(true);
 
         try {
-            await register(nombre, correo, password);
-            console.log('Usuario registrado');
-        } catch (error) {
-            console.error('Error al registrar:', error);
-            // Fallback local si el error no viene del contexto (raro)
-            if (!error) setUiError(error.message || 'Error al registrar. Verifica tus credenciales');
+            await registerUser(userData);
+            toast.success('¡Cuenta creada exitosamente!');
+            navigate('/dashboard');
+        } catch (err) {
+            const msg = err.message || 'Error al registrar usuario';
+            setError(msg);
+            toast.error(msg);
+        } finally {
+            setLoading(false);
         }
     };
 
-    // Combinar error global con error local, priorizando el global si existe
-    const displayError = error || uiError;
-
     return (
-        <div className="flex justify-center items-center min-h-screen bg-gray-100">
-            <div className="w-full max-w-md p-8 bg-gray-50 rounded-3xl shadow-2xl">
-                <h2 className="text-4xl font-bold text-center text-indigo-700 mb-2">
-                    SalesFlowApp
-                </h2>
-                <p className="text-center text-gray-500 mb-8">
-                    Regístrate para administrar tus ventas
-                </p>
-
-                {displayError && (
-                    <p className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-6">
-                        {displayError}
-                    </p>
+        <AuthLayout
+            title="Crea tu cuenta"
+            subtitle="Empieza a gestionar tu negocio hoy mismo."
+        >
+            <form onSubmit={handleSubmit} className="space-y-5">
+                {error && (
+                    <div className="p-4 rounded-xl bg-red-50 border border-red-100 text-red-600 text-sm font-medium flex items-center animate-shake">
+                        {error}
+                    </div>
                 )}
 
-                <form onSubmit={handleSubmit} className="space-y-6">
+                <div className="group">
+                    <label className="block text-sm font-semibold text-gray-700 mb-2 ml-1" htmlFor="businessName">
+                        Nombre del Negocio
+                    </label>
                     <div className="relative">
-                        <HiUser className="absolute left-3 top-3 text-gray-400" size={20} />
+                        <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                            <FaUser className="text-gray-400 group-focus-within:text-blue-500 transition-colors" />
+                        </div>
                         <input
                             type="text"
-                            value={nombre}
-                            onChange={(e) => {
-                                setNombre(e.target.value);
-                                if (uiError) setUiError('');
-                            }}
-                            placeholder="Nombre"
-                            className="w-full pl-10 p-3 border border-transparent bg-white/70 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 transition"
-                            disabled={isLoading}
+                            id="businessName"
+                            name="businessName"
+                            value={userData.businessName}
+                            onChange={handleChange}
+                            className="w-full pl-11 pr-4 py-3.5 bg-gray-50 border border-gray-200 rounded-xl focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-100 focus:border-blue-500 transition-all font-medium text-gray-700"
+                            placeholder="Ej: Ventas Monstrerrath"
+                            required
                         />
                     </div>
+                </div>
+
+                <div className="grid grid-cols-2 gap-4">
+                    <div className="group">
+                        <label className="block text-sm font-semibold text-gray-700 mb-2 ml-1" htmlFor="firstName">
+                            Nombre
+                        </label>
+                        <div className="relative">
+                            <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                <FaUser className="text-gray-400 group-focus-within:text-blue-500 transition-colors text-sm" />
+                            </div>
+                            <input
+                                type="text"
+                                id="firstName"
+                                name="firstName"
+                                value={userData.firstName}
+                                onChange={handleChange}
+                                className="w-full pl-9 pr-3 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-100 focus:border-blue-500 transition-all font-medium text-gray-700 text-sm"
+                                placeholder="Juan"
+                                required
+                            />
+                        </div>
+                    </div>
+                    <div className="group">
+                        <label className="block text-sm font-semibold text-gray-700 mb-2 ml-1" htmlFor="lastName">
+                            Apellido
+                        </label>
+                        <input
+                            type="text"
+                            id="lastName"
+                            name="lastName"
+                            value={userData.lastName}
+                            onChange={handleChange}
+                            className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-100 focus:border-blue-500 transition-all font-medium text-gray-700 text-sm"
+                            placeholder="Pérez"
+                            required
+                        />
+                    </div>
+                </div>
+
+                <div className="group">
+                    <label className="block text-sm font-semibold text-gray-700 mb-2 ml-1" htmlFor="email">
+                        Correo Electrónico
+                    </label>
                     <div className="relative">
-                        <HiMail className="absolute left-3 top-3 text-gray-400" size={20} />
+                        <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                            <FaEnvelope className="text-gray-400 group-focus-within:text-blue-500 transition-colors" />
+                        </div>
                         <input
                             type="email"
-                            value={correo}
-                            onChange={(e) => {
-                                setCorreo(e.target.value);
-                                if (uiError) setUiError('');
-                            }}
-                            placeholder="Correo electrónico"
-                            className="w-full pl-10 p-3 border border-transparent bg-white/70 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 transition"
-                            disabled={isLoading}
+                            id="email"
+                            name="email"
+                            value={userData.email}
+                            onChange={handleChange}
+                            className="w-full pl-11 pr-4 py-3.5 bg-gray-50 border border-gray-200 rounded-xl focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-100 focus:border-blue-500 transition-all font-medium text-gray-700"
+                            placeholder="juan@negocio.com"
+                            required
                         />
                     </div>
+                </div>
+
+                <div className="group">
+                    <label className="block text-sm font-semibold text-gray-700 mb-2 ml-1" htmlFor="phone">
+                        Teléfono
+                    </label>
                     <div className="relative">
-                        <HiLockClosed className="absolute left-3 top-3 text-gray-400" size={20} />
+                        <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                            <FaPhone className="text-gray-400 group-focus-within:text-blue-500 transition-colors" />
+                        </div>
+                        <input
+                            type="tel"
+                            id="phone"
+                            name="phone"
+                            value={userData.phone}
+                            onChange={handleChange}
+                            className="w-full pl-11 pr-4 py-3.5 bg-gray-50 border border-gray-200 rounded-xl focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-100 focus:border-blue-500 transition-all font-medium text-gray-700"
+                            placeholder="55 1234 5678"
+                            required
+                        />
+                    </div>
+                </div>
+
+                <div className="group">
+                    <label className="block text-sm font-semibold text-gray-700 mb-2 ml-1" htmlFor="password">
+                        Contraseña
+                    </label>
+                    <div className="relative">
+                        <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                            <FaLock className="text-gray-400 group-focus-within:text-blue-500 transition-colors" />
+                        </div>
                         <input
                             type="password"
-                            value={password}
-                            onChange={(e) => {
-                                setPassword(e.target.value);
-                                if (uiError) setUiError('');
-                            }}
-                            placeholder="Contraseña"
-                            className="w-full pl-10 p-3 border border-transparent bg-white/70 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 transition"
-                            disabled={isLoading}
+                            id="password"
+                            name="password"
+                            value={userData.password}
+                            onChange={handleChange}
+                            className="w-full pl-11 pr-4 py-3.5 bg-gray-50 border border-gray-200 rounded-xl focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-100 focus:border-blue-500 transition-all font-medium text-gray-700"
+                            placeholder="Mínimo 6 caracteres"
+                            required
                         />
                     </div>
+                </div>
 
-                    <button
-                        type="submit"
-                        disabled={isLoading}
-                        className="w-full bg-indigo-600 text-white p-3 rounded-xl text-lg font-semibold hover:bg-indigo-700 hover:shadow-lg transform hover:-translate-y-0.5 transition-all duration-200 disabled:bg-indigo-300"
-                    >
-                        {isLoading ? 'Cargando...' : 'Iniciar Sesión'}
-                    </button>
-                </form>
+                <button
+                    type="submit"
+                    disabled={loading}
+                    className="w-full bg-gradient-to-r from-blue-600 to-indigo-600 text-white font-bold py-3.5 rounded-xl shadow-lg shadow-blue-500/30 hover:shadow-blue-500/40 transform hover:-translate-y-0.5 transition-all duration-200 disabled:opacity-70 disabled:cursor-not-allowed disabled:transform-none flex items-center justify-center gap-2 mt-4"
+                >
+                    {loading ? (
+                        <>
+                            <FaSpinner className="animate-spin text-lg" /> Creando cuenta...
+                        </>
+                    ) : (
+                        <>
+                            Registrarme <FaArrowRight className="text-sm opacity-80" />
+                        </>
+                    )}
+                </button>
 
-                <div className="flex flex-col gap-2">
-                    <p className='text-center text-gray-400 text-sm mt-3'>
-                        ¿Ya tienes una cuenta? <Link to="/login" className="text-indigo-600 hover:underline">Inicia sesión aquí</Link>
+                <div className="text-center pt-2">
+                    <p className="text-gray-500 text-sm">
+                        ¿Ya tienes cuenta?{' '}
+                        <Link to="/login" className="font-bold text-blue-600 hover:text-blue-700 hover:underline transition-colors">
+                            Inicia Sesión
+                        </Link>
                     </p>
                 </div>
-            </div>
-        </div>
-    )
-}
+            </form>
+        </AuthLayout>
+    );
+};
 
 export default RegisterForm;

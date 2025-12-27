@@ -8,9 +8,9 @@ const api = axios.create({
 });
 
 
-export const register = async (nombre, correo, password) => {
+export const register = async (firstName, lastName, email, phone, password, businessName) => {
     try {
-        const response = await api.post("/register", { nombre, correo, password });
+        const response = await api.post("/register", { firstName, lastName, email, phone, password, businessName });
         return response.data;
     } catch (error) {
         throw error.response?.data || error;
@@ -23,9 +23,9 @@ export const register = async (nombre, correo, password) => {
  * @param {String} password 
  * @returns {object}
  */
-export const login = async (correo, password) => {
+export const login = async (email, password) => {
     try {
-        const response = await api.post("/login", { correo, password });
+        const response = await api.post("/login", { email, password });
         return response.data;
     } catch (error) {
         throw error.response?.data || error;
