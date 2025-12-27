@@ -5,6 +5,7 @@ import RegisterForm from '../componentes/auth/RegisterForm';
 import PublicRoute from './PublicRoute';
 import ProtectedRoute from './ProtectedRoute';
 import Dashboard from '../pages/Dashboard';
+import ClientsPage from '../pages/clients/ClientsPage';
 
 const AppRouter = () => {
     const { checkingSession } = useAuth(); // Usamos checkingSession, NO isLoading
@@ -23,6 +24,12 @@ const AppRouter = () => {
             <Route path="/dashboard" element={
                 <ProtectedRoute>
                     <Dashboard />
+                </ProtectedRoute>
+            } />
+
+            <Route path="/clientes" element={
+                <ProtectedRoute>
+                    <ClientsPage />
                 </ProtectedRoute>
             } />
 

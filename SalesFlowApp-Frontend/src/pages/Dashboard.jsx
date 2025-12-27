@@ -1,4 +1,5 @@
 import React from 'react';
+import { Link } from 'react-router-dom';
 import { useAuth } from '../context/authContext';
 
 const Dashboard = () => {
@@ -33,6 +34,12 @@ const Dashboard = () => {
                         <h3 className="font-semibold text-lg mb-2">Estadísticas</h3>
                         <p className="text-gray-600">Tus gráficos aparecerán aquí.</p>
                     </div>
+
+                    {/* Link a Clientes */}
+                    <Link to="/clientes" className="bg-indigo-50 border border-indigo-100 rounded-lg p-4 shadow-sm hover:shadow-md transition cursor-pointer flex flex-col justify-center items-center text-center group">
+                        <h3 className="font-bold text-xl text-indigo-700 mb-2 group-hover:underline">Gestión de Clientes</h3>
+                        <p className="text-indigo-600 text-sm">Administrar base de datos de clientes</p>
+                    </Link>
                 </div>
             </div>
         </div>

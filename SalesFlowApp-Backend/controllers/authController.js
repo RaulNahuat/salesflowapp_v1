@@ -1,92 +1,89 @@
-import * as authService from "../services/authService.js";
-import { Usuario } from "../models/Usuario.js";
+import authService from "../services/authService.js";
 
-const sendTokenResponse = (usuario, statusCode, res) => {
-    const token = authService.generateToken(usuario);
+const register = async (req, res) => {
+    try {
+        const { user, token } = await authService.register(req.body);
 
-    const options = {
-        expires: new Date(Date.now() + (parseInt(process.env.JWT_EXPIRES_TIME) || 24) * 60 * 60 * 1000),
-        httpOnly: true,
-        secure: process.env.NODE_ENV === 'production',
-        sameSite: 'strict'
-    };
+        res.cookie('token', token, {
+            httpOnly: true,
+            secure: process.env.NODE_ENV === 'production',
+            sameSite: 'lax', // Use lax for better compatibility during dev
+            maxAge: 24 * 60 * 60 * 1000 // 24 horas
+        });
 
-    res.status(statusCode)
-        .cookie('token', token, options)
-        .json({
+        res.json({
             success: true,
-            token,
-            nombre: usuario.nombre,
-            rol: usuario.rol
-        })
-};
-
-export const register = async (req, res) => {
-    const { nombre, correo, password } = req.body;
-
-    try {
-        const passwordHash = await authService.hashPassword(password);
-
-        const nuevoUsuario = await Usuario.create({
-            nombre,
-            correo,
-            password_hash: passwordHash
+            message: 'Usuario registrado exitosamente',
+            user: { id: user.id, email: user.email, firstName: user.firstName, lastName: user.lastName }
         });
-
-        sendTokenResponse(nuevoUsuario, 201, res);
     } catch (error) {
-        if (error.name == 'SequelizeUniqueConstraintError') {
-            return res.status(400).json({
-                success: false,
-                message: 'El correo ya está en uso'
-            })
-        }
-        res.status(500).json({
+        res.status(400).json({
             success: false,
             error: error.message
         });
     }
 };
 
-export const login = async (req, res) => {
-    const { correo, password } = req.body;
-
-    if (!correo || !password) {
-        return res.status(400).json({ success: false, message: 'Por favor, proporciona un correo y una contraseña.' });
-    }
-
+const login = async (req, res) => {
     try {
-        const usuario = await Usuario.findOne({ where: { correo } });
-        if (!usuario) {
-            return res.status(401).json({ success: false, message: 'Credenciales inválidas' });
-        }
+        const { email, password } = req.body; // Changed from phone to email
+        const { user, token } = await authService.login(email, password);
 
-        const passwordMatch = await authService.comparePassword(password, usuario.password_hash);
+        res.cookie('token', token, {
+            httpOnly: true,
+            secure: process.env.NODE_ENV === 'production',
+            sameSite: 'lax',
+            maxAge: 24 * 60 * 60 * 1000 // 24 horas
+        });
 
-        if (!passwordMatch) {
-            return res.status(401).json({ success: false, message: 'Credenciales inválidas' });
-        }
-
-        sendTokenResponse(usuario, 200, res);
-
+        res.json({
+            success: true,
+            message: 'Inicio de sesión exitoso',
+            user: { id: user.id, firstName: user.firstName, lastName: user.lastName, email: user.email }
+        });
     } catch (error) {
-        res.status(500).json({
+        res.status(401).json({
             success: false,
             error: error.message
         });
     }
-}
+};
 
-export const verifyUser = async (req, res) => {
-    const user = req.user;
+const logout = (req, res) => {
+    res.clearCookie('token');
+    res.json({ success: true, message: 'Sesión cerrada correctamente' });
+};
 
-    res.status(200).json({
-        success: true,
-        user: {
-            id: user.usuario_id,
-            nombre: user.nombre,
-            email: user.correo,
-            rol: user.rol,
-        }
-    });
-}
+const verifyToken = async (req, res) => {
+    try {
+        // Token is usually in cookies, but authMiddleware checks it.
+        // We can double check or just return the user info verified by middleware if we use it here?
+        // But verifyToken route might be called without middleware?
+        // Usually verifyToken endpoint just returns the user if the token in cookie is valid.
+        // Let's use the explicit service call or rely on middleware.
+        // If we use middleware on this route, req.userId is set.
+        // If we call service.verifyToken(token), we get user.
+
+        const token = req.cookies.token;
+        if (!token) throw new Error("No token provided");
+
+        const user = await authService.verifyToken(token);
+
+        res.json({
+            success: true,
+            user: { id: user.id, firstName: user.firstName, lastName: user.lastName, email: user.email }
+        });
+    } catch (error) {
+        res.status(401).json({
+            success: false,
+            error: error.message
+        });
+    }
+};
+
+export default {
+    login,
+    logout,
+    register,
+    verifyToken
+};

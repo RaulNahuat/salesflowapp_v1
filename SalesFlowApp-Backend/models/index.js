@@ -1,67 +1,73 @@
-import { sequelize } from "../config/db.js";
+import { Sequelize, DataTypes } from 'sequelize';
+import { sequelize } from '../config/db.js';
 
-import { Estatus } from "./Estatus.js";
-import { Cliente } from "./Cliente.js";
-import { Producto } from "./Producto.js";
-import { InventarioAtributo } from "./InventarioAtributo.js";
-import { Venta } from "./Venta.js";
-import { DetalleVenta } from "./DetalleVenta.js";
-import { Rifa } from "./Rifa.js";
-import { Boleto } from "./Boleto.js";
-import { Usuario } from "./Usuario.js";
+// Import models
+import BusinessModel from './Business.js';
+import BusinessMemberModel from './BusinessMember.js';
+import PaymentModel from './Payment.js';
+import ProductModel from './Product.js';
+import ProductImageModel from './ProductImage.js';
+import ProductVariantModel from './ProductVariant.js';
+import RaffleModel from './Raffle.js';
+import RaffleTicketModel from './RaffleTicket.js';
+import SaleModel from './Sale.js';
+import SaleDetailModel from './SaleDetail.js';
+import UserModel from './User.js';
 
+const db = {};
+db.Sequelize = Sequelize;
+db.sequelize = sequelize;
 
-// =========== RELACIONES ===========
+// Initialize models
+db.Business = BusinessModel(sequelize, DataTypes);
+db.BusinessMember = BusinessMemberModel(sequelize, DataTypes);
+db.Payment = PaymentModel(sequelize, DataTypes);
+db.Product = ProductModel(sequelize, DataTypes);
+db.ProductImage = ProductImageModel(sequelize, DataTypes);
+db.ProductVariant = ProductVariantModel(sequelize, DataTypes);
+db.Raffle = RaffleModel(sequelize, DataTypes);
+db.RaffleTicket = RaffleTicketModel(sequelize, DataTypes);
+db.Sale = SaleModel(sequelize, DataTypes);
+db.SaleDetail = SaleDetailModel(sequelize, DataTypes);
+db.User = UserModel(sequelize, DataTypes);
 
-// USUARIO → DATA
-Usuario.hasMany(Cliente, { foreignKey: "usuario_id" });
-Usuario.hasMany(Producto, { foreignKey: "usuario_id" });
-Usuario.hasMany(Venta, { foreignKey: "usuario_id" });
-Usuario.hasMany(Rifa, { foreignKey: "usuario_id" });
+// --- ASOCIACIONES ---
 
-Cliente.belongsTo(Usuario, { foreignKey: "usuario_id" });
-Producto.belongsTo(Usuario, { foreignKey: "usuario_id" });
-Venta.belongsTo(Usuario, { foreignKey: "usuario_id" });
-Rifa.belongsTo(Usuario, { foreignKey: "usuario_id" });
+// Multi-tenancy (Todo pertenece a un Negocio)
+db.Business.hasMany(db.Product);
+db.Business.hasMany(db.Sale);
+db.Business.hasMany(db.Raffle);
+db.Business.hasMany(db.BusinessMember);
 
-// CLIENTES → ESTATUS
-Cliente.belongsTo(Estatus, { foreignKey: "estatus_id" });
+// Usuarios y Negocios
+db.User.hasMany(db.BusinessMember);
+db.BusinessMember.belongsTo(db.User);
+db.BusinessMember.belongsTo(db.Business);
 
-// PRODUCTOS → ESTATUS
-Producto.belongsTo(Estatus, { foreignKey: "estatus_id" });
+// Productos y sus variantes/fotos
+db.Product.hasMany(db.ProductVariant);
+db.Product.hasMany(db.ProductImage);
+db.ProductVariant.belongsTo(db.Product);
+db.ProductImage.belongsTo(db.Product);
 
-// INVENTARIO → PRODUCTO
-InventarioAtributo.belongsTo(Producto, { foreignKey: "producto_id" });
-Producto.hasMany(InventarioAtributo, { foreignKey: "producto_id" });
+// Ventas y Clientes
+db.User.hasMany(db.Sale, { as: 'Purchases', foreignKey: 'customerId' });
+db.Sale.belongsTo(db.User, { as: 'Customer', foreignKey: 'customerId' });
 
-// VENTAS → CLIENTES
-Venta.belongsTo(Cliente, { foreignKey: "cliente_id" });
+// Detalles de Venta
+db.Sale.hasMany(db.SaleDetail);
+db.SaleDetail.belongsTo(db.Sale);
+db.SaleDetail.belongsTo(db.Product);
+db.SaleDetail.belongsTo(db.ProductVariant);
 
-// VENTAS → ESTATUS
-Venta.belongsTo(Estatus, { foreignKey: "estatus_id" });
+// Pagos
+db.Sale.hasMany(db.Payment);
+db.Payment.belongsTo(db.Sale);
 
-// DETALLE_VENTA → VENTAS & PRODUCTOS
-DetalleVenta.belongsTo(Venta, { foreignKey: "venta_id" });
-DetalleVenta.belongsTo(Producto, { foreignKey: "producto_id" });
+// Rifas y Boletos
+db.Raffle.hasMany(db.RaffleTicket);
+db.RaffleTicket.belongsTo(db.Raffle);
+db.RaffleTicket.belongsTo(db.Sale);
+db.RaffleTicket.belongsTo(db.User, { as: 'Owner', foreignKey: 'customerId' });
 
-Venta.hasMany(DetalleVenta, { foreignKey: "venta_id" });
-Producto.hasMany(DetalleVenta, { foreignKey: "producto_id" });
-
-// BOLETOS → RIFAS, CLIENTES, VENTAS
-Boleto.belongsTo(Rifa, { foreignKey: "rifa_id" });
-Boleto.belongsTo(Cliente, { foreignKey: "cliente_id" });
-Boleto.belongsTo(Venta, { foreignKey: "venta_id" });
-
-// EXPORTAR
-export {
-  sequelize,
-  Estatus,
-  Cliente,
-  Producto,
-  InventarioAtributo,
-  Venta,
-  DetalleVenta,
-  Rifa,
-  Boleto,
-  Usuario
-};
+export default db;

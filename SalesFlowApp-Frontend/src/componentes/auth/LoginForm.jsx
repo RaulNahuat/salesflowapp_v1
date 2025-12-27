@@ -1,14 +1,14 @@
 import React, { useState } from 'react';
 import { useAuth } from '../../context/authContext';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { HiMail, HiLockClosed } from "react-icons/hi";
-
 
 const LoginForm = () => {
     const [correo, setCorreo] = useState('');
     const [password, setPassword] = useState('');
     const [uiError, setUiError] = useState('');
     const { signIn, isLoading, error } = useAuth();
+    const navigate = useNavigate();
 
     const handleSubmit = async (e) => {
         e.preventDefault();
@@ -16,15 +16,13 @@ const LoginForm = () => {
 
         try {
             await signIn(correo, password);
+            navigate('/');
         } catch (error) {
-            // El error ya se maneja en el contexto, pero podemos setear un uiError local si queremos feedback inmediato duplicado,
-            // o simplemente dejar que el contexto maneje el error global.
-            // Aquí mantenemos la lógica local como fallback o complemento.
-            if (!error) setUiError('Error al iniciar sesión. Verifica tus credenciales');
+            console.error('Error al iniciar sesión:', error);
+            if (!error) setUiError(error.message || 'Error al iniciar sesión. Verifica tus credenciales');
         }
     };
 
-    // Combinar error global con error local, priorizando el global si existe
     const displayError = error || uiError;
 
     return (
@@ -34,7 +32,7 @@ const LoginForm = () => {
                     SalesFlowApp
                 </h2>
                 <p className="text-center text-gray-500 mb-8">
-                    Inicia sesión para administrar tus ventas
+                    Inicia sesión para continuar
                 </p>
 
                 {displayError && (
@@ -58,7 +56,6 @@ const LoginForm = () => {
                             disabled={isLoading}
                         />
                     </div>
-
                     <div className="relative">
                         <HiLockClosed className="absolute left-3 top-3 text-gray-400" size={20} />
                         <input
@@ -84,9 +81,6 @@ const LoginForm = () => {
                 </form>
 
                 <div className="flex flex-col gap-2">
-                    <p className='text-center text-gray-400 text-sm mt-3'>
-                        ¿Olvidaste tu contraseña? <a href="#" className="text-indigo-600 hover:underline">Recupérala aquí</a>
-                    </p>
                     <p className='text-center text-gray-400 text-sm mt-3'>
                         ¿No tienes una cuenta? <Link to="/register" className="text-indigo-600 hover:underline">Regístrate aquí</Link>
                     </p>
