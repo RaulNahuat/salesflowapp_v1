@@ -5,7 +5,7 @@ const Product = db.Product;
 // Create and Save a new Product
 export const createProduct = async (req, res) => {
     try {
-        const { name, description, costPrice, sellingPrice, stock, status, imageUrl } = req.body;
+        const { name, description, costPrice, sellingPrice, stock, status, imageUrl, variants } = req.body;
         const businessId = req.businessId;
 
         // Validate request
@@ -21,21 +21,41 @@ export const createProduct = async (req, res) => {
             });
         }
 
+        // Calculate total stock from variants if they exist
+        let totalStock = stock || 0;
+        if (variants && variants.length > 0) {
+            totalStock = variants.reduce((sum, v) => sum + (parseInt(v.stock) || 0), 0);
+        }
+
         const product = await Product.create({
             name,
             description,
             costPrice,
             sellingPrice,
-            stock,
-            sellingPrice,
-            stock,
+            stock: totalStock,
             status,
             imageUrl,
             BusinessId: businessId
         });
 
-        res.status(201).json(product);
+        // Create variants if provided
+        if (variants && variants.length > 0) {
+            const variantsToCreate = variants.map(v => ({
+                ...v,
+                ProductId: product.id
+            }));
+            await db.ProductVariant.bulkCreate(variantsToCreate);
+        }
+
+        // Fetch product with variants to return
+        const productWithVariants = await Product.findOne({
+            where: { id: product.id },
+            include: [{ association: 'ProductVariants', required: false }]
+        });
+
+        res.status(201).json(productWithVariants);
     } catch (error) {
+        console.error(error);
         res.status(500).json({
             message: error.message || "Error al crear el producto"
         });
@@ -47,10 +67,18 @@ export const getProducts = async (req, res) => {
     try {
         const businessId = req.businessId;
         const products = await Product.findAll({
-            where: { BusinessId: businessId }
+            where: { BusinessId: businessId },
+            include: [{
+                association: 'ProductVariants',
+                required: false // LEFT JOIN - products without variants are OK
+            }],
+            order: [['createdAt', 'DESC']]
         });
         res.json(products);
     } catch (error) {
+        console.error("❌ ERROR in getProducts:");
+        console.error("Message:", error.message);
+        console.error("Stack:", error.stack);
         res.status(500).json({
             message: error.message || "Error al obtener los productos"
         });
@@ -64,7 +92,11 @@ export const getProduct = async (req, res) => {
 
     try {
         const product = await Product.findOne({
-            where: { id: id, BusinessId: businessId }
+            where: { id: id, BusinessId: businessId },
+            include: [{
+                association: 'ProductVariants',
+                required: false
+            }]
         });
 
         if (product) {
@@ -87,22 +119,54 @@ export const updateProduct = async (req, res) => {
     const businessId = req.businessId;
 
     try {
-        const [num] = await Product.update(req.body, {
+        const { variants, ...productData } = req.body;
+
+        // Calculate total stock from variants if provided
+        if (variants && variants.length > 0) {
+            productData.stock = variants.reduce((sum, v) => sum + (parseInt(v.stock) || 0), 0);
+        }
+
+        // Update main product data
+        const [num] = await Product.update(productData, {
             where: { id: id, BusinessId: businessId }
         });
 
-        if (num == 1) {
-            res.json({
-                message: "Producto actualizado correctamente."
-            });
-        } else {
-            res.json({
-                message: `No se puede actualizar el producto con id=${id}. Tal vez no se encontró o el req.body está vacío.`
+        if (num !== 1) {
+            return res.status(404).json({
+                message: `No se puede actualizar el producto con id=${id}. Producto no encontrado.`
             });
         }
+
+        // Handle variants if provided
+        if (variants) {
+            // Delete existing variants
+            await db.ProductVariant.destroy({
+                where: { ProductId: id }
+            });
+
+            // Create new variants
+            if (variants.length > 0) {
+                const variantsToCreate = variants.map(v => ({
+                    ...v,
+                    ProductId: id
+                }));
+                await db.ProductVariant.bulkCreate(variantsToCreate);
+            }
+        }
+
+        // Fetch updated product with variants
+        const updatedProduct = await Product.findOne({
+            where: { id: id },
+            include: [{ association: 'ProductVariants', required: false }]
+        });
+
+        res.json(updatedProduct);
     } catch (error) {
+        console.error("❌ ERROR in updateProduct:");
+        console.error("Message:", error.message);
+        console.error("Stack:", error.stack);
         res.status(500).json({
-            message: "Error actualizando el producto con id=" + id
+            message: error.message || "Error actualizando el producto con id=" + id
         });
     }
 };

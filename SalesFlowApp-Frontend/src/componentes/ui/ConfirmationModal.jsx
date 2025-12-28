@@ -1,8 +1,15 @@
 import React from 'react';
 import { FaExclamationTriangle, FaTimes } from 'react-icons/fa';
 
-const ConfirmationModal = ({ isOpen, onClose, onConfirm, title, message, confirmText = "Confirmar", cancelText = "Cancelar", isDatgerous = false }) => {
+const ConfirmationModal = ({ isOpen, onClose, onConfirm, onCancel, title, message, confirmText = "Confirmar", cancelText = "Cancelar", isDatgerous = false }) => {
     if (!isOpen) return null;
+
+    const handleCancel = () => {
+        if (onCancel) {
+            onCancel();
+        }
+        onClose();
+    };
 
     return (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm animate-fadeIn">
@@ -29,10 +36,10 @@ const ConfirmationModal = ({ isOpen, onClose, onConfirm, title, message, confirm
                 </div>
 
                 {/* Footer */}
-                <div className="px-6 py-4 bg-gray-50 flex justify-end gap-3">
+                <div className="px-4 sm:px-6 py-4 bg-gray-50 flex flex-col sm:flex-row justify-end gap-3">
                     <button
-                        onClick={onClose}
-                        className="px-4 py-2 text-gray-700 font-semibold hover:bg-gray-200 rounded-lg transition-colors"
+                        onClick={handleCancel}
+                        className="w-full sm:w-auto px-4 py-2.5 text-gray-700 font-semibold hover:bg-gray-200 rounded-lg transition-colors order-2 sm:order-1"
                     >
                         {cancelText}
                     </button>
@@ -41,9 +48,9 @@ const ConfirmationModal = ({ isOpen, onClose, onConfirm, title, message, confirm
                             onConfirm();
                             onClose();
                         }}
-                        className={`px-4 py-2 text-white font-bold rounded-lg shadow-md transition-all transform hover:-translate-y-0.5 ${isDatgerous
-                                ? 'bg-red-600 hover:bg-red-700 shadow-red-500/30'
-                                : 'bg-blue-600 hover:bg-blue-700 shadow-blue-500/30'
+                        className={`w-full sm:w-auto px-4 py-2.5 text-white font-bold rounded-lg shadow-md transition-all transform hover:-translate-y-0.5 order-1 sm:order-2 ${isDatgerous
+                            ? 'bg-red-600 hover:bg-red-700 shadow-red-500/30'
+                            : 'bg-blue-600 hover:bg-blue-700 shadow-blue-500/30'
                             }`}
                     >
                         {confirmText}

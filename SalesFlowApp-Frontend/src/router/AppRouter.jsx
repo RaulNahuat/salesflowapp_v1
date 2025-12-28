@@ -17,6 +17,7 @@ import ClientList from '../componentes/clients/ClientList';
 import ClientForm from '../componentes/clients/ClientForm';
 import WorkerList from '../componentes/workers/WorkerList';
 import WorkerForm from '../componentes/workers/WorkerForm';
+import POSPage from '../pages/sales/POSPage';
 
 const ProtectedLayout = ({ children }) => {
     return (
@@ -53,6 +54,15 @@ const AppRouter = () => {
                 <Route path="/dashboard" element={
                     <ProtectedLayout>
                         <Dashboard />
+                    </ProtectedLayout>
+                } />
+
+                {/* POS */}
+                <Route path="/pos" element={
+                    <ProtectedLayout>
+                        <RequirePermission permission="pos">
+                            <POSPage />
+                        </RequirePermission>
                     </ProtectedLayout>
                 } />
 

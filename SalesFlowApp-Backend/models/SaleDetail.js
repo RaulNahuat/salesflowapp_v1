@@ -9,6 +9,10 @@ export default (sequelize, DataTypes) => {
             type: DataTypes.INTEGER,
             allowNull: false
         },
+        subtotal: {
+            type: DataTypes.DECIMAL(10, 2),
+            allowNull: false
+        },
         unitPrice: {
             type: DataTypes.DECIMAL(10, 2),
             allowNull: false

@@ -48,14 +48,19 @@ db.BusinessMember.belongsTo(db.User);
 db.BusinessMember.belongsTo(db.Business);
 
 // Productos y sus variantes/fotos
-db.Product.hasMany(db.ProductVariant);
+db.Product.hasMany(db.ProductVariant, { foreignKey: 'ProductId' });
 db.Product.hasMany(db.ProductImage);
-db.ProductVariant.belongsTo(db.Product);
+db.ProductVariant.belongsTo(db.Product, { foreignKey: 'ProductId' });
 db.ProductImage.belongsTo(db.Product);
 
 // Ventas y Clientes
-db.User.hasMany(db.Sale, { as: 'Purchases', foreignKey: 'customerId' });
-db.Sale.belongsTo(db.User, { as: 'Customer', foreignKey: 'customerId' });
+// Ventas y Clientes
+db.Client.hasMany(db.Sale, { foreignKey: 'clientId' });
+db.Sale.belongsTo(db.Client, { foreignKey: 'clientId' });
+
+// Ventas y Vendedores (BusinessMembers)
+db.BusinessMember.hasMany(db.Sale, { foreignKey: 'createdById' });
+db.Sale.belongsTo(db.BusinessMember, { as: 'Seller', foreignKey: 'createdById' });
 
 // Detalles de Venta
 db.Sale.hasMany(db.SaleDetail);

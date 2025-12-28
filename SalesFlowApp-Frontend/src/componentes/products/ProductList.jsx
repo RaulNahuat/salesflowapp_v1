@@ -116,7 +116,8 @@ const ProductList = () => {
                         </div>
                     </div>
 
-                    <div className="overflow-x-auto">
+                    {/* Desktop Table - hidden on mobile */}
+                    <div className="hidden md:block overflow-x-auto">
                         <table className="w-full text-left">
                             <thead className="bg-gray-50 text-gray-600 text-xs uppercase font-semibold">
                                 <tr>
@@ -158,15 +159,13 @@ const ProductList = () => {
                                             <div className="flex items-center justify-center space-x-2">
                                                 <Link
                                                     to={`/products/edit/${product.id}`}
-                                                    className="p-2 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
-                                                    title="Editar"
+                                                    className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
                                                 >
                                                     <FaEdit />
                                                 </Link>
                                                 <button
                                                     onClick={() => confirmDelete(product.id)}
-                                                    className="p-2 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
-                                                    title="Eliminar"
+                                                    className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors"
                                                 >
                                                     <FaTrash />
                                                 </button>
@@ -176,12 +175,65 @@ const ProductList = () => {
                                 ))}
                             </tbody>
                         </table>
-                        {filteredProducts.length === 0 && searchTerm && (
-                            <div className="p-8 text-center text-gray-500">
-                                No se encontraron productos con "{searchTerm}"
-                            </div>
-                        )}
                     </div>
+
+                    {/* Mobile Cards - hidden on desktop */}
+                    <div className="md:hidden divide-y divide-gray-100">
+                        {filteredProducts.map((product) => (
+                            <div key={product.id} className="p-4 hover:bg-gray-50/50 transition-colors">
+                                <div className="flex items-start gap-3">
+                                    {/* Image */}
+                                    <div className="h-16 w-16 rounded-lg bg-gray-100 flex items-center justify-center text-gray-400 flex-shrink-0">
+                                        {product.imageUrl ? (
+                                            <img src={product.imageUrl} alt="" className="h-full w-full object-cover rounded-lg" />
+                                        ) : (
+                                            <FaBox className="text-2xl" />
+                                        )}
+                                    </div>
+
+                                    {/* Content */}
+                                    <div className="flex-1 min-w-0">
+                                        <h3 className="font-bold text-gray-900 mb-1">{product.name}</h3>
+                                        {product.description && (
+                                            <p className="text-xs text-gray-500 mb-2 line-clamp-2">{product.description}</p>
+                                        )}
+
+                                        {/* Info Row */}
+                                        <div className="flex items-center gap-3 mb-3">
+                                            <span className={`px-2.5 py-1 rounded-full text-xs font-bold ${product.stock > 10 ? 'bg-green-100 text-green-700' :
+                                                product.stock > 0 ? 'bg-yellow-100 text-yellow-700' : 'bg-red-100 text-red-700'
+                                                }`}>
+                                                {product.stock} unids.
+                                            </span>
+                                            <span className="font-bold text-gray-900">
+                                                ${parseFloat(product.sellingPrice).toFixed(2)}
+                                            </span>
+                                        </div>
+
+                                        {/* Actions */}
+                                        <div className="flex gap-2">
+                                            <Link
+                                                to={`/products/edit/${product.id}`}
+                                                className="flex-1 flex items-center justify-center gap-2 px-3 py-2 text-blue-600 bg-blue-50 hover:bg-blue-100 rounded-lg transition-colors text-sm font-medium"
+                                            >
+                                                <FaEdit /> Editar
+                                            </Link>
+                                            <button
+                                                onClick={() => confirmDelete(product.id)}
+                                                className="flex-1 flex items-center justify-center gap-2 px-3 py-2 text-red-600 bg-red-50 hover:bg-red-100 rounded-lg transition-colors text-sm font-medium"
+                                            >
+                                                <FaTrash /> Eliminar
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        ))}
+                    </div>    {filteredProducts.length === 0 && searchTerm && (
+                        <div className="p-8 text-center text-gray-500">
+                            No se encontraron productos con "{searchTerm}"
+                        </div>
+                    )}
                 </div>
             )}
             {/* Modal de Confirmación */}

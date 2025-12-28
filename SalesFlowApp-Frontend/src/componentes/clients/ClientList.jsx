@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import clientApi from '../../services/clientApi';
-import { FaUser, FaPlus, FaSearch, FaEdit, FaTrash, FaExclamationTriangle, FaPhone, FaEnvelope } from 'react-icons/fa';
+import { FaUser, FaPlus, FaSearch, FaEdit, FaTrash, FaExclamationTriangle, FaPhone, FaEnvelope, FaMapMarkerAlt } from 'react-icons/fa';
 import ConfirmationModal from '../ui/ConfirmationModal';
 import { toast } from 'react-hot-toast';
 
@@ -120,7 +120,8 @@ const ClientList = () => {
                         </div>
                     </div>
 
-                    <div className="overflow-x-auto">
+                    {/* Desktop Table */}
+                    <div className="hidden md:block overflow-x-auto">
                         <table className="w-full text-left">
                             <thead className="bg-gray-50 text-gray-600 text-xs uppercase font-semibold">
                                 <tr>
@@ -168,14 +169,14 @@ const ClientList = () => {
                                             <div className="flex items-center justify-center space-x-2">
                                                 <Link
                                                     to={`/clients/edit/${client.id}`}
-                                                    className="p-2 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
+                                                    className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
                                                     title="Editar"
                                                 >
                                                     <FaEdit />
                                                 </Link>
                                                 <button
                                                     onClick={() => confirmDelete(client.id)}
-                                                    className="p-2 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                                                    className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors"
                                                     title="Eliminar"
                                                 >
                                                     <FaTrash />
@@ -186,6 +187,69 @@ const ClientList = () => {
                                 ))}
                             </tbody>
                         </table>
+                    </div>
+
+                    {/* Mobile Cards */}
+                    <div className="md:hidden divide-y divide-gray-100">
+                        {filteredClients.map((client) => (
+                            <div key={client.id} className="p-4 hover:bg-gray-50/50 transition-colors">
+                                <div className="flex items-start gap-3">
+                                    {/* Avatar */}
+                                    <div className="h-12 w-12 rounded-full bg-indigo-100 text-indigo-600 flex items-center justify-center font-bold text-lg flex-shrink-0">
+                                        {client.firstName.charAt(0)}
+                                    </div>
+
+                                    {/* Content */}
+                                    <div className="flex-1 min-w-0">
+                                        <h3 className="font-bold text-gray-900 mb-2">
+                                            {client.firstName} {client.lastName}
+                                        </h3>
+
+                                        {/* Contact Info */}
+                                        <div className="text-sm text-gray-600 space-y-1 mb-2">
+                                            {client.phone && (
+                                                <div className="flex items-center gap-2">
+                                                    <FaPhone className="text-gray-400 text-xs" />
+                                                    <a href={`tel:${client.phone}`} className="hover:text-blue-600">
+                                                        {client.phone}
+                                                    </a>
+                                                </div>
+                                            )}
+                                            {client.email && (
+                                                <div className="flex items-center gap-2">
+                                                    <FaEnvelope className="text-gray-400 text-xs" />
+                                                    <a href={`mailto:${client.email}`} className="hover:text-blue-600 truncate">
+                                                        {client.email}
+                                                    </a>
+                                                </div>
+                                            )}
+                                            {client.address && (
+                                                <div className="flex items-start gap-2">
+                                                    <FaMapMarkerAlt className="text-gray-400 text-xs mt-0.5" />
+                                                    <span className="text-xs">{client.address}</span>
+                                                </div>
+                                            )}
+                                        </div>
+
+                                        {/* Actions */}
+                                        <div className="flex gap-2 mt-3">
+                                            <Link
+                                                to={`/clients/edit/${client.id}`}
+                                                className="flex-1 flex items-center justify-center gap-2 px-3 py-2 text-blue-600 bg-blue-50 hover:bg-blue-100 rounded-lg transition-colors text-sm font-medium"
+                                            >
+                                                <FaEdit /> Editar
+                                            </Link>
+                                            <button
+                                                onClick={() => confirmDelete(client.id)}
+                                                className="flex-1 flex items-center justify-center gap-2 px-3 py-2 text-red-600 bg-red-50 hover:bg-red-100 rounded-lg transition-colors text-sm font-medium"
+                                            >
+                                                <FaTrash /> Eliminar
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        ))}
                     </div>
                 </div>
             )}

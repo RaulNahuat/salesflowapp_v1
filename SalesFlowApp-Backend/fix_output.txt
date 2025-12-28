@@ -1,0 +1,14 @@
+﻿[dotenv@17.2.3] injecting env (11) from .env -- tip: 🗂️ backup and recover secrets: https://dotenvx.com/ops
+--- Checking Sales Table Columns ---
+Current Columns: [
+  'id',            'total',
+  'status',        'uuidTicket',
+  'paymentMethod', 'deliveryPoint',
+  'deliveryDate',  'notes',
+  'BusinessId',    'clientId',
+  'createdById',   'createdAt',
+  'updatedAt'
+]
+createdAt already exists.
+updatedAt already exists.
+--- Verification Complete ---

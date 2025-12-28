@@ -79,6 +79,9 @@ app.use('/api/clients', clientRoutes);
 import workerRoutes from './routes/workerRoutes.js';
 app.use('/api/workers', workerRoutes);
 
+import saleRoutes from './routes/saleRoutes.js';
+app.use('/api/sales', saleRoutes);
+
 import { protect } from './middlewares/authMiddleware.js';
 app.post('/api/protected', protect, (req, res) => {
     res.status(200).json({

@@ -98,6 +98,7 @@ const login = async (email, password) => {
         let businessId = null;
         let role = null;
         let permissions = null;
+        let businessMemberId = null;
 
         if (member) {
             if (member.status === 'inactive') {
@@ -106,9 +107,10 @@ const login = async (email, password) => {
             businessId = member.BusinessId;
             role = member.role;
             permissions = member.permissions;
+            businessMemberId = member.id;
         }
 
-        const payload = { userId: user.id, businessId, role };
+        const payload = { userId: user.id, businessId, role, businessMemberId };
 
         const token = jwt.sign(
             payload,
