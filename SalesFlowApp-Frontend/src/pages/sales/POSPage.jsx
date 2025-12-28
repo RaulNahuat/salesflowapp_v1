@@ -220,55 +220,99 @@ const POSPage = () => {
 
     // --- STEP 1: CLIENT SELECTION ---
     if (step === 1) {
-        return (
-            <div className="max-w-4xl mx-auto p-4 min-h-screen flex flex-col justify-center">
-                <h1 className="text-3xl font-extrabold mb-8 text-gray-800 text-center">Iniciar Venta</h1>
+        const filteredClients = clients.filter(c =>
+            c.firstName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+            c.lastName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+            (c.phone && c.phone.includes(searchTerm))
+        );
 
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    {/* Option A: Casual */}
+        return (
+            <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-indigo-50 flex items-start justify-center p-4 pt-8">
+                <div className="w-full max-w-2xl">
+                    {/* Header */}
+                    <div className="text-center mb-4">
+                        <h1 className="text-3xl sm:text-4xl font-bold text-gray-900 mb-1">Iniciar Venta</h1>
+                        <p className="text-gray-600 text-sm">Selecciona un cliente para comenzar</p>
+                    </div>
+
+                    {/* Casual Client Button - Compact */}
                     <button
                         onClick={handleCasualClient}
-                        className="bg-gradient-to-br from-blue-500 to-blue-600 text-white p-8 rounded-2xl shadow-lg hover:shadow-xl hover:-translate-y-1 transition-all flex flex-col items-center justify-center gap-4 group"
+                        className="w-full bg-gradient-to-r from-blue-500 to-blue-600 text-white p-4 rounded-xl shadow-md hover:shadow-lg hover:-translate-y-0.5 transition-all flex items-center justify-between group mb-4"
                     >
-                        <div className="w-20 h-20 bg-white/20 rounded-full flex items-center justify-center backdrop-blur-sm group-hover:scale-110 transition-transform">
-                            <FaUser className="text-4xl" />
+                        <div className="flex items-center gap-3">
+                            <div className="w-12 h-12 bg-white/20 rounded-full flex items-center justify-center backdrop-blur-sm group-hover:scale-110 transition-transform">
+                                <FaUser className="text-xl" />
+                            </div>
+                            <div className="text-left">
+                                <p className="font-bold text-lg">Cliente Casual</p>
+                                <p className="text-blue-100 text-xs">Venta rápida sin registro</p>
+                            </div>
                         </div>
-                        <span className="text-xl font-bold">Cliente Casual</span>
-                        <span className="text-blue-100 text-sm">Venta rápida sin registro</span>
+                        <FaArrowRight className="text-white/80 group-hover:text-white group-hover:translate-x-1 transition-all" />
                     </button>
 
-                    {/* Option B: Registered */}
-                    <div className="bg-white p-6 rounded-2xl shadow-lg border border-gray-100 flex flex-col h-[400px]">
-                        <h2 className="text-xl font-bold mb-4 text-gray-700 flex items-center gap-2">
-                            <FaSearch className="text-blue-500" /> Buscar Cliente
-                        </h2>
-                        <input
-                            type="text"
-                            placeholder="Nombre o teléfono..."
-                            className="w-full p-4 bg-gray-50 rounded-xl border-none focus:ring-2 focus:ring-blue-500 mb-4"
-                            onChange={(e) => setSearchTerm(e.target.value)}
-                        />
-                        <div className="flex-1 overflow-y-auto space-y-2 pr-2">
-                            {clients.filter(c =>
-                                c.firstName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                                c.lastName.toLowerCase().includes(searchTerm.toLowerCase())
-                            ).map(client => (
-                                <div
-                                    key={client.id}
-                                    onClick={() => handleClientSelect(client)}
-                                    className="p-3 border border-gray-100 rounded-xl hover:bg-blue-50 cursor-pointer flex items-center justify-between group transition-all"
-                                >
-                                    <div className="flex items-center gap-3">
-                                        <div className="w-8 h-8 rounded-full bg-gray-200 flex items-center justify-center text-gray-500 font-bold text-sm">
-                                            {client.firstName.charAt(0)}
+                    {/* Registered Clients - Larger */}
+                    <div className="bg-white p-6 rounded-2xl shadow-lg border border-gray-100 flex flex-col">
+                        {/* Header with counter */}
+                        <div className="flex items-center justify-between mb-4">
+                            <h2 className="text-xl font-bold text-gray-800 flex items-center gap-2">
+                                <FaSearch className="text-blue-500" /> Clientes Registrados
+                            </h2>
+                            <div className="bg-blue-50 text-blue-600 px-3 py-1 rounded-full text-xs font-bold">
+                                {clients.length} {clients.length === 1 ? 'cliente' : 'clientes'}
+                            </div>
+                        </div>
+
+                        {/* Search Input */}
+                        <div className="relative mb-4">
+                            <FaSearch className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" />
+                            <input
+                                type="text"
+                                placeholder="Nombre, apellido o teléfono..."
+                                value={searchTerm}
+                                className="w-full pl-11 pr-4 py-3 bg-gray-50 rounded-xl border border-gray-200 focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all"
+                                onChange={(e) => setSearchTerm(e.target.value)}
+                            />
+                        </div>
+
+                        {/* Results counter */}
+                        {searchTerm && (
+                            <p className="text-xs text-gray-500 mb-2">
+                                {filteredClients.length} {filteredClients.length === 1 ? 'resultado' : 'resultados'}
+                            </p>
+                        )}
+
+                        {/* Client List - Bigger */}
+                        <div className="overflow-y-auto space-y-2 pr-2 max-h-[400px]">
+                            {filteredClients.length > 0 ? (
+                                filteredClients.map(client => (
+                                    <div
+                                        key={client.id}
+                                        onClick={() => handleClientSelect(client)}
+                                        className="p-4 border border-gray-100 rounded-xl hover:bg-blue-50 hover:border-blue-200 cursor-pointer flex items-center justify-between group transition-all"
+                                    >
+                                        <div className="flex items-center gap-3">
+                                            <div className="w-12 h-12 rounded-full bg-gradient-to-br from-blue-500 to-indigo-500 flex items-center justify-center text-white font-bold shadow-sm">
+                                                {client.firstName.charAt(0)}{client.lastName.charAt(0)}
+                                            </div>
+                                            <div>
+                                                <p className="font-bold text-gray-800">{client.firstName} {client.lastName}</p>
+                                                {client.phone && (
+                                                    <p className="text-xs text-gray-500">{client.phone}</p>
+                                                )}
+                                            </div>
                                         </div>
-                                        <div>
-                                            <p className="font-bold text-gray-800 text-sm">{client.firstName} {client.lastName}</p>
-                                        </div>
+                                        <FaArrowRight className="text-gray-300 group-hover:text-blue-500 transition-colors" />
                                     </div>
-                                    <FaArrowRight className="text-gray-300 group-hover:text-blue-500" />
+                                ))
+                            ) : (
+                                <div className="text-center py-12 text-gray-400">
+                                    <FaUser className="mx-auto text-5xl mb-3 opacity-50" />
+                                    <p className="font-medium">No se encontraron clientes</p>
+                                    <p className="text-xs mt-1">Intenta con otro término de búsqueda</p>
                                 </div>
-                            ))}
+                            )}
                         </div>
                     </div>
                 </div>
@@ -523,8 +567,8 @@ const POSPage = () => {
                                                 onClick={() => !isOutOfStock && handleVariantSelect(variant)}
                                                 disabled={isOutOfStock}
                                                 className={`w-full flex items-center justify-between p-3 rounded-xl border transition-all ${isOutOfStock
-                                                        ? 'border-gray-100 bg-gray-50 opacity-60 cursor-not-allowed'
-                                                        : 'border-gray-200 hover:border-blue-500 hover:bg-blue-50 cursor-pointer'
+                                                    ? 'border-gray-100 bg-gray-50 opacity-60 cursor-not-allowed'
+                                                    : 'border-gray-200 hover:border-blue-500 hover:bg-blue-50 cursor-pointer'
                                                     }`}
                                             >
                                                 <div className="text-left">
@@ -537,10 +581,10 @@ const POSPage = () => {
                                                     )}
                                                 </div>
                                                 <div className={`text-xs font-bold px-2 py-1 rounded-md ${isOutOfStock
-                                                        ? 'bg-red-100 text-red-700'
-                                                        : availableStock <= 3
-                                                            ? 'bg-yellow-100 text-yellow-700'
-                                                            : 'bg-green-100 text-green-700'
+                                                    ? 'bg-red-100 text-red-700'
+                                                    : availableStock <= 3
+                                                        ? 'bg-yellow-100 text-yellow-700'
+                                                        : 'bg-green-100 text-green-700'
                                                     }`}>
                                                     {availableStock} disp.
                                                 </div>

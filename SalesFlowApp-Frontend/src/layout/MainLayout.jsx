@@ -83,7 +83,7 @@ const MainLayout = ({ children }) => {
                         <div className="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center mr-3">
                             <span className="text-white font-bold text-xl">S</span>
                         </div>
-                        <span className="text-xl font-bold text-gray-800 tracking-tight">SalesFlow</span>
+                        <span className="text-xl font-bold text-gray-800 tracking-tight">SalesFlowApp</span>
                     </div>
 
                     {/* Navigation */}
@@ -137,7 +137,7 @@ const MainLayout = ({ children }) => {
                     >
                         <FaBars size={24} />
                     </button>
-                    <span className="font-bold text-gray-800">SalesFlow</span>
+                    <span className="font-bold text-gray-800">SalesFlowApp</span>
                     <div className="w-8"></div> {/* Spacer for center alignment */}
                 </header>
 

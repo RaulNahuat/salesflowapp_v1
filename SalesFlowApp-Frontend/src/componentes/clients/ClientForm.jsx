@@ -67,9 +67,18 @@ const ClientForm = () => {
             }
             navigate('/clients');
         } catch (err) {
-            const msg = err.message || 'Error al guardar el cliente';
+            let msg = err.message || 'Error al guardar el cliente';
+
+            // Check if it's a duplicate phone error
+            if (err.response?.status === 409 && err.response?.data?.existingClient) {
+                const existing = err.response.data.existingClient;
+                msg = `El teléfono ${existing.phone} ya está registrado para ${existing.firstName} ${existing.lastName}`;
+                toast.error(msg, { duration: 5000 });
+            } else {
+                toast.error(msg);
+            }
+
             setError(msg);
-            toast.error(msg);
             setLoading(false);
         }
     };

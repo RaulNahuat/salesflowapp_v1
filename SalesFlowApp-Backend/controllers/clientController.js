@@ -14,6 +14,28 @@ export const createClient = async (req, res) => {
             });
         }
 
+        // Check if phone already exists for this business
+        if (phone) {
+            const existingClient = await Client.findOne({
+                where: {
+                    phone: phone,
+                    BusinessId: businessId
+                }
+            });
+
+            if (existingClient) {
+                return res.status(409).json({
+                    message: `Ya existe un cliente con el teléfono ${phone}`,
+                    existingClient: {
+                        id: existingClient.id,
+                        firstName: existingClient.firstName,
+                        lastName: existingClient.lastName,
+                        phone: existingClient.phone
+                    }
+                });
+            }
+        }
+
         const client = await Client.create({
             firstName,
             lastName,
@@ -94,6 +116,31 @@ export const updateClient = async (req, res) => {
     const businessId = req.businessId;
 
     try {
+        const { phone } = req.body;
+
+        // Check if phone already exists for another client in this business
+        if (phone) {
+            const existingClient = await Client.findOne({
+                where: {
+                    phone: phone,
+                    BusinessId: businessId,
+                    id: { [db.Sequelize.Op.ne]: id } // Exclude current client
+                }
+            });
+
+            if (existingClient) {
+                return res.status(409).json({
+                    message: `Ya existe otro cliente con el teléfono ${phone}`,
+                    existingClient: {
+                        id: existingClient.id,
+                        firstName: existingClient.firstName,
+                        lastName: existingClient.lastName,
+                        phone: existingClient.phone
+                    }
+                });
+            }
+        }
+
         const [num] = await Client.update(req.body, {
             where: { id: id, BusinessId: businessId }
         });
