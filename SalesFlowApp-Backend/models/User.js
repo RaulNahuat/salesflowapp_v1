@@ -19,6 +19,9 @@ export default (sequelize, DataTypes) => {
             allowNull: false
         },
         password: { type: DataTypes.STRING }
+    }, {
+        timestamps: true,
+        paranoid: true
     });
 
     User.prototype.comparePassword = async function (password) {

@@ -30,9 +30,9 @@ const ConfirmationModal = ({ isOpen, onClose, onConfirm, onCancel, title, messag
 
                 {/* Body */}
                 <div className="p-6">
-                    <p className="text-gray-600 leading-relaxed">
+                    <div className="text-gray-600 leading-relaxed">
                         {message}
-                    </p>
+                    </div>
                 </div>
 
                 {/* Footer */}

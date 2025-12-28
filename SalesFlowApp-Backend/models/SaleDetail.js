@@ -17,5 +17,8 @@ export default (sequelize, DataTypes) => {
             type: DataTypes.DECIMAL(10, 2),
             allowNull: false
         }
+    }, {
+        timestamps: true,
+        paranoid: true
     });
 };

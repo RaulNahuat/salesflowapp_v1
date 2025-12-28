@@ -116,7 +116,8 @@ export const getSales = async (req, res) => {
             include: [
                 {
                     model: Client,
-                    attributes: ['firstName', 'lastName']
+                    attributes: ['firstName', 'lastName', 'deletedAt'],
+                    paranoid: false
                 },
                 {
                     model: BusinessMember,
@@ -125,7 +126,11 @@ export const getSales = async (req, res) => {
                 },
                 {
                     model: SaleDetail,
-                    include: [{ model: Product, attributes: ['name'] }]
+                    include: [{
+                        model: Product,
+                        attributes: ['name', 'deletedAt'],
+                        paranoid: false
+                    }]
                 }
             ],
             order: [['createdAt', 'DESC']],

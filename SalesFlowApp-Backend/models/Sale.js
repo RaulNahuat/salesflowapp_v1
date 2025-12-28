@@ -40,5 +40,8 @@ export default (sequelize, DataTypes) => {
             allowNull: false,
             defaultValue: DataTypes.NOW
         }
+    }, {
+        timestamps: true,
+        paranoid: true
     });
 };

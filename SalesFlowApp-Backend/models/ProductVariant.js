@@ -17,5 +17,8 @@ export default (sequelize, DataTypes) => {
         sku: {
             type: DataTypes.STRING
         }
+    }, {
+        timestamps: true,
+        paranoid: true
     });
 };

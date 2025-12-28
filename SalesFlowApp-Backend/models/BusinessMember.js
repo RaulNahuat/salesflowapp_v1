@@ -25,5 +25,8 @@ export default (sequelize, DataTypes) => {
             type: DataTypes.ENUM('active', 'inactive'),
             defaultValue: 'active'
         }
+    }, {
+        timestamps: true,
+        paranoid: true
     });
 };

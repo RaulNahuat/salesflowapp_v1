@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useMemo } from 'react';
-import { FaSearch, FaShoppingCart, FaTrash, FaUser, FaMoneyBillWave, FaBoxOpen, FaArrowLeft, FaPlus, FaMinus, FaArrowRight } from 'react-icons/fa';
+import { FaSearch, FaShoppingCart, FaTrash, FaUser, FaMoneyBillWave, FaBoxOpen, FaArrowLeft, FaPlus, FaMinus, FaArrowRight, FaWhatsapp } from 'react-icons/fa';
 import { toast } from 'react-hot-toast';
 import productApi from '../../services/productApi';
 import clientApi from '../../services/clientApi';
@@ -170,7 +170,7 @@ const POSPage = () => {
 
         setProcessing(true);
         try {
-            await saleApi.createSale({
+            const response = await saleApi.createSale({
                 items: cart,
                 clientId: selectedClient.id,
                 paymentMethod: 'cash',
@@ -178,30 +178,68 @@ const POSPage = () => {
                 notes: 'Venta en POS'
             });
 
+            const tickets = response.earnedTickets || [];
+
             toast.success('¡Venta Exitosa! 🎉', {
                 duration: 2000,
                 icon: '✅'
             });
 
-            // Reset cart but keep client and stay in step 2
+            // Prepare sharing message if there are tickets
+            let ticketMsg = "";
+            if (tickets.length > 0) {
+                ticketMsg = "\n\n🎟️ *¡Felicidades! Ganaste boletos:*";
+                tickets.forEach(rt => {
+                    ticketMsg += `\n- ${rt.raffleMotive}: *${rt.tickets.join(", ")}*`;
+                });
+            }
+
+            const totalMsg = `*Hola ${selectedClient.firstName}!* 👋\n\nTu compra en *SalesFlowApp* ha sido registrada:\nTotal: *${new Intl.NumberFormat('es-MX', { style: 'currency', currency: 'MXN' }).format(cartTotal)}*${ticketMsg}\n\n¡Gracias por tu preferencia! ✨`;
+
+            // Reset cart
             setCart([]);
             setActiveTab('products');
             setSearchTerm('');
 
-            // Refresh products
+            // Fresh products
             const updatedProds = await productApi.getProducts();
             setProducts(updatedProds.filter(p => p.stock > 0));
 
-            // Show modal asking for next action
+            // Custom Success Modal with WhatsApp option
             setModalConfig({
                 isOpen: true,
                 title: '¡Venta completada!',
-                message: `¿Deseas hacer otra venta para ${selectedClient.firstName} ${selectedClient.lastName}?`,
+                message: (
+                    <div className="space-y-4">
+                        <p>¿Deseas compartir el resumen de la venta?</p>
+                        {tickets.length > 0 && (
+                            <div className="bg-yellow-50 p-3 rounded-lg border border-yellow-200 text-sm">
+                                <p className="font-bold text-yellow-800 flex items-center gap-2 mb-1">
+                                    <FaTicketAlt /> ¡Boletos Generados!
+                                </p>
+                                {tickets.map((rt, i) => (
+                                    <p key={i} className="text-yellow-700">
+                                        {rt.raffleMotive}: <strong>{rt.tickets.join(", ")}</strong>
+                                    </p>
+                                ))}
+                            </div>
+                        )}
+                        <button
+                            onClick={() => {
+                                const url = `https://wa.me/${selectedClient.phone?.replace(/\D/g, '')}?text=${encodeURIComponent(totalMsg)}`;
+                                window.open(url, '_blank');
+                            }}
+                            className="w-full bg-green-500 text-white py-3 rounded-xl font-bold flex items-center justify-center gap-2 hover:bg-green-600 transition-colors"
+                        >
+                            <FaWhatsapp className="text-xl" /> Compartir por WhatsApp
+                        </button>
+                    </div>
+                ),
                 isDatgerous: false,
-                confirmText: 'Sí, continuar',
-                cancelText: 'Cambiar cliente',
+                confirmText: 'Siguiente Venta',
+                cancelText: 'Cerrar',
                 action: () => {
-                    // Stay with same client - do nothing, just close modal
+                    // Just close and keep client
                 },
                 onCancel: () => {
                     setSelectedClient(null);

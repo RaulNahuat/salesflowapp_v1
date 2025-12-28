@@ -166,7 +166,14 @@ const Dashboard = () => {
                                             </div>
                                             <div>
                                                 <p className="font-bold text-gray-800 text-sm">
-                                                    {sale.Client ? `${sale.Client.firstName} ${sale.Client.lastName}` : 'Cliente Casual'}
+                                                    {sale.Client ? (
+                                                        <>
+                                                            {sale.Client.firstName} {sale.Client.lastName}
+                                                            {sale.Client.deletedAt && (
+                                                                <span className="ml-1 text-[10px] text-red-500 font-normal">(Eliminado)</span>
+                                                            )}
+                                                        </>
+                                                    ) : 'Cliente Casual'}
                                                 </p>
                                                 <p className="text-xs text-gray-500">
                                                     {new Date(sale.createdAt).toLocaleDateString()} • {new Date(sale.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}

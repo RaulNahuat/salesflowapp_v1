@@ -18,6 +18,9 @@ import ClientForm from '../componentes/clients/ClientForm';
 import WorkerList from '../componentes/workers/WorkerList';
 import WorkerForm from '../componentes/workers/WorkerForm';
 import POSPage from '../pages/sales/POSPage';
+import RaffleList from '../pages/raffles/RaffleList';
+import RaffleForm from '../pages/raffles/RaffleForm';
+import RaffleDetail from '../pages/raffles/RaffleDetail';
 
 const ProtectedLayout = ({ children }) => {
     return (
@@ -63,6 +66,28 @@ const AppRouter = () => {
                         <RequirePermission permission="pos">
                             <POSPage />
                         </RequirePermission>
+                    </ProtectedLayout>
+                } />
+
+                {/* Raffles */}
+                <Route path="/raffles" element={
+                    <ProtectedLayout>
+                        <RaffleList />
+                    </ProtectedLayout>
+                } />
+                <Route path="/raffles/new" element={
+                    <ProtectedLayout>
+                        <RaffleForm />
+                    </ProtectedLayout>
+                } />
+                <Route path="/raffles/:id" element={
+                    <ProtectedLayout>
+                        <RaffleDetail />
+                    </ProtectedLayout>
+                } />
+                <Route path="/raffles/:id/edit" element={
+                    <ProtectedLayout>
+                        <RaffleForm />
                     </ProtectedLayout>
                 } />
 

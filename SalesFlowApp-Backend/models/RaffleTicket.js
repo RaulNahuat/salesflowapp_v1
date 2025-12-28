@@ -12,6 +12,14 @@ export default (sequelize, DataTypes) => {
         isWinner: {
             type: DataTypes.BOOLEAN,
             defaultValue: false
+        },
+        place: {
+            type: DataTypes.INTEGER,
+            allowNull: true,
+            comment: '1st, 2nd, or 3rd place'
         }
+    }, {
+        timestamps: true,
+        paranoid: true
     });
 };
