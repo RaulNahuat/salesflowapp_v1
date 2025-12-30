@@ -1,7 +1,7 @@
 import { sequelize } from '../config/db.js';
 import db from '../models/index.js';
 
-const { Sale, SaleDetail, Product, Client, BusinessMember, User, ProductVariant } = db;
+const { Sale, SaleDetail, Product, Client, BusinessMember, User, ProductVariant, ReceiptToken } = db;
 
 export const createSale = async (req, res) => {
     const t = await sequelize.transaction();
@@ -116,7 +116,7 @@ export const getSales = async (req, res) => {
             include: [
                 {
                     model: Client,
-                    attributes: ['firstName', 'lastName', 'deletedAt'],
+                    attributes: ['id', 'firstName', 'lastName', 'phone', 'deletedAt'],
                     paranoid: false
                 },
                 {
@@ -126,11 +126,18 @@ export const getSales = async (req, res) => {
                 },
                 {
                     model: SaleDetail,
-                    include: [{
-                        model: Product,
-                        attributes: ['name', 'deletedAt'],
-                        paranoid: false
-                    }]
+                    include: [
+                        {
+                            model: Product,
+                            attributes: ['name', 'deletedAt'],
+                            paranoid: false
+                        },
+                        {
+                            model: ProductVariant,
+                            paranoid: false
+                            // Include all attributes or specify like ['size', 'color']
+                        }
+                    ]
                 }
             ],
             order: [['createdAt', 'DESC']],
@@ -142,5 +149,83 @@ export const getSales = async (req, res) => {
     } catch (error) {
         console.error('Error fetching sales:', error);
         res.status(500).json({ message: 'Error al obtener historial de ventas' });
+    }
+};
+
+export const generateReceiptToken = async (req, res) => {
+    try {
+        const { clientName, total, sales } = req.body;
+        const businessId = req.user.businessId; // Only allow authenticated users to generate tokens
+
+        // Create a token valid for 30 days
+        const expiresAt = new Date();
+        expiresAt.setDate(expiresAt.getDate() + 30);
+
+        const tokenEntry = await ReceiptToken.create({
+            parameters: { clientName, total, sales, businessId },
+            expiresAt
+        });
+
+        res.json({ token: tokenEntry.id });
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ message: 'Error al generar el link del recibo' });
+    }
+};
+
+export const getReceiptData = async (req, res) => {
+    try {
+        const { token } = req.params;
+        const entry = await ReceiptToken.findByPk(token);
+
+        if (!entry) {
+            return res.status(404).json({ message: 'Recibo no encontrado o inválido' });
+        }
+
+        if (new Date() > new Date(entry.expiresAt)) {
+            return res.status(410).json({ message: 'Este recibo ha expirado' });
+        }
+
+        // Fetch business details
+        const businessId = entry.parameters.businessId;
+        const business = await db.Business.findByPk(businessId, {
+            attributes: ['name', 'slug', 'logoURL']
+        });
+
+        // RE-FETCH FRESH SALES DATA
+        // The token params contain "sales" array which has the objects.
+        // We need to extract the IDs to re-query DB for full details including variants.
+        const saleIds = entry.parameters.sales.map(s => s.id);
+
+        const freshSales = await db.Sale.findAll({
+            where: {
+                id: saleIds,
+                BusinessId: businessId // Security check
+            },
+            include: [
+                {
+                    model: db.SaleDetail,
+                    include: [
+                        { model: db.Product, paranoid: false },
+                        { model: db.ProductVariant, paranoid: false }
+                    ]
+                }
+            ]
+        });
+
+        // Re-construct the response with fresh data
+        // We keep the original clientName/total from params to preserve the snapshot context if needed,
+        // but replace the sales array with the fresh query result.
+
+        const responseData = {
+            ...entry.parameters,
+            sales: freshSales, // Override with fresh data containing variants
+            business: business ? business.toJSON() : null
+        };
+
+        res.json(responseData);
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ message: 'Error al recuperar el recibo' });
     }
 };

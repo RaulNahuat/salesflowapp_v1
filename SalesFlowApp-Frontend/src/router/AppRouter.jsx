@@ -18,9 +18,11 @@ import ClientForm from '../componentes/clients/ClientForm';
 import WorkerList from '../componentes/workers/WorkerList';
 import WorkerForm from '../componentes/workers/WorkerForm';
 import POSPage from '../pages/sales/POSPage';
+import SalesHistoryPage from '../pages/sales/SalesHistoryPage';
 import RaffleList from '../pages/raffles/RaffleList';
 import RaffleForm from '../pages/raffles/RaffleForm';
 import RaffleDetail from '../pages/raffles/RaffleDetail';
+import ReceiptPage from '../pages/public/ReceiptPage';
 
 const ProtectedLayout = ({ children }) => {
     return (
@@ -52,6 +54,9 @@ const AppRouter = () => {
                 {/* Rutas Públicas */}
                 <Route path="/login" element={<PublicRoute><LoginForm /></PublicRoute>} />
                 <Route path="/register" element={<PublicRoute><RegisterForm /></PublicRoute>} />
+                {/* Support both generic and branded URLs */}
+                <Route path="/r/:token" element={<ReceiptPage />} />
+                <Route path="/:slug/r/:token" element={<ReceiptPage />} />
 
                 {/* Rutas Protegidas (con MainLayout) */}
                 <Route path="/dashboard" element={
@@ -60,11 +65,18 @@ const AppRouter = () => {
                     </ProtectedLayout>
                 } />
 
-                {/* POS */}
+                {/* POS & Sales */}
                 <Route path="/pos" element={
                     <ProtectedLayout>
                         <RequirePermission permission="pos">
                             <POSPage />
+                        </RequirePermission>
+                    </ProtectedLayout>
+                } />
+                <Route path="/sales" element={
+                    <ProtectedLayout>
+                        <RequirePermission permission="pos">
+                            <SalesHistoryPage />
                         </RequirePermission>
                     </ProtectedLayout>
                 } />

@@ -46,7 +46,12 @@ export const AuthProvider = ({ children }) => {
                 }
             } catch (error) {
                 // Solo loguear errores reales de red o servidor, no de autenticación
-                console.error("Error verificando sesión:", error);
+                if (error.response?.status === 429) {
+                    console.warn("Rate limit exceeded (429). Session verification blocked.");
+                    // Optionally show a toast here if you have toast imported
+                } else if (error.response?.status !== 401 && error.response?.status !== 403) {
+                    console.error("Error verificando sesión:", error);
+                }
                 setAuthState({
                     isLoggedIn: false,
                     user: null,

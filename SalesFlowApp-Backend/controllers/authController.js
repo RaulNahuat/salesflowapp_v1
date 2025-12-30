@@ -40,7 +40,9 @@ const register = async (req, res) => {
 
 const login = async (req, res) => {
     try {
-        const { email, password } = req.body; // Changed from phone to email
+        const { email, password } = req.body;
+        // Updated service returns { user: {...}, token, role, permissions }
+        // The user object inside already has businessSlug/Name appended by service
         const { user, token, role, permissions } = await authService.login(email, password);
 
         res.cookie('token', token, {
@@ -59,13 +61,15 @@ const login = async (req, res) => {
                 lastName: user.lastName,
                 email: user.email,
                 role: role,
-                permissions: permissions
+                permissions: permissions,
+                businessSlug: user.businessSlug,
+                businessName: user.businessName
             }
         });
     } catch (error) {
         res.status(401).json({
             success: false,
-            message: error.message // Changed from 'error' to 'message' to match frontend expectation
+            message: error.message
         });
     }
 };
@@ -75,6 +79,7 @@ const logout = (req, res) => {
     res.json({ success: true, message: 'Sesión cerrada correctamente' });
 };
 
+
 const verifyToken = async (req, res) => {
     try {
         const token = req.cookies.token;
@@ -82,7 +87,6 @@ const verifyToken = async (req, res) => {
 
         const user = await authService.verifyToken(token);
 
-        // Check if account is inactive (handled in service or here)
         if (user.status === 'inactive') {
             res.clearCookie('token');
             return res.json({ success: true, user: null });
@@ -96,7 +100,9 @@ const verifyToken = async (req, res) => {
                 lastName: user.lastName,
                 email: user.email,
                 role: user.role,
-                permissions: user.permissions
+                permissions: user.permissions,
+                businessSlug: user.businessSlug,
+                businessName: user.businessName
             }
         });
     } catch (error) {

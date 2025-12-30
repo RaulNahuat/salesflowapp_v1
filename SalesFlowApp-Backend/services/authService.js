@@ -89,13 +89,16 @@ const login = async (email, password) => {
             throw new Error("Credenciales inválidas");
         }
 
-        // Fetch user's business
+        // Fetch user's business with Slug
         const member = await db.BusinessMember.findOne({
-            where: { UserId: user.id }
+            where: { UserId: user.id },
+            include: [{ model: db.Business, attributes: ['slug', 'name'] }]
         });
 
         // Validar que el usuario tenga un negocio asociado
         let businessId = null;
+        let businessSlug = null;
+        let businessName = null;
         let role = null;
         let permissions = null;
         let businessMemberId = null;
@@ -105,6 +108,8 @@ const login = async (email, password) => {
                 throw new Error("Tu cuenta ha sido desactivada por el administrador.");
             }
             businessId = member.BusinessId;
+            businessSlug = member.Business?.slug;
+            businessName = member.Business?.name;
             role = member.role;
             permissions = member.permissions;
             businessMemberId = member.id;
@@ -118,13 +123,21 @@ const login = async (email, password) => {
             { expiresIn: '24h' }
         );
 
-        return { user, token, role, permissions };
+        return {
+            user: {
+                ...user.toJSON(),
+                businessSlug,
+                businessName // Optional: helpful for display
+            },
+            token,
+            role,
+            permissions
+        };
     } catch (error) {
-        // If it's a known error (has a message we threw), rethrow it
+        // ... err handling
         if (error.message === "Credenciales inválidas" || error.message.includes("desactivada")) {
             throw error;
         }
-        // Otherwise log it and throw a generic one
         console.error("Login Service Error:", error);
         throw new Error("Error interno del servidor. Por favor intente más tarde.");
     }
@@ -145,9 +158,10 @@ const verifyToken = async (token) => {
             throw new Error("Usuario no encontrado");
         }
 
-        // Fetch Member details to get permissions
+        // Fetch Member details with Business Slug
         const member = await db.BusinessMember.findOne({
-            where: { UserId: user.id }
+            where: { UserId: user.id },
+            include: [{ model: db.Business, attributes: ['slug', 'name'] }]
         });
 
         // Attach role/perms to user object
@@ -156,6 +170,8 @@ const verifyToken = async (token) => {
             userWithRole.role = member.role;
             userWithRole.permissions = member.permissions;
             userWithRole.status = member.status;
+            userWithRole.businessSlug = member.Business?.slug;
+            userWithRole.businessName = member.Business?.name;
         }
 
         return userWithRole;

@@ -12,7 +12,8 @@ import {
     FaTimes,
     FaUserCircle,
     FaUsers,
-    FaUserTie
+    FaUserTie,
+    FaFileInvoiceDollar
 } from 'react-icons/fa';
 import ConfirmationModal from '../componentes/ui/ConfirmationModal';
 
@@ -37,6 +38,7 @@ const MainLayout = ({ children }) => {
     const menuItems = [
         { path: '/dashboard', label: 'Dashboard', icon: FaChartPie, permission: null }, // Always available
         { path: '/pos', label: 'Punto de Venta', icon: FaCashRegister, permission: 'pos' },
+        { path: '/sales', label: 'Ver Ventas', icon: FaFileInvoiceDollar, permission: 'pos' },
         { path: '/products', label: 'Inventario', icon: FaBox, permission: 'products' },
         { path: '/clients', label: 'Clientes', icon: FaUsers, permission: 'clients' }, // Separate permission
         { path: '/workers', label: 'Equipo', icon: FaUserTie, permission: 'settings' }, // Managers/Owners

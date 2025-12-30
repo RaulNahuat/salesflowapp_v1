@@ -24,6 +24,24 @@ const saleApi = {
         } catch (error) {
             throw error.response?.data || { message: 'Error obteniendo historial de ventas' };
         }
+    },
+
+    generateReceiptToken: async (data) => {
+        try {
+            const response = await axios.post(`${API_URL}/sales/receipt-token`, data, { withCredentials: true });
+            return response.data;
+        } catch (error) {
+            throw error.response?.data || { message: 'Error generando link' };
+        }
+    },
+
+    getReceiptData: async (token) => {
+        try {
+            const response = await axios.get(`${API_URL}/sales/receipt-data/${token}`);
+            return response.data;
+        } catch (error) {
+            throw error.response?.data || { message: 'Error recuperando recibo' };
+        }
     }
 };
 

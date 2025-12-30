@@ -14,6 +14,7 @@ import SaleModel from './Sale.js';
 import SaleDetailModel from './SaleDetail.js';
 import UserModel from './User.js';
 import ClientModel from './Client.js';
+import ReceiptTokenModel from './ReceiptToken.js';
 
 const db = {};
 db.Sequelize = Sequelize;
@@ -32,6 +33,7 @@ db.Sale = SaleModel(sequelize, DataTypes);
 db.SaleDetail = SaleDetailModel(sequelize, DataTypes);
 db.User = UserModel(sequelize, DataTypes);
 db.Client = ClientModel(sequelize, DataTypes);
+db.ReceiptToken = ReceiptTokenModel(sequelize, DataTypes);
 
 // --- ASOCIACIONES ---
 

@@ -37,7 +37,7 @@ app.use(helmet());
 
 const limiter = rateLimit({
     windowMs: 15 * 60 * 1000,
-    max: 100, //
+    max: 1000, // Increased from 100 to 1000 to prevent issues with frequent reloads/SPA polling
     message: 'Demasiadas solicitudes desde esta IP, por favor inténtalo de nuevo después de 15 minutos',
     standardHeaders: true,
     legacyHeaders: false,

@@ -121,6 +121,11 @@ export const updateProduct = async (req, res) => {
     try {
         const { variants, ...productData } = req.body;
 
+        // Sanitize numeric fields
+        if (productData.costPrice === '' || productData.costPrice === null) productData.costPrice = 0;
+        if (productData.sellingPrice === '' || productData.sellingPrice === null) productData.sellingPrice = 0;
+        if (productData.stock === '' || productData.stock === null) productData.stock = 0;
+
         // Calculate total stock from variants if provided
         if (variants && variants.length > 0) {
             productData.stock = variants.reduce((sum, v) => sum + (parseInt(v.stock) || 0), 0);
@@ -131,10 +136,16 @@ export const updateProduct = async (req, res) => {
             where: { id: id, BusinessId: businessId }
         });
 
-        if (num !== 1) {
-            return res.status(404).json({
-                message: `No se puede actualizar el producto con id=${id}. Producto no encontrado.`
-            });
+        // Loophole: if num === 0, it might mean the product doesn't exist OR no changes were made.
+        // We should check if the product exists.
+        if (num === 0) {
+            const existingProduct = await Product.findOne({ where: { id: id, BusinessId: businessId } });
+            if (!existingProduct) {
+                return res.status(404).json({
+                    message: `No se puede actualizar el producto con id=${id}. Producto no encontrado.`
+                });
+            }
+            // If it exists, it just means no data changed. We continue to update variants.
         }
 
         // Handle variants if provided
@@ -146,11 +157,17 @@ export const updateProduct = async (req, res) => {
 
             // Create new variants
             if (variants.length > 0) {
-                const variantsToCreate = variants.map(v => ({
-                    ...v,
-                    ProductId: id
-                }));
-                await db.ProductVariant.bulkCreate(variantsToCreate);
+                const sanitizedVariants = variants.map(v => {
+                    // Destructure to remove ID and timestamps to avoid conflicts
+                    // eslint-disable-next-line no-unused-vars
+                    const { id: variantId, createdAt, updatedAt, ProductId, ...variantData } = v;
+                    return {
+                        ...variantData,
+                        ProductId: id // Ensure it's linked to the correct product
+                    };
+                });
+
+                await db.ProductVariant.bulkCreate(sanitizedVariants);
             }
         }
 
