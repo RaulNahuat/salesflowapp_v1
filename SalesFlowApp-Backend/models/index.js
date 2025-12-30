@@ -80,4 +80,8 @@ db.RaffleTicket.belongsTo(db.Raffle, { foreignKey: 'RaffleId' });
 db.RaffleTicket.belongsTo(db.Sale, { foreignKey: 'SaleId' });
 db.RaffleTicket.belongsTo(db.Client, { as: 'Owner', foreignKey: 'clientId' });
 
+// Receipt Tokens
+db.Sale.belongsTo(db.ReceiptToken, { foreignKey: 'receiptTokenId' });
+db.ReceiptToken.hasOne(db.Sale, { foreignKey: 'receiptTokenId' });
+
 export default db;

@@ -1,5 +1,5 @@
 import express from 'express';
-import { createSale, getSales, generateReceiptToken, getReceiptData } from '../controllers/saleController.js';
+import { createSale, getSales, generateReceiptToken, getReceiptData, getReceiptHistory, getReports } from '../controllers/saleController.js';
 import { protect, attachBusiness } from '../middlewares/authMiddleware.js';
 
 const router = express.Router();
@@ -15,5 +15,7 @@ router.use(attachBusiness);
 router.post('/', createSale);
 router.get('/', getSales);
 router.post('/receipt-token', generateReceiptToken);
+router.get('/receipt-history', getReceiptHistory);
+router.get('/reports', getReports);
 
 export default router;

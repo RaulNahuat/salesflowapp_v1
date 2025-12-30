@@ -11,37 +11,41 @@ import {
     FaUser,
     FaClock,
     FaTruckLoading,
-    FaPhoneSlash
+    FaReceipt,
+    FaExternalLinkAlt
 } from 'react-icons/fa';
 import { toast } from 'react-hot-toast';
 import saleApi from '../../services/saleApi';
-import { useAuth } from '../../context/authContext';
+import businessApi from '../../services/businessApi';
 
 const SalesHistoryPage = () => {
-    const { user } = useAuth(); // Get user for business slug
     const [sales, setSales] = useState([]);
     const [loading, setLoading] = useState(true);
     const [searchTerm, setSearchTerm] = useState('');
     const [filterType, setFilterType] = useState('all'); // all, today, this_week
-    const [viewMode, setViewMode] = useState('list'); // list, consolidated
     const [expandedSale, setExpandedSale] = useState(null);
+    const [businessSlug, setBusinessSlug] = useState('');
+    const [businessName, setBusinessName] = useState('');
 
     useEffect(() => {
-        fetchSales();
+        const fetchData = async () => {
+            try {
+                const [salesData, businessData] = await Promise.all([
+                    saleApi.getSales({ limit: 100 }),
+                    businessApi.getBusiness()
+                ]);
+                setSales(salesData);
+                setBusinessSlug(businessData.slug || '');
+                setBusinessName(businessData.name || 'SalesFlow');
+            } catch (error) {
+                console.error(error);
+                toast.error('Error al cargar datos');
+            } finally {
+                setLoading(false);
+            }
+        };
+        fetchData();
     }, []);
-
-    const fetchSales = async () => {
-        setLoading(true);
-        try {
-            const data = await saleApi.getSales({ limit: 100 }); // Fetch a good chunk for filtering
-            setSales(data);
-        } catch (error) {
-            console.error(error);
-            toast.error('Error al cargar historial de ventas');
-        } finally {
-            setLoading(false);
-        }
-    };
 
     // --- FILTERS ---
     const dateFilteredSales = useMemo(() => {
@@ -79,92 +83,39 @@ const SalesHistoryPage = () => {
         };
     }, [filteredSales]);
 
+    const handleViewReceipt = (sale) => {
+        if (!sale.receiptTokenId) {
+            toast.error('Esta venta no tiene un ticket generado');
+            return;
+        }
+        const url = businessSlug
+            ? `${window.location.origin}/${businessSlug}/r/${sale.receiptTokenId}`
+            : `${window.location.origin}/r/${sale.receiptTokenId}`;
+        window.open(url, '_blank');
+    };
+
     const handleShareWhatsApp = (sale) => {
         if (!sale.Client || !sale.Client.phone) {
             toast.error('Este cliente no tiene un teléfono registrado');
             return;
         }
 
-        let itemsMsg = "";
-        sale.SaleDetails.forEach(detail => {
-            const prodName = detail.Product ? detail.Product.name : 'Producto';
-            itemsMsg += `\n- ${detail.quantity}x ${prodName} ($${parseFloat(detail.subtotal).toFixed(2)})`;
-        });
+        if (!sale.receiptTokenId) {
+            toast.error('Esta venta no tiene un ticket generado');
+            return;
+        }
 
+        const receiptUrl = businessSlug
+            ? `${window.location.origin}/${businessSlug}/r/${sale.receiptTokenId}`
+            : `${window.location.origin}/r/${sale.receiptTokenId}`;
+        const clientName = `${sale.Client.firstName} ${sale.Client.lastName}`;
         const totalFormatted = new Intl.NumberFormat('es-MX', { style: 'currency', currency: 'MXN' }).format(sale.total);
-        const msg = `*Hola ${sale.Client.firstName}!* 👋\n\nResumen de tu compra:\n${itemsMsg}\n\n*Total: ${totalFormatted}*\n\n¡Gracias por tu preferencia! ✨`;
+
+        const msg = `*¡Hola ${sale.Client.firstName}!* 👋\n\nGracias por tu compra en *${businessName}*\n\n💰 Total: ${totalFormatted}\n📄 Ver ticket: ${receiptUrl}\n\n¡Esperamos verte pronto! ✨`;
 
         const url = `https://wa.me/${sale.Client.phone.replace(/\D/g, '')}?text=${encodeURIComponent(msg)}`;
         window.open(url, '_blank');
     };
-
-    const handleShareConsolidated = async (clientName, phone, salesGroup) => {
-        if (!phone) {
-            toast.error('Este cliente no tiene un teléfono registrado');
-            return;
-        }
-
-        const toastId = toast.loading('Generando recibo...');
-
-        try {
-            const totalVal = salesGroup.reduce((acc, s) => acc + parseFloat(s.total), 0);
-
-            // Generate Token
-            const { token } = await saleApi.generateReceiptToken({
-                clientName,
-                total: totalVal,
-                sales: salesGroup
-            });
-
-            // Construct Link
-            const slug = user?.businessSlug || 'r';
-            const link = user?.businessSlug
-                ? `${window.location.origin}/${slug}/r/${token}`
-                : `${window.location.origin}/r/${token}`;
-
-            // Build Message
-            const totalFormatted = new Intl.NumberFormat('es-MX', { style: 'currency', currency: 'MXN' }).format(totalVal);
-            const msg = `*Hola ${clientName}!* 👋\n\nAquí tienes el resumen detallado de tus compras pendientes y el total a pagar.\n\nPuedes ver el detalle y *descargar tu recibo en PDF* aquí:\n👉 ${link}\n\n*TOTAL: ${totalFormatted}*\n\n¡Gracias por tu preferencia! ✨`;
-
-            const url = `https://wa.me/${phone.replace(/\D/g, '')}?text=${encodeURIComponent(msg)}`;
-            window.open(url, '_blank');
-            toast.success('Enlace generado con éxito', { id: toastId });
-
-        } catch (error) {
-            console.error(error);
-            toast.error('Error al generar el link del recibo', { id: toastId });
-        }
-    };
-
-    // Group sales by client for "Consolidated View"
-    const consolidatedByClient = useMemo(() => {
-        const groups = {};
-        dateFilteredSales.forEach(sale => {
-            const clientId = sale.Client ? sale.Client.id : 'casual';
-            if (!groups[clientId]) {
-                groups[clientId] = {
-                    client: sale.Client || { firstName: 'Cliente', lastName: 'Casual' },
-                    sales: [],
-                    total: 0
-                };
-            }
-            groups[clientId].sales.push(sale);
-            groups[clientId].total += parseFloat(sale.total);
-        });
-
-        let results = Object.values(groups);
-
-        if (searchTerm) {
-            const term = searchTerm.toLowerCase();
-            results = results.filter(g => {
-                const clientName = `${g.client.firstName} ${g.client.lastName}`.toLowerCase();
-                const matchesId = g.sales.some(s => s.id.toString().includes(term));
-                return clientName.includes(term) || matchesId;
-            });
-        }
-
-        return results.sort((a, b) => b.total - a.total);
-    }, [dateFilteredSales, searchTerm]);
 
     const toggleExpand = (id) => {
         setExpandedSale(expandedSale === id ? null : id);
@@ -224,22 +175,6 @@ const SalesHistoryPage = () => {
                 </div>
             </div>
 
-            {/* View Selection Tabs */}
-            <div className="flex gap-4 border-b border-gray-200">
-                <button
-                    onClick={() => setViewMode('list')}
-                    className={`pb-2 px-1 text-sm font-bold transition-all border-b-2 ${viewMode === 'list' ? 'border-blue-600 text-blue-600' : 'border-transparent text-gray-400 hover:text-gray-600'}`}
-                >
-                    Ventas Individuales
-                </button>
-                <button
-                    onClick={() => setViewMode('consolidated')}
-                    className={`pb-2 px-1 text-sm font-bold transition-all border-b-2 ${viewMode === 'consolidated' ? 'border-blue-600 text-blue-600' : 'border-transparent text-gray-400 hover:text-gray-600'}`}
-                >
-                    Totales por Cliente (Entregas)
-                </button>
-            </div>
-
             {/* Sales Content */}
             <div className="space-y-3">
                 {filteredSales.length === 0 ? (
@@ -247,7 +182,7 @@ const SalesHistoryPage = () => {
                         <FaFilter className="mx-auto text-4xl text-gray-200 mb-3" />
                         <p className="text-gray-500 font-medium">No se encontraron ventas con los filtros actuales</p>
                     </div>
-                ) : viewMode === 'list' ? (
+                ) : (
                     filteredSales.map(sale => (
                         <div key={sale.id} className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden hover:border-blue-200 transition-colors">
                             <div
@@ -280,14 +215,25 @@ const SalesHistoryPage = () => {
                                     </div>
 
                                     <div className="flex items-center gap-2">
-                                        {sale.Client?.phone && (
-                                            <button
-                                                onClick={(e) => { e.stopPropagation(); handleShareWhatsApp(sale); }}
-                                                className="p-2.5 bg-green-100 text-green-600 rounded-lg hover:bg-green-600 hover:text-white transition-all shadow-sm"
-                                                title="Re-enviar ticket por WhatsApp"
-                                            >
-                                                <FaWhatsapp className="text-lg" />
-                                            </button>
+                                        {sale.receiptTokenId && (
+                                            <>
+                                                <button
+                                                    onClick={(e) => { e.stopPropagation(); handleViewReceipt(sale); }}
+                                                    className="p-2.5 bg-blue-100 text-blue-600 rounded-lg hover:bg-blue-600 hover:text-white transition-all shadow-sm"
+                                                    title="Ver ticket digital"
+                                                >
+                                                    <FaReceipt className="text-lg" />
+                                                </button>
+                                                {sale.Client?.phone && (
+                                                    <button
+                                                        onClick={(e) => { e.stopPropagation(); handleShareWhatsApp(sale); }}
+                                                        className="p-2.5 bg-green-100 text-green-600 rounded-lg hover:bg-green-600 hover:text-white transition-all shadow-sm"
+                                                        title="Compartir ticket por WhatsApp"
+                                                    >
+                                                        <FaWhatsapp className="text-lg" />
+                                                    </button>
+                                                )}
+                                            </>
                                         )}
                                         <div className={`p-2 rounded-lg transition-colors ${expandedSale === sale.id ? 'bg-blue-50 text-blue-600' : 'text-gray-400'}`}>
                                             {expandedSale === sale.id ? <FaChevronUp /> : <FaChevronDown />}
@@ -356,54 +302,6 @@ const SalesHistoryPage = () => {
                             )}
                         </div>
                     ))
-                ) : (
-                    /* Consolidated View Cards */
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        {consolidatedByClient.map(item => (
-                            <div key={item.client.id || 'casual'} className="bg-white p-5 rounded-2xl shadow-sm border border-gray-100 flex flex-col justify-between hover:border-blue-300 transition-all group">
-                                <div className="flex justify-between items-start mb-4">
-                                    <div className="flex items-center gap-3">
-                                        <div className="w-12 h-12 rounded-full bg-gradient-to-br from-blue-500 to-indigo-600 text-white flex items-center justify-center font-bold text-lg shadow-md">
-                                            {item.client.firstName.charAt(0)}
-                                        </div>
-                                        <div>
-                                            <h3 className="font-bold text-gray-900 text-lg">{item.client.firstName} {item.client.lastName}</h3>
-                                            <p className="text-xs text-gray-500">{item.sales.length} {item.sales.length === 1 ? 'venta' : 'ventas'} en este periodo</p>
-                                        </div>
-                                    </div>
-                                    <div className="text-right">
-                                        <p className="text-xs text-gray-400 font-bold uppercase">Total Acumulado</p>
-                                        <p className="text-2xl font-black text-blue-600">${item.total.toFixed(2)}</p>
-                                    </div>
-                                </div>
-
-                                <div className="space-y-2 mb-4">
-                                    {item.sales.slice(0, 3).map(s => (
-                                        <div key={s.id} className="text-xs flex justify-between text-gray-600 bg-gray-50 p-2 rounded-lg">
-                                            <span>#{s.id} - {new Date(s.createdAt).toLocaleDateString()}</span>
-                                            <span className="font-bold">${parseFloat(s.total).toFixed(2)}</span>
-                                        </div>
-                                    ))}
-                                    {item.sales.length > 3 && (
-                                        <p className="text-[10px] text-center text-gray-400 font-medium">+ {item.sales.length - 3} ventas más</p>
-                                    )}
-                                </div>
-
-                                {item.client.phone ? (
-                                    <button
-                                        onClick={() => handleShareConsolidated(item.client.firstName, item.client.phone, item.sales)}
-                                        className="w-full bg-green-500 hover:bg-green-600 text-white font-bold py-3 rounded-xl flex items-center justify-center gap-2 transition-all shadow-lg shadow-green-200"
-                                    >
-                                        <FaWhatsapp className="text-xl" /> Compartir Total por WhatsApp
-                                    </button>
-                                ) : (
-                                    <div className="text-center py-3 bg-gray-100 text-gray-400 rounded-xl text-sm font-bold flex items-center justify-center gap-2">
-                                        <FaPhoneSlash /> Sin teléfono para compartir
-                                    </div>
-                                )}
-                            </div>
-                        ))}
-                    </div>
                 )}
             </div>
         </div>

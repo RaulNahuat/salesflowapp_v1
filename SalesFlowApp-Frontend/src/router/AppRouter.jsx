@@ -23,6 +23,8 @@ import RaffleList from '../pages/raffles/RaffleList';
 import RaffleForm from '../pages/raffles/RaffleForm';
 import RaffleDetail from '../pages/raffles/RaffleDetail';
 import ReceiptPage from '../pages/public/ReceiptPage';
+import ReceiptHistoryPage from '../pages/ReceiptHistoryPage';
+import ReportsPage from '../pages/ReportsPage';
 
 const ProtectedLayout = ({ children }) => {
     return (
@@ -77,6 +79,20 @@ const AppRouter = () => {
                     <ProtectedLayout>
                         <RequirePermission permission="pos">
                             <SalesHistoryPage />
+                        </RequirePermission>
+                    </ProtectedLayout>
+                } />
+                <Route path="/receipts/history" element={
+                    <ProtectedLayout>
+                        <RequirePermission permission="pos">
+                            <ReceiptHistoryPage />
+                        </RequirePermission>
+                    </ProtectedLayout>
+                } />
+                <Route path="/reports" element={
+                    <ProtectedLayout>
+                        <RequirePermission permission="reports">
+                            <ReportsPage />
                         </RequirePermission>
                     </ProtectedLayout>
                 } />

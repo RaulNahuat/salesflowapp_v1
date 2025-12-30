@@ -23,15 +23,23 @@ const register = async (req, res) => {
             }
         });
     } catch (error) {
-        console.error("Register Error:", error); // Log full error
+        console.error("Register Error:", error);
+
+        // Determine status code based on error type
+        let statusCode = 400;
+        let errorMessage = error.message;
+
+        // Check for duplicate/conflict errors
+        if (error.message.includes("Ya existe una cuenta")) {
+            statusCode = 409; // Conflict
+        }
 
         // Extract specific Sequelize validation message if available
-        let errorMessage = error.message;
         if (error.errors && error.errors.length > 0) {
             errorMessage = error.errors[0].message;
         }
 
-        res.status(400).json({
+        res.status(statusCode).json({
             success: false,
             message: errorMessage
         });

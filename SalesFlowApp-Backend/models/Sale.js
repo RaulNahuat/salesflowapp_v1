@@ -30,6 +30,10 @@ export default (sequelize, DataTypes) => {
         notes: {
             type: DataTypes.TEXT
         },
+        receiptTokenId: {
+            type: DataTypes.UUID,
+            allowNull: true
+        },
         createdAt: {
             type: DataTypes.DATE,
             allowNull: false,

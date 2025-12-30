@@ -42,6 +42,30 @@ const saleApi = {
         } catch (error) {
             throw error.response?.data || { message: 'Error recuperando recibo' };
         }
+    },
+
+    getReceiptHistory: async (filters = {}) => {
+        try {
+            const response = await axios.get(`${API_URL}/sales/receipt-history`, {
+                params: filters,
+                withCredentials: true
+            });
+            return response.data;
+        } catch (error) {
+            throw error.response?.data || { message: 'Error obteniendo historial de recibos' };
+        }
+    },
+
+    getReports: async (params = {}) => {
+        try {
+            const response = await axios.get(`${API_URL}/sales/reports`, {
+                params,
+                withCredentials: true
+            });
+            return response.data;
+        } catch (error) {
+            throw error.response?.data || { message: 'Error obteniendo reportes' };
+        }
     }
 };
 

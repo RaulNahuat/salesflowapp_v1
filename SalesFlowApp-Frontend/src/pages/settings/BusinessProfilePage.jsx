@@ -8,9 +8,13 @@ const BusinessProfilePage = () => {
         name: '',
         slug: '',
         logoURL: '',
+        phone: '',
+        email: '',
+        address: '',
+        returnPolicy: '',
+        weekStartDay: 1,
+        liveDays: [],
         settings: {
-            address: '',
-            phone: '',
             currency: 'MXN',
             taxRate: 0,
             ticketFooter: ''
@@ -28,10 +32,16 @@ const BusinessProfilePage = () => {
                 const data = await businessApi.getBusiness();
                 // Ensure settings object exists
                 setBusiness({
-                    ...data,
+                    name: data.name || '',
+                    slug: data.slug || '',
+                    logoURL: data.logoURL || '',
+                    phone: data.phone || '',
+                    email: data.email || '',
+                    address: data.address || '',
+                    returnPolicy: data.returnPolicy || '',
+                    weekStartDay: data.weekStartDay !== undefined ? data.weekStartDay : 1,
+                    liveDays: data.liveDays || [],
                     settings: {
-                        address: '',
-                        phone: '',
                         currency: 'MXN',
                         taxRate: 0,
                         ticketFooter: '',
@@ -60,6 +70,17 @@ const BusinessProfilePage = () => {
             ...prev,
             settings: { ...prev.settings, [name]: value }
         }));
+    };
+
+    const handleLiveDayToggle = (day) => {
+        setBusiness(prev => {
+            const liveDays = prev.liveDays || [];
+            if (liveDays.includes(day)) {
+                return { ...prev, liveDays: liveDays.filter(d => d !== day) };
+            } else {
+                return { ...prev, liveDays: [...liveDays, day].sort() };
+            }
+        });
     };
 
     const validate = () => {
@@ -180,29 +201,41 @@ const BusinessProfilePage = () => {
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-6">
                                 <div>
                                     <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2 flex items-center">
-                                        <FaMapMarkerAlt className="mr-1" /> Dirección Física
-                                    </label>
-                                    <input
-                                        type="text"
-                                        name="address"
-                                        value={business.settings?.address || ''}
-                                        onChange={handleSettingChange}
-                                        className="w-full px-4 py-3 rounded-lg border border-gray-200 bg-gray-50 focus:bg-white focus:outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-100 transition-all duration-200"
-                                        placeholder="Calle 123, Colonia Centro"
-                                    />
-                                </div>
-
-                                <div>
-                                    <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2 flex items-center">
                                         <FaPhone className="mr-1" /> Teléfono de Contacto
                                     </label>
                                     <input
                                         type="text"
                                         name="phone"
-                                        value={business.settings?.phone || ''}
-                                        onChange={handleSettingChange}
+                                        value={business.phone || ''}
+                                        onChange={handleChange}
                                         className="w-full px-4 py-3 rounded-lg border border-gray-200 bg-gray-50 focus:bg-white focus:outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-100 transition-all duration-200"
                                         placeholder="(55) 1234-5678"
+                                    />
+                                </div>
+
+                                <div>
+                                    <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">Email de Contacto</label>
+                                    <input
+                                        type="email"
+                                        name="email"
+                                        value={business.email || ''}
+                                        onChange={handleChange}
+                                        className="w-full px-4 py-3 rounded-lg border border-gray-200 bg-gray-50 focus:bg-white focus:outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-100 transition-all duration-200"
+                                        placeholder="contacto@negocio.com"
+                                    />
+                                </div>
+
+                                <div className="md:col-span-2">
+                                    <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2 flex items-center">
+                                        <FaMapMarkerAlt className="mr-1" /> Dirección Física
+                                    </label>
+                                    <textarea
+                                        name="address"
+                                        value={business.address || ''}
+                                        onChange={handleChange}
+                                        rows="2"
+                                        className="w-full px-4 py-3 rounded-lg border border-gray-200 bg-gray-50 focus:bg-white focus:outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-100 transition-all duration-200 resize-none"
+                                        placeholder="Calle 123, Colonia Centro, Ciudad, CP 12345"
                                     />
                                 </div>
 
@@ -245,10 +278,70 @@ const BusinessProfilePage = () => {
                                         name="ticketFooter"
                                         value={business.settings?.ticketFooter || ''}
                                         onChange={handleSettingChange}
-                                        rows="3"
+                                        rows="2"
                                         className="w-full px-4 py-3 rounded-lg border border-gray-200 bg-gray-50 focus:bg-white focus:outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-100 transition-all duration-200 resize-none"
                                         placeholder="Ej. ¡Gracias por su compra! Síganos en redes sociales."
                                     />
+                                </div>
+
+                                <div className="md:col-span-2">
+                                    <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">Política de Devolución</label>
+                                    <textarea
+                                        name="returnPolicy"
+                                        value={business.returnPolicy || ''}
+                                        onChange={handleChange}
+                                        rows="3"
+                                        className="w-full px-4 py-3 rounded-lg border border-gray-200 bg-gray-50 focus:bg-white focus:outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-100 transition-all duration-200 resize-none"
+                                        placeholder="Ej. Aceptamos devoluciones dentro de los 7 días con ticket de compra."
+                                    />
+                                    <p className="text-xs text-gray-400 mt-1">Esta política aparecerá en los tickets digitales.</p>
+                                </div>
+
+                                <div>
+                                    <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">Inicio de Semana (Reportes)</label>
+                                    <select
+                                        name="weekStartDay"
+                                        value={business.weekStartDay}
+                                        onChange={handleChange}
+                                        className="w-full px-4 py-3 rounded-lg border border-gray-200 bg-gray-50 focus:bg-white focus:outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-100 transition-all duration-200"
+                                    >
+                                        <option value={0}>Domingo</option>
+                                        <option value={1}>Lunes</option>
+                                        <option value={2}>Martes</option>
+                                        <option value={3}>Miércoles</option>
+                                        <option value={4}>Jueves</option>
+                                        <option value={5}>Viernes</option>
+                                        <option value={6}>Sábado</option>
+                                    </select>
+                                    <p className="text-xs text-gray-400 mt-1">Define cuándo inicia tu semana laboral para los reportes.</p>
+                                </div>
+
+                                <div className="md:col-span-2">
+                                    <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-3">Días de Live de Ventas</label>
+                                    <div className="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-7 gap-2">
+                                        {[
+                                            { value: 0, label: 'Dom' },
+                                            { value: 1, label: 'Lun' },
+                                            { value: 2, label: 'Mar' },
+                                            { value: 3, label: 'Mié' },
+                                            { value: 4, label: 'Jue' },
+                                            { value: 5, label: 'Vie' },
+                                            { value: 6, label: 'Sáb' }
+                                        ].map(day => (
+                                            <button
+                                                key={day.value}
+                                                type="button"
+                                                onClick={() => handleLiveDayToggle(day.value)}
+                                                className={`px-3 py-2 rounded-lg text-sm font-bold transition-all duration-200 ${(business.liveDays || []).includes(day.value)
+                                                        ? 'bg-indigo-600 text-white shadow-md'
+                                                        : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                                                    }`}
+                                            >
+                                                {day.label}
+                                            </button>
+                                        ))}
+                                    </div>
+                                    <p className="text-xs text-gray-400 mt-2">Selecciona los días que haces transmisiones en vivo para vender.</p>
                                 </div>
                             </div>
                         </div>

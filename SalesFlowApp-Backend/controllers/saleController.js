@@ -92,10 +92,42 @@ export const createSale = async (req, res) => {
 
         await t.commit();
 
-        res.status(201).json({
-            message: 'Venta registrada exitosamente',
-            saleId: sale.id
-        });
+        // Generate receipt token automatically for this sale
+        try {
+            const clientName = clientId
+                ? await Client.findByPk(clientId).then(c => c ? `${c.firstName} ${c.lastName}` : 'Cliente')
+                : 'Cliente Casual';
+
+            const expiresAt = new Date();
+            expiresAt.setDate(expiresAt.getDate() + 30);
+
+            const tokenEntry = await ReceiptToken.create({
+                parameters: {
+                    clientName,
+                    total,
+                    saleId: sale.id, // Link to this specific sale
+                    businessId
+                },
+                expiresAt
+            });
+
+            // Update sale with receipt token ID
+            await sale.update({ receiptTokenId: tokenEntry.id });
+
+            res.status(201).json({
+                message: 'Venta registrada exitosamente',
+                saleId: sale.id,
+                receiptToken: tokenEntry.id // Return token to frontend
+            });
+        } catch (tokenError) {
+            console.error('Error generating receipt token:', tokenError);
+            // Sale was successful, just log the token error
+            res.status(201).json({
+                message: 'Venta registrada exitosamente',
+                saleId: sale.id,
+                receiptToken: null
+            });
+        }
 
     } catch (error) {
         await t.rollback();
@@ -154,17 +186,34 @@ export const getSales = async (req, res) => {
 
 export const generateReceiptToken = async (req, res) => {
     try {
-        const { clientName, total, sales } = req.body;
-        const businessId = req.user.businessId; // Only allow authenticated users to generate tokens
+        const { saleId } = req.body;
+        const businessId = req.user.businessId;
+
+        // Fetch the sale
+        const sale = await Sale.findOne({
+            where: { id: saleId, BusinessId: businessId },
+            include: [{ model: Client }]
+        });
+
+        if (!sale) {
+            return res.status(404).json({ message: 'Venta no encontrada' });
+        }
+
+        const clientName = sale.Client
+            ? `${sale.Client.firstName} ${sale.Client.lastName}`
+            : 'Cliente Casual';
 
         // Create a token valid for 30 days
         const expiresAt = new Date();
         expiresAt.setDate(expiresAt.getDate() + 30);
 
         const tokenEntry = await ReceiptToken.create({
-            parameters: { clientName, total, sales, businessId },
+            parameters: { clientName, total: sale.total, saleId, businessId },
             expiresAt
         });
+
+        // Update sale with receipt token
+        await sale.update({ receiptTokenId: tokenEntry.id });
 
         res.json({ token: tokenEntry.id });
     } catch (error) {
@@ -186,21 +235,22 @@ export const getReceiptData = async (req, res) => {
             return res.status(410).json({ message: 'Este recibo ha expirado' });
         }
 
-        // Fetch business details
+        // Increment view count and update last viewed timestamp
+        await entry.increment('viewCount');
+        await entry.update({ lastViewedAt: new Date() });
+
+        // Fetch business details including contact information
         const businessId = entry.parameters.businessId;
         const business = await db.Business.findByPk(businessId, {
-            attributes: ['name', 'slug', 'logoURL']
+            attributes: ['name', 'slug', 'logoURL', 'phone', 'email', 'address', 'returnPolicy']
         });
 
-        // RE-FETCH FRESH SALES DATA
-        // The token params contain "sales" array which has the objects.
-        // We need to extract the IDs to re-query DB for full details including variants.
-        const saleIds = entry.parameters.sales.map(s => s.id);
-
-        const freshSales = await db.Sale.findAll({
+        // Fetch the single sale
+        const saleId = entry.parameters.saleId;
+        const sale = await db.Sale.findOne({
             where: {
-                id: saleIds,
-                BusinessId: businessId // Security check
+                id: saleId,
+                BusinessId: businessId
             },
             include: [
                 {
@@ -209,23 +259,266 @@ export const getReceiptData = async (req, res) => {
                         { model: db.Product, paranoid: false },
                         { model: db.ProductVariant, paranoid: false }
                     ]
+                },
+                {
+                    model: db.Client,
+                    paranoid: false
                 }
             ]
         });
 
-        // Re-construct the response with fresh data
-        // We keep the original clientName/total from params to preserve the snapshot context if needed,
-        // but replace the sales array with the fresh query result.
+        if (!sale) {
+            return res.status(404).json({ message: 'Venta no encontrada' });
+        }
 
         const responseData = {
-            ...entry.parameters,
-            sales: freshSales, // Override with fresh data containing variants
-            business: business ? business.toJSON() : null
+            clientName: entry.parameters.clientName,
+            total: entry.parameters.total,
+            sale: sale.toJSON(), // Single sale object
+            business: business ? business.toJSON() : null,
+            createdAt: sale.createdAt
         };
 
         res.json(responseData);
     } catch (error) {
         console.error(error);
         res.status(500).json({ message: 'Error al recuperar el recibo' });
+    }
+};
+
+export const getReceiptHistory = async (req, res) => {
+    try {
+        const businessId = req.user.businessId;
+        const { limit = 50, offset = 0, clientName, startDate, endDate, minAmount, maxAmount } = req.query;
+
+        // Build where clause for sales with receipt tokens
+        const whereClause = {
+            BusinessId: businessId,
+            receiptTokenId: { [db.Sequelize.Op.ne]: null } // Only sales with receipt tokens
+        };
+
+        // Add filters
+        if (startDate || endDate) {
+            whereClause.createdAt = {};
+            if (startDate) whereClause.createdAt[db.Sequelize.Op.gte] = new Date(startDate);
+            if (endDate) whereClause.createdAt[db.Sequelize.Op.lte] = new Date(endDate);
+        }
+
+        if (minAmount || maxAmount) {
+            whereClause.total = {};
+            if (minAmount) whereClause.total[db.Sequelize.Op.gte] = parseFloat(minAmount);
+            if (maxAmount) whereClause.total[db.Sequelize.Op.lte] = parseFloat(maxAmount);
+        }
+
+        // Fetch sales with receipt tokens
+        const sales = await db.Sale.findAll({
+            where: whereClause,
+            include: [
+                {
+                    model: db.Client,
+                    paranoid: false,
+                    where: clientName ? {
+                        [db.Sequelize.Op.or]: [
+                            { firstName: { [db.Sequelize.Op.like]: `%${clientName}%` } },
+                            { lastName: { [db.Sequelize.Op.like]: `%${clientName}%` } }
+                        ]
+                    } : undefined,
+                    required: !!clientName
+                }
+            ],
+            order: [['createdAt', 'DESC']],
+            limit: parseInt(limit),
+            offset: parseInt(offset)
+        });
+
+        // Get all receipt token IDs
+        const tokenIds = sales.map(s => s.receiptTokenId).filter(Boolean);
+
+        // Fetch receipt tokens
+        const tokens = await db.ReceiptToken.findAll({
+            where: { id: tokenIds }
+        });
+
+        // Create a map for quick lookup
+        const tokenMap = {};
+        tokens.forEach(t => {
+            tokenMap[t.id] = t;
+        });
+
+        // Transform to receipt format
+        const receipts = sales
+            .filter(sale => tokenMap[sale.receiptTokenId]) // Ensure receipt token exists
+            .map(sale => {
+                const token = tokenMap[sale.receiptTokenId];
+                return {
+                    id: sale.receiptTokenId,
+                    createdAt: sale.createdAt,
+                    viewCount: token.viewCount || 0,
+                    lastViewedAt: token.lastViewedAt,
+                    parameters: {
+                        clientName: sale.Client
+                            ? `${sale.Client.firstName} ${sale.Client.lastName}`
+                            : 'Cliente Casual',
+                        total: parseFloat(sale.total),
+                        saleId: sale.id,
+                        businessId: sale.BusinessId
+                    }
+                };
+            });
+
+        // Calculate statistics
+        const stats = {
+            totalReceipts: receipts.length,
+            totalViews: receipts.reduce((sum, r) => sum + r.viewCount, 0),
+            averageViews: receipts.length > 0
+                ? (receipts.reduce((sum, r) => sum + r.viewCount, 0) / receipts.length).toFixed(2)
+                : 0,
+            mostViewed: receipts.length > 0
+                ? Math.max(...receipts.map(r => r.viewCount))
+                : 0
+        };
+
+        res.json({
+            receipts,
+            stats
+        });
+    } catch (error) {
+        console.error('Error fetching receipt history:', error);
+        res.status(500).json({ message: 'Error al obtener historial de recibos', error: error.message });
+    }
+};
+
+// Get sales reports with statistics
+export const getReports = async (req, res) => {
+    try {
+        const businessId = req.user.businessId;
+        const { startDate, endDate, liveDaysOnly } = req.query;
+
+        console.log('=== REPORTS DEBUG V4 ===');
+        console.log('Business ID:', businessId);
+        console.log('Filters:', { startDate, endDate, liveDaysOnly });
+
+        const whereClause = { BusinessId: businessId };
+
+        // Add date filters - use string comparison to avoid timezone issues
+        if (startDate && endDate) {
+            whereClause.createdAt = {
+                [db.Sequelize.Op.between]: [
+                    `${startDate} 00:00:00`,
+                    `${endDate} 23:59:59`
+                ]
+            };
+            console.log('Date filter applied:', `${startDate} 00:00:00 to ${endDate} 23:59:59`);
+        }
+
+        console.log('Executing query...');
+
+        const sales = await db.Sale.findAll({
+            where: whereClause,
+            include: [
+                { model: db.SaleDetail, include: [{ model: db.Product, paranoid: false }] },
+                { model: db.Client, paranoid: false }
+            ],
+            order: [['createdAt', 'DESC']]
+        });
+
+        console.log(`Found ${sales.length} sales`);
+        if (sales.length > 0) {
+            console.log('First sale:', {
+                id: sales[0].id,
+                total: sales[0].total,
+                createdAt: sales[0].createdAt,
+                detailsCount: sales[0].SaleDetails?.length || 0
+            });
+        }
+
+        const business = await db.Business.findByPk(businessId);
+        const liveDays = business?.liveDays || [];
+
+        let filteredSales = sales;
+        if (liveDaysOnly === 'true' && liveDays.length > 0) {
+            filteredSales = sales.filter(sale => liveDays.includes(new Date(sale.createdAt).getDay()));
+        }
+
+        const totalSales = filteredSales.reduce((sum, sale) => sum + parseFloat(sale.total), 0);
+        const totalTransactions = filteredSales.length;
+        const averageSale = totalTransactions > 0 ? totalSales / totalTransactions : 0;
+
+        let totalItemsSold = 0;
+        filteredSales.forEach(sale => {
+            sale.SaleDetails.forEach(detail => { totalItemsSold += detail.quantity; });
+        });
+
+        const salesByDay = Array(7).fill(0).map((_, i) => ({
+            day: ['Domingo', 'Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado'][i],
+            dayNumber: i,
+            sales: 0,
+            transactions: 0
+        }));
+
+        filteredSales.forEach(sale => {
+            const dayOfWeek = new Date(sale.createdAt).getDay();
+            salesByDay[dayOfWeek].sales += parseFloat(sale.total);
+            salesByDay[dayOfWeek].transactions += 1;
+        });
+
+        const productStats = {};
+        filteredSales.forEach(sale => {
+            sale.SaleDetails.forEach(detail => {
+                const productId = detail.ProductId;
+                const productName = detail.Product?.name || 'Producto eliminado';
+
+                if (!productStats[productId]) {
+                    productStats[productId] = { id: productId, name: productName, quantity: 0, revenue: 0 };
+                }
+
+                productStats[productId].quantity += detail.quantity;
+                productStats[productId].revenue += parseFloat(detail.subtotal);
+            });
+        });
+
+        const allProducts = Object.values(productStats).sort((a, b) => b.revenue - a.revenue);
+
+        const clientStats = {};
+        filteredSales.forEach(sale => {
+            const clientId = sale.ClientId || 'casual';
+            const clientName = sale.Client ? `${sale.Client.firstName} ${sale.Client.lastName}` : 'Cliente Casual';
+
+            if (!clientStats[clientId]) {
+                clientStats[clientId] = { id: clientId, name: clientName, purchases: 0, total: 0 };
+            }
+
+            clientStats[clientId].purchases += 1;
+            clientStats[clientId].total += parseFloat(sale.total);
+        });
+
+        const allClients = Object.values(clientStats).sort((a, b) => b.total - a.total);
+
+        const salesTrend = {};
+        filteredSales.forEach(sale => {
+            const date = new Date(sale.createdAt).toISOString().split('T')[0];
+            if (!salesTrend[date]) salesTrend[date] = { date, sales: 0, transactions: 0 };
+            salesTrend[date].sales += parseFloat(sale.total);
+            salesTrend[date].transactions += 1;
+        });
+
+        const trend = Object.values(salesTrend).sort((a, b) => new Date(a.date) - new Date(b.date));
+
+        res.json({
+            summary: {
+                totalSales: parseFloat(totalSales.toFixed(2)),
+                totalTransactions,
+                averageSale: parseFloat(averageSale.toFixed(2)),
+                totalItemsSold
+            },
+            salesByDay,
+            products: allProducts,
+            clients: allClients,
+            trend
+        });
+
+    } catch (error) {
+        console.error('Error fetching reports:', error);
+        res.status(500).json({ message: 'Error al obtener reportes', error: error.message });
     }
 };

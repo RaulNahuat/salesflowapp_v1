@@ -5,15 +5,19 @@ import crypto from "crypto";
 
 const register = async (userData) => {
     const { firstName, lastName, email, phone, password, businessName } = userData;
-    // Check if user exists
-    const existingUser = await db.User.findOne({
-        where: {
-            [db.Sequelize.Op.or]: [{ email }, { phone }]
-        }
-    });
 
-    if (existingUser) {
-        throw new Error("El usuario ya existe con ese correo o teléfono");
+    // Check for duplicate email
+    const existingEmail = await db.User.findOne({ where: { email } });
+    if (existingEmail) {
+        throw new Error("Ya existe una cuenta con este correo electrónico");
+    }
+
+    // Check for duplicate phone (only if phone is provided)
+    if (phone) {
+        const existingPhone = await db.User.findOne({ where: { phone } });
+        if (existingPhone) {
+            throw new Error("Ya existe una cuenta con este número de teléfono");
+        }
     }
 
     // Transaction to ensure data integrity

@@ -17,6 +17,30 @@ export default (sequelize, DataTypes) => {
         logoURL: {
             type: DataTypes.STRING
         },
+        phone: {
+            type: DataTypes.STRING
+        },
+        email: {
+            type: DataTypes.STRING
+        },
+        address: {
+            type: DataTypes.TEXT
+        },
+        returnPolicy: {
+            type: DataTypes.TEXT
+        },
+        weekStartDay: {
+            type: DataTypes.INTEGER,
+            defaultValue: 1, // Monday
+            validate: {
+                min: 0,
+                max: 6
+            }
+        },
+        liveDays: {
+            type: DataTypes.JSON,
+            defaultValue: []
+        },
         settings: {
             type: DataTypes.JSON
         }

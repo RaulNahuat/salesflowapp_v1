@@ -1,9 +1,10 @@
 import React, { useState, useEffect, useMemo } from 'react';
-import { FaSearch, FaShoppingCart, FaTrash, FaUser, FaMoneyBillWave, FaBoxOpen, FaArrowLeft, FaPlus, FaMinus, FaArrowRight, FaWhatsapp } from 'react-icons/fa';
+import { FaSearch, FaShoppingCart, FaTrash, FaUser, FaMoneyBillWave, FaBoxOpen, FaArrowLeft, FaPlus, FaMinus, FaArrowRight, FaWhatsapp, FaFileInvoiceDollar, FaTicketAlt } from 'react-icons/fa';
 import { toast } from 'react-hot-toast';
 import productApi from '../../services/productApi';
 import clientApi from '../../services/clientApi';
 import saleApi from '../../services/saleApi';
+import businessApi from '../../services/businessApi';
 import ConfirmationModal from '../../componentes/ui/ConfirmationModal';
 
 const POSPage = () => {
@@ -17,6 +18,8 @@ const POSPage = () => {
     const [loading, setLoading] = useState(true);
     const [processing, setProcessing] = useState(false);
     const [modalConfig, setModalConfig] = useState({ isOpen: false, title: '', message: '', action: null, onCancel: null });
+    const [businessSlug, setBusinessSlug] = useState('');
+    const [businessName, setBusinessName] = useState('');
 
     // Mobile View State: 'products' | 'cart'
     const [activeTab, setActiveTab] = useState('products');
@@ -25,15 +28,18 @@ const POSPage = () => {
     useEffect(() => {
         const fetchData = async () => {
             try {
-                const [productsData, clientsData] = await Promise.all([
+                const [productsData, clientsData, businessData] = await Promise.all([
                     productApi.getProducts(),
-                    clientApi.getClients()
+                    clientApi.getClients(),
+                    businessApi.getBusiness()
                 ]);
                 setProducts(productsData.filter(p => p.stock > 0));
                 setClients(clientsData);
+                setBusinessSlug(businessData.slug || '');
+                setBusinessName(businessData.name || 'SalesFlow');
             } catch (error) {
                 console.error(error);
-                toast.error('Error cargando datos del POS');
+                toast.error('Error al cargar datos');
             } finally {
                 setLoading(false);
             }
@@ -179,13 +185,22 @@ const POSPage = () => {
             });
 
             const tickets = response.earnedTickets || [];
+            const receiptToken = response.receiptToken;
 
             toast.success('¡Venta Exitosa! 🎉', {
                 duration: 2000,
                 icon: '✅'
             });
 
-            // Prepare sharing message if there are tickets
+            // Build receipt URL if token exists
+            let receiptUrl = '';
+            if (receiptToken) {
+                receiptUrl = businessSlug
+                    ? `${window.location.origin}/${businessSlug}/r/${receiptToken}`
+                    : `${window.location.origin}/r/${receiptToken}`;
+            }
+
+            // Prepare sharing message if there are raffle tickets
             let ticketMsg = "";
             if (tickets.length > 0) {
                 ticketMsg = "\n\n🎟️ *¡Felicidades! Ganaste boletos:*";
@@ -194,7 +209,14 @@ const POSPage = () => {
                 });
             }
 
-            const totalMsg = `*Hola ${selectedClient.firstName}!* 👋\n\nTu compra en *SalesFlowApp* ha sido registrada:\nTotal: *${new Intl.NumberFormat('es-MX', { style: 'currency', currency: 'MXN' }).format(cartTotal)}*${ticketMsg}\n\n¡Gracias por tu preferencia! ✨`;
+            // WhatsApp message with receipt link
+            let whatsappMsg = `*¡Hola ${selectedClient.firstName}!* 👋\n\nTu compra en *${businessName}* ha sido registrada:\nTotal: *${new Intl.NumberFormat('es-MX', { style: 'currency', currency: 'MXN' }).format(cartTotal)}*${ticketMsg}`;
+
+            if (receiptUrl) {
+                whatsappMsg += `\n\n📄 *Ver tu ticket digital:*\n${receiptUrl}`;
+            }
+
+            whatsappMsg += `\n\n¡Gracias por tu preferencia! ✨`;
 
             // Reset cart
             setCart([]);
@@ -205,13 +227,13 @@ const POSPage = () => {
             const updatedProds = await productApi.getProducts();
             setProducts(updatedProds.filter(p => p.stock > 0));
 
-            // Custom Success Modal with WhatsApp option
+            // Custom Success Modal with receipt options
             setModalConfig({
                 isOpen: true,
                 title: '¡Venta completada!',
                 message: (
                     <div className="space-y-4">
-                        <p>¿Deseas compartir el resumen de la venta?</p>
+                        <p className="text-gray-600">La venta se registró exitosamente.</p>
                         {tickets.length > 0 && (
                             <div className="bg-yellow-50 p-3 rounded-lg border border-yellow-200 text-sm">
                                 <p className="font-bold text-yellow-800 flex items-center gap-2 mb-1">
@@ -224,15 +246,29 @@ const POSPage = () => {
                                 ))}
                             </div>
                         )}
-                        <button
-                            onClick={() => {
-                                const url = `https://wa.me/${selectedClient.phone?.replace(/\D/g, '')}?text=${encodeURIComponent(totalMsg)}`;
-                                window.open(url, '_blank');
-                            }}
-                            className="w-full bg-green-500 text-white py-3 rounded-xl font-bold flex items-center justify-center gap-2 hover:bg-green-600 transition-colors"
-                        >
-                            <FaWhatsapp className="text-xl" /> Compartir por WhatsApp
-                        </button>
+                        {receiptToken && (
+                            <div className="space-y-2">
+                                <button
+                                    onClick={() => {
+                                        window.open(receiptUrl, '_blank');
+                                    }}
+                                    className="w-full bg-blue-500 text-white py-3 rounded-xl font-bold flex items-center justify-center gap-2 hover:bg-blue-600 transition-colors"
+                                >
+                                    <FaFileInvoiceDollar className="text-xl" /> Ver Ticket Digital
+                                </button>
+                                {selectedClient.phone && (
+                                    <button
+                                        onClick={() => {
+                                            const url = `https://wa.me/${selectedClient.phone?.replace(/\D/g, '')}?text=${encodeURIComponent(whatsappMsg)}`;
+                                            window.open(url, '_blank');
+                                        }}
+                                        className="w-full bg-green-500 text-white py-3 rounded-xl font-bold flex items-center justify-center gap-2 hover:bg-green-600 transition-colors"
+                                    >
+                                        <FaWhatsapp className="text-xl" /> Compartir Ticket por WhatsApp
+                                    </button>
+                                )}
+                            </div>
+                        )}
                     </div>
                 ),
                 isDatgerous: false,

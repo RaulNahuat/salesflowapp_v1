@@ -9,6 +9,15 @@ export default (sequelize, DataTypes) => {
             type: DataTypes.JSON, // Stores { clientName: '...', sales: [...] } or filter criteria
             allowNull: false
         },
+        viewCount: {
+            type: DataTypes.INTEGER,
+            defaultValue: 0,
+            allowNull: false
+        },
+        lastViewedAt: {
+            type: DataTypes.DATE,
+            allowNull: true
+        },
         expiresAt: {
             type: DataTypes.DATE,
             allowNull: false

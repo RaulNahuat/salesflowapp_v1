@@ -13,7 +13,9 @@ import {
     FaUserCircle,
     FaUsers,
     FaUserTie,
-    FaFileInvoiceDollar
+    FaFileInvoiceDollar,
+    FaHistory,
+    FaChartBar
 } from 'react-icons/fa';
 import ConfirmationModal from '../componentes/ui/ConfirmationModal';
 
@@ -39,6 +41,8 @@ const MainLayout = ({ children }) => {
         { path: '/dashboard', label: 'Dashboard', icon: FaChartPie, permission: null }, // Always available
         { path: '/pos', label: 'Punto de Venta', icon: FaCashRegister, permission: 'pos' },
         { path: '/sales', label: 'Ver Ventas', icon: FaFileInvoiceDollar, permission: 'pos' },
+        { path: '/receipts/history', label: 'Historial de Tickets', icon: FaHistory, permission: 'pos' },
+        { path: '/reports', label: 'Reportes', icon: FaChartBar, permission: 'reports' },
         { path: '/products', label: 'Inventario', icon: FaBox, permission: 'products' },
         { path: '/clients', label: 'Clientes', icon: FaUsers, permission: 'clients' }, // Separate permission
         { path: '/workers', label: 'Equipo', icon: FaUserTie, permission: 'settings' }, // Managers/Owners
