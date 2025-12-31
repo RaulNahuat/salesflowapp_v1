@@ -25,6 +25,7 @@ import RaffleDetail from '../pages/raffles/RaffleDetail';
 import ReceiptPage from '../pages/public/ReceiptPage';
 import ReceiptHistoryPage from '../pages/ReceiptHistoryPage';
 import ReportsPage from '../pages/ReportsPage';
+import ProfilePage from '../pages/settings/ProfilePage';
 
 const ProtectedLayout = ({ children }) => {
     return (
@@ -148,6 +149,11 @@ const AppRouter = () => {
                         <RequirePermission permission="settings">
                             <BusinessProfilePage />
                         </RequirePermission>
+                    </ProtectedLayout>
+                } />
+                <Route path="/profile" element={
+                    <ProtectedLayout>
+                        <ProfilePage />
                     </ProtectedLayout>
                 } />
 

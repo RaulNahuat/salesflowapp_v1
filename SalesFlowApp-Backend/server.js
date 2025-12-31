@@ -88,6 +88,9 @@ app.use('/api/sales', saleRoutes);
 import raffleRoutes from './routes/raffleRoutes.js';
 app.use('/api/raffles', raffleRoutes);
 
+import userRoutes from './routes/userRoutes.js';
+app.use('/api/users', userRoutes);
+
 import { protect } from './middlewares/authMiddleware.js';
 app.post('/api/protected', protect, (req, res) => {
     res.status(200).json({

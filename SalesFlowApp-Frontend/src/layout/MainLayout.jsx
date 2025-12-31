@@ -48,6 +48,7 @@ const MainLayout = ({ children }) => {
         { path: '/workers', label: 'Equipo', icon: FaUserTie, permission: 'settings' }, // Managers/Owners
         { path: '/raffles', label: 'Sorteos', icon: FaTicketAlt, permission: 'raffles' }, // Separate permission
         { path: '/business-profile', label: 'Mi Negocio', icon: FaStore, permission: 'settings' },
+        { path: '/profile', label: 'Mi Perfil', icon: FaUserCircle, permission: null },
     ];
 
     // Filter items based on user permissions
