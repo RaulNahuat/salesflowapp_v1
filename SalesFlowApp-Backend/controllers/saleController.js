@@ -24,18 +24,11 @@ export const createSale = async (req, res) => {
             return res.status(400).json({ error: 'No se pudo identificar al vendedor (BusinessMember no encontrado)' });
         }
 
-        // 1. Create Sale Record
-        const sale = await Sale.create({
-            total,
-            status: 'delivered', // Immediate delivery for POS
-            paymentMethod,
-            notes,
-            BusinessId: businessId,
-            clientId: clientId || null, // Optional client
-            createdById: sellerId
-        }, { transaction: t });
+        // 1. Calculate Valid Total Server-Side
+        let calculatedTotal = 0;
+        const processedItems = [];
 
-        // 2. Process Items (Deduct Stock & Create Details)
+        // Validate items and calculate total first before creating anything
         for (const item of items) {
             const product = await Product.findByPk(item.productId, { transaction: t });
 
@@ -43,52 +36,97 @@ export const createSale = async (req, res) => {
                 throw new Error(`Producto no encontrado: ${item.name}`);
             }
 
-            // Check if this sale is for a specific variant
-            if (item.variantId) {
-                const variant = await ProductVariant.findByPk(item.variantId, { transaction: t });
+            // Price Integrity: Use server-side price
+            const unitPrice = parseFloat(product.sellingPrice);
+            const subtotal = unitPrice * item.quantity;
+            calculatedTotal += subtotal;
 
+            let variant = null;
+            if (item.variantId) {
+                variant = await ProductVariant.findByPk(item.variantId, { transaction: t });
                 if (!variant) {
                     throw new Error(`Variante no encontrada para: ${item.name}`);
                 }
-
                 if (variant.stock < item.quantity) {
                     throw new Error(`Stock insuficiente para variante: ${item.name}`);
                 }
-
-                // Deduct stock from variant
-                await variant.decrement('stock', { by: item.quantity, transaction: t });
-
-                // Also update total product stock
-                await product.decrement('stock', { by: item.quantity, transaction: t });
-
-                // Create Detail with variant reference
-                await SaleDetail.create({
-                    SaleId: sale.id,
-                    ProductId: item.productId,
-                    ProductVariantId: item.variantId,
-                    quantity: item.quantity,
-                    unitPrice: item.price,
-                    subtotal: item.price * item.quantity
-                }, { transaction: t });
             } else {
-                // No variant - regular product
                 if (product.stock < item.quantity) {
                     throw new Error(`Stock insuficiente para: ${product.name}`);
                 }
+            }
 
-                // Deduct Stock
-                await product.decrement('stock', { by: item.quantity, transaction: t });
+            processedItems.push({
+                product,
+                variant,
+                quantity: item.quantity,
+                unitPrice,
+                subtotal
+            });
+        }
 
-                // Create Detail
+        // Validate Total (Allow 0.5 difference for rounding issues)
+        const submittedTotal = parseFloat(total);
+        if (Math.abs(submittedTotal - calculatedTotal) > 0.50) {
+            throw new Error(`Discrepancia de precios detectada. Total Frontend: ${submittedTotal}, Total Real: ${calculatedTotal}`);
+        }
+
+        // 2. Create Sale Record with Verified Total
+        const sale = await Sale.create({
+            total: calculatedTotal, // Use server calculated total
+            status: 'delivered',
+            paymentMethod,
+            notes,
+            BusinessId: businessId,
+            clientId: clientId || null,
+            createdById: sellerId
+        }, { transaction: t });
+
+        // 3. Process Items (Deduct Stock & Create Details)
+        for (const item of processedItems) {
+            if (item.variant) {
+                // Deduct stock from variant
+                await item.variant.decrement('stock', { by: item.quantity, transaction: t });
+                // Also update total product stock
+                await item.product.decrement('stock', { by: item.quantity, transaction: t });
+
                 await SaleDetail.create({
                     SaleId: sale.id,
-                    ProductId: item.productId,
+                    ProductId: item.product.id,
+                    ProductVariantId: item.variant.id,
                     quantity: item.quantity,
-                    unitPrice: item.price,
-                    subtotal: item.price * item.quantity
+                    unitPrice: item.unitPrice,
+                    subtotal: item.subtotal
+                }, { transaction: t });
+            } else {
+                // Deduct Stock
+                await item.product.decrement('stock', { by: item.quantity, transaction: t });
+
+                await SaleDetail.create({
+                    SaleId: sale.id,
+                    ProductId: item.product.id,
+                    quantity: item.quantity,
+                    unitPrice: item.unitPrice,
+                    subtotal: item.subtotal
                 }, { transaction: t });
             }
         }
+
+        // 4. Create Payment Record (Financial Ledger)
+        // Access Payment model correctly from db object if not imported directly, 
+        // but considering imports at top: const { Sale, SaleDetail, ... } = db;
+        // We need to ensure Payment is in the destructured list or access via db.Payment
+        await db.Payment.create({
+            amount: calculatedTotal,
+            method: paymentMethod,
+            date: new Date(),
+            SaleId: sale.id,
+            BusinessId: businessId // Ensure Payment model has this or association supports it. 
+            // Checking step 35: Payment model only has amount, method, date. 
+            // Checking step 12: db.Sale.hasMany(db.Payment). 
+            // So SaleId is valid. BusinessId might not be in Payment model unless added by hook or manual column.
+            // Let's stick to relation via SaleId for now as per schema in Step 35.
+        }, { transaction: t });
 
         await t.commit();
 
@@ -104,8 +142,8 @@ export const createSale = async (req, res) => {
             const tokenEntry = await ReceiptToken.create({
                 parameters: {
                     clientName,
-                    total,
-                    saleId: sale.id, // Link to this specific sale
+                    total: calculatedTotal,
+                    saleId: sale.id,
                     businessId
                 },
                 expiresAt
@@ -117,11 +155,10 @@ export const createSale = async (req, res) => {
             res.status(201).json({
                 message: 'Venta registrada exitosamente',
                 saleId: sale.id,
-                receiptToken: tokenEntry.id // Return token to frontend
+                receiptToken: tokenEntry.id
             });
         } catch (tokenError) {
             console.error('Error generating receipt token:', tokenError);
-            // Sale was successful, just log the token error
             res.status(201).json({
                 message: 'Venta registrada exitosamente',
                 saleId: sale.id,
@@ -130,7 +167,7 @@ export const createSale = async (req, res) => {
         }
 
     } catch (error) {
-        await t.rollback();
+        if (t && !t.finished) await t.rollback();
         console.error('Error creating sale:', error);
         res.status(500).json({
             message: error.message || 'Error al procesar la venta'
@@ -242,7 +279,7 @@ export const getReceiptData = async (req, res) => {
         // Fetch business details including contact information
         const businessId = entry.parameters.businessId;
         const business = await db.Business.findByPk(businessId, {
-            attributes: ['name', 'slug', 'logoURL', 'phone', 'email', 'address', 'returnPolicy']
+            attributes: ['name', 'slug', 'logoURL', 'phone', 'email', 'address', 'returnPolicy', 'settings']
         });
 
         // Fetch the single sale

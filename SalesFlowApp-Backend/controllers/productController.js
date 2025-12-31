@@ -114,6 +114,7 @@ export const getProduct = async (req, res) => {
 };
 
 // Update a Product by the id in the request
+// Update a Product by the id in the request
 export const updateProduct = async (req, res) => {
     const id = req.params.id;
     const businessId = req.businessId;
@@ -124,52 +125,70 @@ export const updateProduct = async (req, res) => {
         // Sanitize numeric fields
         if (productData.costPrice === '' || productData.costPrice === null) productData.costPrice = 0;
         if (productData.sellingPrice === '' || productData.sellingPrice === null) productData.sellingPrice = 0;
-        if (productData.stock === '' || productData.stock === null) productData.stock = 0;
+        // Stock will be recalculated if variants are present
 
-        // Calculate total stock from variants if provided
-        if (variants && variants.length > 0) {
-            productData.stock = variants.reduce((sum, v) => sum + (parseInt(v.stock) || 0), 0);
-        }
-
-        // Update main product data
-        const [num] = await Product.update(productData, {
-            where: { id: id, BusinessId: businessId }
-        });
-
-        // Loophole: if num === 0, it might mean the product doesn't exist OR no changes were made.
-        // We should check if the product exists.
-        if (num === 0) {
-            const existingProduct = await Product.findOne({ where: { id: id, BusinessId: businessId } });
-            if (!existingProduct) {
-                return res.status(404).json({
-                    message: `No se puede actualizar el producto con id=${id}. Producto no encontrado.`
-                });
-            }
-            // If it exists, it just means no data changed. We continue to update variants.
-        }
-
-        // Handle variants if provided
-        if (variants) {
-            // Delete existing variants
-            await db.ProductVariant.destroy({
-                where: { ProductId: id }
+        // Check availability
+        const product = await Product.findOne({ where: { id: id, BusinessId: businessId } });
+        if (!product) {
+            return res.status(404).json({
+                message: `No se puede actualizar el producto con id=${id}. Producto no encontrado.`
             });
+        }
 
-            // Create new variants
-            if (variants.length > 0) {
-                const sanitizedVariants = variants.map(v => {
-                    // Destructure to remove ID and timestamps to avoid conflicts
-                    // eslint-disable-next-line no-unused-vars
-                    const { id: variantId, createdAt, updatedAt, ProductId, ...variantData } = v;
-                    return {
-                        ...variantData,
-                        ProductId: id // Ensure it's linked to the correct product
-                    };
+        // Handle variants intelligently (Upsert Strategy)
+        if (variants) {
+            const existingVariants = await db.ProductVariant.findAll({ where: { ProductId: id } });
+            const incomingVariantIds = variants.map(v => v.id).filter(Boolean); // IDs sent from frontend
+
+            // 1. Identify Variants to Delete (Exist in DB but NOT in incoming list)
+            const variantsToDelete = existingVariants.filter(v => !incomingVariantIds.includes(v.id));
+            if (variantsToDelete.length > 0) {
+                await db.ProductVariant.destroy({
+                    where: { id: variantsToDelete.map(v => v.id) }
                 });
+            }
 
-                await db.ProductVariant.bulkCreate(sanitizedVariants);
+            // 2. Process Incoming Variants (Update or Create)
+            for (const v of variants) {
+                if (v.id && existingVariants.some(ev => ev.id === v.id)) {
+                    // Update existing
+                    await db.ProductVariant.update({
+                        color: v.color,
+                        size: v.size,
+                        stock: v.stock,
+                        sku: v.sku
+                    }, { where: { id: v.id } });
+                } else {
+                    // Create new
+                    await db.ProductVariant.create({
+                        ProductId: id,
+                        color: v.color,
+                        size: v.size,
+                        stock: v.stock,
+                        sku: v.sku
+                    });
+                }
             }
         }
+
+        // Recalculate Total Stock for Synchronization
+        let finalStock = productData.stock || 0;
+
+        // If variants are managed, stock MUST come from sum of variants
+        const currentVariants = await db.ProductVariant.findAll({ where: { ProductId: id } });
+        if (currentVariants.length > 0) {
+            finalStock = currentVariants.reduce((sum, v) => sum + (parseInt(v.stock) || 0), 0);
+        } else {
+            // If no variants, respect the manually entered stock
+            // Ensure it's treated as number
+            finalStock = parseInt(productData.stock || 0);
+        }
+
+        // Update Main Product
+        await product.update({
+            ...productData,
+            stock: finalStock
+        });
 
         // Fetch updated product with variants
         const updatedProduct = await Product.findOne({

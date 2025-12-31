@@ -56,6 +56,10 @@ const ReceiptPage = () => {
 
         const businessName = data.business?.name || "SalesFlow";
 
+        const ticketSettings = data.business?.settings || {};
+        const currency = ticketSettings.currency || 'MXN';
+        const taxRate = parseFloat(ticketSettings.taxRate) || 0;
+
         // --- HEADER ---
         doc.setFont("helvetica", "bold");
         doc.setFontSize(22);
@@ -165,22 +169,57 @@ const ReceiptPage = () => {
             yPos = finalY + 12;
         });
 
-        // --- TOTAL ---
+        // --- TOTAL & TAX "INFORMATIVE" STYLE ---
         yPos += 5;
 
+        // Calculate Tax for display (Inclusive)
+        let taxAmount = 0;
+        let subtotal = parseFloat(data.total); // Subtotal is now same as Total for clarity
+
+        if (taxRate > 0) {
+            const basePrice = subtotal / (1 + (taxRate / 100));
+            taxAmount = subtotal - basePrice;
+        }
+
         doc.setFillColor(248, 249, 250);
-        doc.roundedRect(120, yPos, 78, 20, 2, 2, 'F');
+
+        // Background rect
+        const rectHeight = taxRate > 0 ? 25 : 20;
+        doc.roundedRect(120, yPos, 78, rectHeight, 2, 2, 'F');
+
+        const totalLabelX = 145;
+        const totalValueX = 190;
+        let runningY = yPos + 8;
+
+        // Display Subtotal (same as total) - Omitted for simplicity as per user preference for "Informative" Total
 
         doc.setFontSize(12);
         doc.setFont("helvetica", "bold");
-        doc.setTextColor(80);
-        doc.text("TOTAL A PAGAR", 145, yPos + 13, { align: "right" });
-
-        doc.setFontSize(16);
         doc.setTextColor(33, 37, 41);
-        doc.text(`$${parseFloat(data.total).toFixed(2)}`, 190, yPos + 13, { align: "right" });
+        doc.text("TOTAL A PAGAR", totalLabelX, runningY, { align: "right" });
+        doc.text(`$${parseFloat(data.total).toFixed(2)}`, totalValueX, runningY, { align: "right" });
 
-        yPos += 30;
+        // Tax Note
+        if (taxRate > 0) {
+            runningY += 6;
+            doc.setFontSize(8);
+            doc.setFont("helvetica", "normal");
+            doc.setTextColor(100);
+            doc.text(`(Incluye IVA ${taxRate}%: $${taxAmount.toFixed(2)})`, totalValueX, runningY, { align: "right" });
+
+            // Currency
+            runningY += 4;
+            doc.text(currency, totalValueX, runningY, { align: "right" });
+        } else {
+            // Currency only
+            runningY += 5;
+            doc.setFontSize(8);
+            doc.setFont("helvetica", "normal");
+            doc.setTextColor(150);
+            doc.text(currency, totalValueX, runningY, { align: "right" });
+        }
+
+        yPos += rectHeight + 10;
 
         // --- BUSINESS CONTACT INFO ---
         if (data.business) {
@@ -209,8 +248,19 @@ const ReceiptPage = () => {
         doc.setFontSize(8);
         doc.setTextColor(150);
         doc.setFont("helvetica", "italic");
-        doc.text("Gracias por su preferencia", 105, footerY, { align: "center" });
-        doc.text("Generado por SalesFlow", 105, footerY + 5, { align: "center" });
+
+        const footerText = ticketSettings.ticketFooter || "Gracias por su preferencia";
+        const footerLines = doc.splitTextToSize(footerText, 180);
+        let currentFooterY = footerY;
+
+        footerLines.forEach(line => {
+            doc.text(line, 105, currentFooterY, { align: "center" });
+            currentFooterY += 4;
+        });
+
+        if (!ticketSettings.ticketFooter) {
+            doc.text("Generado por SalesFlow", 105, currentFooterY + 4, { align: "center" });
+        }
 
         doc.save(`Ticket_${data.clientName.replace(/\s+/g, '_')}.pdf`);
     };
@@ -219,6 +269,21 @@ const ReceiptPage = () => {
     if (error) return <div className="h-screen flex items-center justify-center text-red-500 font-bold">{error}</div>;
 
     const businessName = data.business?.name || "SalesFlow";
+
+
+    const ticketSettings = data.business?.settings || {};
+    const currency = ticketSettings.currency || 'MXN';
+    const taxRate = parseFloat(ticketSettings.taxRate) || 0;
+    const footerText = ticketSettings.ticketFooter || "Gracias por su preferencia";
+
+    // Calculation for on-screen display
+    // Calculation for on-screen display
+    let taxAmount = 0;
+
+    if (taxRate > 0) {
+        const basePrice = parseFloat(data.total) / (1 + (taxRate / 100));
+        taxAmount = parseFloat(data.total) - basePrice;
+    }
 
     return (
         <div className="min-h-screen bg-gradient-to-br from-gray-50 to-blue-50 flex flex-col items-center justify-center p-4">
@@ -247,7 +312,7 @@ const ReceiptPage = () => {
                     <div className="grid grid-cols-2 gap-4 text-xs text-gray-400 font-medium mb-8 uppercase tracking-wider border-b border-gray-100 pb-4">
                         <div className="text-left">
                             <p className="mb-1">Folio</p>
-                            <p className="text-gray-900 font-bold">#{data.sale.id}</p>
+                            <p className="text-gray-900 font-bold text-[10px] break-all">#{data.sale.id.toUpperCase()}</p>
                         </div>
                         <div className="text-right">
                             <p className="mb-1">Fecha</p>
@@ -265,31 +330,40 @@ const ReceiptPage = () => {
 
                     {/* Products List */}
                     <div className="mb-8">
-                        <div className="space-y-4">
+                        {/* Headers */}
+                        <div className="flex justify-between text-[10px] uppercase tracking-wider font-bold text-gray-400 border-b border-gray-100 pb-2 mb-3">
+                            <div className="w-8 text-center">Cant.</div>
+                            <div className="flex-1 pl-3">Descripción</div>
+                            <div className="text-right">Importe</div>
+                        </div>
+
+                        {/* Scrollable List */}
+                        <div className="max-h-64 overflow-y-auto pr-1 scrollbar-thin scrollbar-thumb-gray-200 scrollbar-track-transparent space-y-4">
                             {data.sale.SaleDetails.map((detail, idx) => {
                                 const unitPrice = parseFloat(detail.unitPrice);
                                 const prodName = detail.Product ? detail.Product.name : 'Producto';
                                 const variantInfo = detail.ProductVariant ? formatVariant(detail.ProductVariant) : '';
+                                const isLast = idx === data.sale.SaleDetails.length - 1;
 
                                 return (
-                                    <div key={idx} className="group">
+                                    <div key={idx} className={`group ${!isLast ? 'border-b border-gray-50 pb-3' : ''}`}>
                                         <div className="flex justify-between items-start text-sm">
-                                            <div className="flex gap-3">
-                                                <span className="font-bold text-gray-400 w-5 tabular-nums text-right">
-                                                    {detail.quantity}x
+                                            <div className="flex gap-3 w-full">
+                                                <span className="font-bold text-gray-400 w-8 text-center pt-0.5 text-xs bg-gray-50 rounded h-6 flex items-center justify-center">
+                                                    {detail.quantity}
                                                 </span>
-                                                <div className="flex flex-col">
-                                                    <span className="text-gray-800 font-semibold leading-tight group-hover:text-blue-600 transition-colors">
-                                                        {prodName} <span className="text-gray-500 font-normal text-xs">{variantInfo}</span>
+                                                <div className="flex flex-col flex-1 pl-1">
+                                                    <span className="text-gray-800 font-semibold leading-tight group-hover:text-blue-600 transition-colors text-[13px]">
+                                                        {prodName} <span className="text-gray-500 font-normal text-xs block sm:inline sm:ml-1">{variantInfo}</span>
                                                     </span>
-                                                    <span className="text-[11px] text-gray-400 mt-0.5">
+                                                    <span className="text-[10px] text-gray-400 mt-0.5">
                                                         ${unitPrice.toFixed(2)} c/u
                                                     </span>
                                                 </div>
+                                                <span className="font-bold text-gray-900 tabular-nums text-right min-w-[60px]">
+                                                    ${parseFloat(detail.subtotal).toFixed(2)}
+                                                </span>
                                             </div>
-                                            <span className="font-bold text-gray-900 tabular-nums">
-                                                ${parseFloat(detail.subtotal).toFixed(2)}
-                                            </span>
                                         </div>
                                     </div>
                                 );
@@ -301,14 +375,26 @@ const ReceiptPage = () => {
                     <div className="border-t-2 border-dashed border-gray-200 my-8"></div>
 
                     {/* Total Section */}
-                    <div className="flex justify-between items-end mb-10">
+                    {/* Total Section */}
+                    <div className="flex justify-between items-end mb-1">
                         <span className="text-sm font-bold text-gray-500 uppercase tracking-widest">Total a Pagar</span>
                         <div className="text-right">
                             <span className="text-4xl font-black text-gray-900 tracking-tighter shadow-blue-200 drop-shadow-sm">
                                 ${parseFloat(data.total).toFixed(2)}
                             </span>
-                            <p className="text-[10px] text-gray-400 mt-1 uppercase font-medium">Moneda Nacional</p>
                         </div>
+                    </div>
+
+                    {/* Informative Tax & Currency */}
+                    <div className="text-right mb-10">
+                        {taxRate > 0 && (
+                            <p className="text-xs text-gray-500 mb-1">
+                                (Incluye IVA {taxRate}%: ${taxAmount.toFixed(2)})
+                            </p>
+                        )}
+                        <p className="text-[10px] text-gray-400 uppercase font-medium">
+                            {currency} - {currency === 'MXN' ? 'Moneda Nacional' : 'Dólar Americano'}
+                        </p>
                     </div>
 
 
@@ -357,8 +443,8 @@ const ReceiptPage = () => {
                         </button>
                     </div>
 
-                    <p className="text-center text-[10px] text-gray-300 mt-6 font-medium uppercase tracking-widest">
-                        Generado por SalesFlow
+                    <p className="text-center text-[10px] text-gray-400 mt-6 font-medium uppercase tracking-wide px-8 leading-relaxed">
+                        {footerText}
                     </p>
                 </div>
 
