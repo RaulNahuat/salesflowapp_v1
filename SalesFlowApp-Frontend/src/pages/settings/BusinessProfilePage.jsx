@@ -1,7 +1,21 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import businessApi from '../../services/businessApi';
-import { FaStore, FaSave, FaArrowLeft, FaGlobe, FaReceipt, FaMoneyBillWave, FaMapMarkerAlt, FaPhone } from 'react-icons/fa';
+import {
+    FaStore,
+    FaSave,
+    FaArrowLeft,
+    FaGlobe,
+    FaReceipt,
+    FaMoneyBillWave,
+    FaMapMarkerAlt,
+    FaPhone,
+    FaEnvelope,
+    FaRegBuilding,
+    FaCalendarCheck,
+    FaChevronLeft
+} from 'react-icons/fa';
+import { toast } from 'react-hot-toast';
 
 const BusinessProfilePage = () => {
     const [business, setBusiness] = useState({
@@ -23,14 +37,13 @@ const BusinessProfilePage = () => {
 
     const [loading, setLoading] = useState(true);
     const [errors, setErrors] = useState({});
-    const [status, setStatus] = useState({ type: '', msg: '' });
+    const [isSaving, setIsSaving] = useState(false);
     const navigate = useNavigate();
 
     useEffect(() => {
         const fetchBusiness = async () => {
             try {
                 const data = await businessApi.getBusiness();
-                // Ensure settings object exists
                 setBusiness({
                     name: data.name || '',
                     slug: data.slug || '',
@@ -45,11 +58,11 @@ const BusinessProfilePage = () => {
                         currency: 'MXN',
                         taxRate: 0,
                         ticketFooter: '',
-                        ...data.settings // Merges existing settings
+                        ...data.settings
                     }
                 });
             } catch (err) {
-                setStatus({ type: 'error', msg: err.message || 'Error al cargar información' });
+                toast.error('Error al cargar la información del negocio');
             } finally {
                 setLoading(false);
             }
@@ -60,7 +73,6 @@ const BusinessProfilePage = () => {
     const handleChange = (e) => {
         const { name, value } = e.target;
         setBusiness(prev => ({ ...prev, [name]: value }));
-        // Clear error when user types
         if (errors[name]) setErrors(prev => ({ ...prev, [name]: '' }));
     };
 
@@ -85,286 +97,321 @@ const BusinessProfilePage = () => {
 
     const validate = () => {
         const newErrors = {};
-        if (!business.name.trim()) newErrors.name = 'El nombre del negocio es obligatorio.';
-        if (business.settings.taxRate < 0 || business.settings.taxRate > 100) newErrors.taxRate = 'El impuesto debe estar entre 0 y 100.';
+        if (!business.name.trim()) newErrors.name = 'El nombre del negocio es requerido.';
+        if (business.settings.taxRate < 0 || business.settings.taxRate > 100) newErrors.taxRate = 'Rango inválido (0-100).';
         setErrors(newErrors);
         return Object.keys(newErrors).length === 0;
     };
 
     const handleSubmit = async (e) => {
         e.preventDefault();
-        setStatus({ type: '', msg: '' });
-
         if (!validate()) return;
 
+        setIsSaving(true);
         try {
             await businessApi.updateBusiness(business);
-            setStatus({ type: 'success', msg: 'Información guardada correctamente.' });
-            setTimeout(() => setStatus({ type: '', msg: '' }), 3000);
+            toast.success('Perfil actualizado correctamente');
         } catch (err) {
-            setStatus({ type: 'error', msg: err.message || 'Error al actualizar.' });
+            toast.error(err.message || 'Error al actualizar');
+        } finally {
+            setIsSaving(false);
         }
     };
 
     if (loading) return (
-        <div className="min-h-screen flex items-center justify-center bg-gray-50">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+        <div className="flex flex-col items-center justify-center h-96 gap-4">
+            <div className="w-12 h-12 border-4 border-blue-600/20 border-t-blue-600 rounded-full animate-spin"></div>
+            <p className="text-slate-400 font-bold uppercase tracking-widest text-[10px]">Cargando Configuración...</p>
         </div>
     );
 
     return (
-        <div className="min-h-screen bg-gray-50 pb-12">
-            {/* Header / Navbar area could go here */}
-            <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 pt-8">
-
-                {/* Navigation Back */}
+        <div className="max-w-5xl mx-auto pb-20 animate-fade-up">
+            {/* Header Navigation */}
+            <div className="flex items-center justify-between mb-8">
                 <button
                     onClick={() => navigate('/dashboard')}
-                    className="flex items-center text-gray-500 hover:text-gray-800 transition-colors mb-6 text-sm font-medium"
+                    className="group flex items-center gap-3 text-slate-400 hover:text-slate-800 transition-all font-bold text-[10px] uppercase tracking-[0.2em]"
                 >
-                    <FaArrowLeft className="mr-2" /> Volver al Dashboard
+                    <div className="w-10 h-10 rounded-full bg-white border border-slate-100 flex items-center justify-center group-hover:bg-slate-50 transition-colors">
+                        <FaChevronLeft className="group-hover:-translate-x-0.5 transition-transform" />
+                    </div>
+                    Volver al Panel
                 </button>
+                <div className="flex items-center gap-2">
+                    <div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></div>
+                    <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Negocio Verificado</span>
+                </div>
+            </div>
 
-                <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
-                    {/* Header Banner */}
-                    <div className="bg-gradient-to-r from-blue-600 to-indigo-700 px-8 py-6 text-white">
-                        <div className="flex items-center">
-                            <div className="p-3 bg-white/20 rounded-lg backdrop-blur-sm mr-4">
-                                <FaStore className="text-2xl" />
+            <form onSubmit={handleSubmit} className="space-y-8">
+                {/* 1. Identity Card */}
+                <div className="premium-card overflow-hidden border-0 shadow-soft">
+                    <div className="bg-gradient-to-br from-blue-50/50 via-white to-indigo-50/30 p-8 sm:p-12 border-b border-slate-100 relative">
+                        <div className="absolute top-0 right-0 w-80 h-80 bg-blue-100/20 blur-[100px] rounded-full -mr-20 -mt-20"></div>
+                        <div className="relative z-10 flex flex-col md:flex-row items-center gap-8 text-center md:text-left">
+                            <div className="w-24 h-24 rounded-[2rem] bg-white shadow-lg shadow-blue-500/5 flex items-center justify-center p-1 group border border-blue-50">
+                                {business.logoURL ? (
+                                    <img src={business.logoURL} alt="Logo" className="w-full h-full object-contain rounded-[1.8rem] group-hover:scale-110 transition-transform duration-500" />
+                                ) : (
+                                    <FaStore size={32} className="text-blue-400" />
+                                )}
                             </div>
                             <div>
-                                <h1 className="text-2xl font-bold">Perfil del Negocio</h1>
-                                <p className="text-blue-100 text-sm opacity-90">Personaliza la identidad y configuración de tu empresa</p>
+                                <h1 className="text-3xl font-bold tracking-tight mb-2 text-slate-800">Perfil del Negocio</h1>
+                                <p className="text-slate-500 font-medium max-w-md">Identidad de marca y detalles operativos.</p>
                             </div>
                         </div>
                     </div>
 
-                    <form onSubmit={handleSubmit} className="p-8">
-                        {status.msg && (
-                            <div className={`mb-6 p-4 rounded-xl text-sm font-medium flex items-center ${status.type === 'error' ? 'bg-red-50 text-red-700 border border-red-100' : 'bg-green-50 text-green-700 border border-green-100'
-                                }`}>
-                                {status.msg}
-                            </div>
-                        )}
-
-                        {/* Identidad Section */}
-                        <div className="mb-10">
-                            <h2 className="text-lg font-bold text-gray-800 mb-1 border-b pb-2 border-gray-100">Identidad Digital</h2>
-                            <p className="text-sm text-gray-400 mb-6">Información visible para tus clientes y en el sistema.</p>
-
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-6">
-                                <div>
-                                    <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">Nombre del Negocio</label>
+                    <div className="p-8 sm:p-12 space-y-10">
+                        <section>
+                            <h3 className="text-[10px] font-bold text-blue-600 uppercase tracking-[0.3em] mb-8 flex items-center gap-3">
+                                <div className="w-1.5 h-1.5 rounded-full bg-blue-600"></div> Identidad Digital
+                            </h3>
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                                <div className="space-y-2">
+                                    <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest ml-2">Nombre Comercial</label>
                                     <input
                                         type="text"
                                         name="name"
                                         value={business.name}
                                         onChange={handleChange}
-                                        className={`w-full px-4 py-3 rounded-lg border bg-gray-50 focus:bg-white focus:outline-none focus:ring-2 transition-all duration-200 ${errors.name ? 'border-red-300 focus:ring-red-200' : 'border-gray-200 focus:border-blue-500 focus:ring-blue-100'}`}
-                                        placeholder="Ej. Abarrotes La Familia"
+                                        className="premium-input-style w-full"
+                                        placeholder="Ej. Boutique Elegante"
                                     />
-                                    {errors.name && <p className="text-red-500 text-xs mt-1">{errors.name}</p>}
+                                    {errors.name && <p className="text-rose-500 text-[10px] font-bold mt-1 ml-2">{errors.name}</p>}
                                 </div>
-
-                                <div>
-                                    <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2 flex items-center">
-                                        URL del Logo <FaGlobe className="ml-1 text-gray-300" />
-                                    </label>
-                                    <input
-                                        type="text"
-                                        name="logoURL"
-                                        value={business.logoURL || ''}
-                                        onChange={handleChange}
-                                        className="w-full px-4 py-3 rounded-lg border border-gray-200 bg-gray-50 focus:bg-white focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100 transition-all duration-200"
-                                        placeholder="https://..."
-                                    />
-                                </div>
-
-                                <div className="md:col-span-2">
-                                    <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">Slug (Identificador)</label>
-                                    <div className="flex items-center w-full px-4 py-3 rounded-lg border border-gray-200 bg-gray-100 text-gray-500 select-none">
-                                        <span className="text-gray-400 mr-2">salesflow.app/</span>
-                                        <span className="font-mono font-medium text-gray-700">{business.slug}</span>
+                                <div className="space-y-2">
+                                    <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest ml-2">URL del Logo (Link)</label>
+                                    <div className="relative group">
+                                        <FaGlobe className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-300 group-focus-within:text-blue-500 transition-colors" />
+                                        <input
+                                            type="text"
+                                            name="logoURL"
+                                            value={business.logoURL}
+                                            onChange={handleChange}
+                                            className="premium-input-style w-full pl-12"
+                                            placeholder="https://imgur.com/logo.png"
+                                        />
                                     </div>
-                                    <p className="text-xs text-gray-400 mt-1">Este enlace es único y automático.</p>
+                                </div>
+                                <div className="md:col-span-2 space-y-2">
+                                    <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest ml-2">Identificador del Negocio (Slug)</label>
+                                    <div className="flex items-center bg-slate-50 border border-slate-100 rounded-2xl px-5 py-4 text-slate-400 font-bold text-sm">
+                                        <span className="opacity-50">salesflow.app/</span>
+                                        <span className="text-slate-800 font-bold ml-1">{business.slug}</span>
+                                    </div>
+                                    <p className="text-[10px] font-bold text-slate-300 italic ml-2">Este enlace es único y se genera automáticamente.</p>
                                 </div>
                             </div>
-                        </div>
+                        </section>
 
-                        {/* Configuración Operativa Section */}
-                        <div className="mb-8">
-                            <h2 className="text-lg font-bold text-gray-800 mb-1 border-b pb-2 border-gray-100 flex items-center">
-                                <FaReceipt className="mr-2 text-indigo-500 opacity-75" /> Configuración de Ventas & Tickets
-                            </h2>
-                            <p className="text-sm text-gray-400 mb-6">Estos datos aparecerán impresos en tus recibos.</p>
+                        <div className="w-full h-px bg-slate-50"></div>
 
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-6">
-                                <div>
-                                    <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2 flex items-center">
-                                        <FaPhone className="mr-1" /> Teléfono de Contacto
-                                    </label>
-                                    <input
-                                        type="text"
-                                        name="phone"
-                                        value={business.phone || ''}
-                                        onChange={handleChange}
-                                        className="w-full px-4 py-3 rounded-lg border border-gray-200 bg-gray-50 focus:bg-white focus:outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-100 transition-all duration-200"
-                                        placeholder="(55) 1234-5678"
-                                    />
-                                </div>
-
-                                <div>
-                                    <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">Email de Contacto</label>
-                                    <input
-                                        type="email"
-                                        name="email"
-                                        value={business.email || ''}
-                                        onChange={handleChange}
-                                        className="w-full px-4 py-3 rounded-lg border border-gray-200 bg-gray-50 focus:bg-white focus:outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-100 transition-all duration-200"
-                                        placeholder="contacto@negocio.com"
-                                    />
-                                </div>
-
-                                <div className="md:col-span-2">
-                                    <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2 flex items-center">
-                                        <FaMapMarkerAlt className="mr-1" /> Dirección Física
-                                    </label>
-                                    <textarea
-                                        name="address"
-                                        value={business.address || ''}
-                                        onChange={handleChange}
-                                        rows="2"
-                                        className="w-full px-4 py-3 rounded-lg border border-gray-200 bg-gray-50 focus:bg-white focus:outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-100 transition-all duration-200 resize-none"
-                                        placeholder="Calle 123, Colonia Centro, Ciudad, CP 12345"
-                                    />
-                                </div>
-
-                                <div>
-                                    <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2 flex items-center">
-                                        <FaMoneyBillWave className="mr-1" /> Moneda
-                                    </label>
-                                    <div className="relative">
-                                        <select
-                                            name="currency"
-                                            value={business.settings?.currency || 'MXN'}
-                                            onChange={handleSettingChange}
-                                            className="w-full px-4 py-3 rounded-lg border border-gray-200 bg-gray-50 focus:bg-white focus:outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-100 transition-all duration-200 appearance-none"
-                                        >
-                                            <option value="MXN">Peso Mexicano (MXN)</option>
-                                            <option value="USD">Dólar Americano (USD)</option>
-                                        </select>
-                                        <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-3 text-gray-500">
-                                            <svg className="fill-current h-4 w-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20"><path d="M9.293 12.95l.707.707L15.657 8l-1.414-1.414L10 10.828 5.757 6.586 4.343 8z" /></svg>
-                                        </div>
+                        <section>
+                            <h3 className="text-[10px] font-bold text-rose-600 uppercase tracking-[0.3em] mb-8 flex items-center gap-3">
+                                <div className="w-1.5 h-1.5 rounded-full bg-rose-600"></div> Información de Contacto
+                            </h3>
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                                <div className="space-y-2">
+                                    <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest ml-2">Número Telefónico</label>
+                                    <div className="relative group">
+                                        <FaPhone size={14} className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-300 group-focus-within:text-rose-500 transition-colors" />
+                                        <input
+                                            type="text"
+                                            name="phone"
+                                            value={business.phone}
+                                            onChange={handleChange}
+                                            className="premium-input-style w-full pl-12"
+                                            placeholder="+52 55 1234 5678"
+                                        />
                                     </div>
                                 </div>
+                                <div className="space-y-2">
+                                    <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest ml-2">Correo Corporativo</label>
+                                    <div className="relative group">
+                                        <FaEnvelope size={14} className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-300 group-focus-within:text-rose-500 transition-colors" />
+                                        <input
+                                            type="email"
+                                            name="email"
+                                            value={business.email}
+                                            onChange={handleChange}
+                                            className="premium-input-style w-full pl-12"
+                                            placeholder="contacto@empresa.com"
+                                        />
+                                    </div>
+                                </div>
+                                <div className="md:col-span-2 space-y-2">
+                                    <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest ml-2">Dirección Física</label>
+                                    <div className="relative group">
+                                        <FaMapMarkerAlt size={14} className="absolute left-4 top-6 text-slate-300 group-focus-within:text-rose-500 transition-colors" />
+                                        <textarea
+                                            name="address"
+                                            value={business.address}
+                                            onChange={handleChange}
+                                            rows="3"
+                                            className="premium-input-style w-full pl-12 pt-5 resize-none"
+                                            placeholder="Calle, Número, Colonia, Ciudad, CP"
+                                        />
+                                    </div>
+                                </div>
+                            </div>
+                        </section>
+                    </div>
+                </div>
 
-                                <div>
-                                    <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">Impuesto / IVA (%)</label>
+                {/* 2. Operations Card */}
+                <div className="premium-card p-8 sm:p-12 space-y-10">
+                    <section>
+                        <h3 className="text-[10px] font-bold text-indigo-600 uppercase tracking-[0.3em] mb-8 flex items-center gap-3">
+                            <div className="w-1.5 h-1.5 rounded-full bg-indigo-600"></div> Configuración Operativa
+                        </h3>
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                            <div className="space-y-2">
+                                <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest ml-2">Moneda del Sistema</label>
+                                <div className="relative group">
+                                    <FaMoneyBillWave size={14} className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-300 group-focus-within:text-indigo-500 transition-colors" />
+                                    <select
+                                        name="currency"
+                                        value={business.settings.currency}
+                                        onChange={handleSettingChange}
+                                        className="premium-input-style w-full pl-12 appearance-none cursor-pointer"
+                                    >
+                                        <option value="MXN">Pesos Mexicanos (MXN)</option>
+                                        <option value="USD">Dólares Americanos (USD)</option>
+                                        <option value="EUR">Euros (EUR)</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div className="space-y-2">
+                                <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest ml-2">Tasa de Impuestos (IVA/Tax %)</label>
+                                <div className="relative group">
+                                    <div className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 font-bold text-[10px]">%</div>
                                     <input
                                         type="number"
                                         name="taxRate"
-                                        value={business.settings?.taxRate || 0}
+                                        value={business.settings.taxRate}
                                         onChange={handleSettingChange}
-                                        className={`w-full px-4 py-3 rounded-lg border border-gray-200 bg-gray-50 focus:bg-white focus:outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-100 transition-all duration-200 ${errors.taxRate ? 'border-red-300' : ''}`}
+                                        className="premium-input-style w-full"
                                         min="0" max="100" step="0.01"
                                     />
-                                    {errors.taxRate && <p className="text-red-500 text-xs mt-1">{errors.taxRate}</p>}
                                 </div>
-
-                                <div className="md:col-span-2">
-                                    <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">Pie de Página del Ticket</label>
-                                    <textarea
-                                        name="ticketFooter"
-                                        value={business.settings?.ticketFooter || ''}
-                                        onChange={handleSettingChange}
-                                        rows="2"
-                                        className="w-full px-4 py-3 rounded-lg border border-gray-200 bg-gray-50 focus:bg-white focus:outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-100 transition-all duration-200 resize-none"
-                                        placeholder="Ej. ¡Gracias por su compra! Síganos en redes sociales."
-                                    />
-                                </div>
-
-                                <div className="md:col-span-2">
-                                    <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">Política de Devolución</label>
-                                    <textarea
-                                        name="returnPolicy"
-                                        value={business.returnPolicy || ''}
-                                        onChange={handleChange}
-                                        rows="3"
-                                        className="w-full px-4 py-3 rounded-lg border border-gray-200 bg-gray-50 focus:bg-white focus:outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-100 transition-all duration-200 resize-none"
-                                        placeholder="Ej. Aceptamos devoluciones dentro de los 7 días con ticket de compra."
-                                    />
-                                    <p className="text-xs text-gray-400 mt-1">Esta política aparecerá en los tickets digitales.</p>
-                                </div>
-
-                                <div>
-                                    <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">Inicio de Semana (Reportes)</label>
-                                    <select
-                                        name="weekStartDay"
-                                        value={business.weekStartDay}
-                                        onChange={handleChange}
-                                        className="w-full px-4 py-3 rounded-lg border border-gray-200 bg-gray-50 focus:bg-white focus:outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-100 transition-all duration-200"
-                                    >
-                                        <option value={0}>Domingo</option>
-                                        <option value={1}>Lunes</option>
-                                        <option value={2}>Martes</option>
-                                        <option value={3}>Miércoles</option>
-                                        <option value={4}>Jueves</option>
-                                        <option value={5}>Viernes</option>
-                                        <option value={6}>Sábado</option>
-                                    </select>
-                                    <p className="text-xs text-gray-400 mt-1">Define cuándo inicia tu semana laboral para los reportes.</p>
-                                </div>
-
-                                <div className="md:col-span-2">
-                                    <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-3">Días de Live de Ventas</label>
-                                    <div className="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-7 gap-2">
-                                        {[
-                                            { value: 0, label: 'Dom' },
-                                            { value: 1, label: 'Lun' },
-                                            { value: 2, label: 'Mar' },
-                                            { value: 3, label: 'Mié' },
-                                            { value: 4, label: 'Jue' },
-                                            { value: 5, label: 'Vie' },
-                                            { value: 6, label: 'Sáb' }
-                                        ].map(day => (
-                                            <button
-                                                key={day.value}
-                                                type="button"
-                                                onClick={() => handleLiveDayToggle(day.value)}
-                                                className={`px-3 py-2 rounded-lg text-sm font-bold transition-all duration-200 ${(business.liveDays || []).includes(day.value)
-                                                        ? 'bg-indigo-600 text-white shadow-md'
-                                                        : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
-                                                    }`}
-                                            >
-                                                {day.label}
-                                            </button>
-                                        ))}
-                                    </div>
-                                    <p className="text-xs text-gray-400 mt-2">Selecciona los días que haces transmisiones en vivo para vender.</p>
-                                </div>
+                                {errors.taxRate && <p className="text-rose-500 text-[10px] font-bold mt-1 ml-2">{errors.taxRate}</p>}
+                            </div>
+                            <div className="space-y-2">
+                                <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest ml-2">Inicio de Semana Fiscal</label>
+                                <select
+                                    name="weekStartDay"
+                                    value={business.weekStartDay}
+                                    onChange={handleChange}
+                                    className="premium-input-style w-full"
+                                >
+                                    <option value={0}>Domingo</option>
+                                    <option value={1}>Lunes</option>
+                                    <option value={2}>Martes</option>
+                                    <option value={3}>Miércoles</option>
+                                    <option value={4}>Jueves</option>
+                                    <option value={5}>Viernes</option>
+                                    <option value={6}>Sábado</option>
+                                </select>
                             </div>
                         </div>
+                    </section>
 
-                        {/* Actions */}
-                        <div className="flex items-center justify-end pt-6 border-t border-gray-100">
-                            <button
-                                type="button"
-                                onClick={() => navigate('/dashboard')}
-                                className="mr-4 px-6 py-2.5 rounded-lg text-gray-500 font-medium hover:bg-gray-100 transition-all duration-200"
-                            >
-                                Cancelar
-                            </button>
-                            <button
-                                type="submit"
-                                className="px-8 py-3 rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 text-white font-bold shadow-lg shadow-blue-500/30 hover:shadow-blue-500/40 hover:-translate-y-0.5 active:translate-y-0 transition-all duration-200 flex items-center"
-                            >
-                                <FaSave className="mr-2" /> Guardar Cambios
-                            </button>
+                    <div className="w-full h-px bg-slate-50"></div>
+
+                    <section>
+                        <h3 className="text-[10px] font-bold text-emerald-600 uppercase tracking-[0.3em] mb-8 flex items-center gap-3">
+                            <div className="w-1.5 h-1.5 rounded-full bg-emerald-600"></div> Días de Operación Especial (Live)
+                        </h3>
+                        <div className="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-7 gap-3">
+                            {[
+                                { val: 0, l: 'Dom' },
+                                { val: 1, l: 'Lun' },
+                                { val: 2, l: 'Mar' },
+                                { val: 3, l: 'Mié' },
+                                { val: 4, l: 'Jue' },
+                                { val: 5, l: 'Vie' },
+                                { val: 6, l: 'Sáb' }
+                            ].map(day => (
+                                <button
+                                    key={day.val}
+                                    type="button"
+                                    onClick={() => handleLiveDayToggle(day.val)}
+                                    className={`h-14 rounded-2xl flex flex-col items-center justify-center transition-all border ${(business.liveDays || []).includes(day.val)
+                                        ? 'bg-emerald-600 border-emerald-500 text-white shadow-lg shadow-emerald-100'
+                                        : 'bg-white border-slate-100 text-slate-400 hover:border-emerald-200 hover:text-emerald-500'
+                                        }`}
+                                >
+                                    <FaCalendarCheck size={14} className="mb-1" />
+                                    <span className="text-[9px] font-bold uppercase tracking-widest leading-none">{day.l}</span>
+                                </button>
+                            ))}
                         </div>
-                    </form>
+                        <p className="text-[10px] font-bold text-slate-400 mt-4 italic">Selecciona los días en los que realizas dinámicas de venta en vivo para segmentar tus reportes.</p>
+                    </section>
+
+                    <div className="w-full h-px bg-slate-50"></div>
+
+                    <section>
+                        <h3 className="text-[10px] font-bold text-slate-400 uppercase tracking-[0.3em] mb-8 flex items-center gap-3">
+                            <div className="w-1.5 h-1.5 rounded-full bg-slate-300"></div> Textos Legales y de Ticket
+                        </h3>
+                        <div className="space-y-8">
+                            <div className="space-y-2">
+                                <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest ml-2">Pie de Página del Ticket</label>
+                                <textarea
+                                    name="ticketFooter"
+                                    value={business.settings.ticketFooter}
+                                    onChange={handleSettingChange}
+                                    rows="2"
+                                    className="premium-input-style w-full pt-5 resize-none"
+                                    placeholder="Ej. ¡Gracias por apoyar el comercio local!"
+                                />
+                            </div>
+                            <div className="space-y-2">
+                                <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest ml-2">Política de Privacidad y Devoluciones</label>
+                                <textarea
+                                    name="returnPolicy"
+                                    value={business.returnPolicy}
+                                    onChange={handleChange}
+                                    rows="4"
+                                    className="premium-input-style w-full pt-5 resize-none"
+                                    placeholder="Describe los términos bajo los cuales aceptas cambios o devoluciones..."
+                                />
+                            </div>
+                        </div>
+                    </section>
                 </div>
-            </div>
+
+                {/* 3. Floating Action Footer */}
+                <div className="sticky bottom-8 left-0 right-0 z-40 px-4">
+                    <div className="max-w-md mx-auto bg-white/80 backdrop-blur-2xl border border-white shadow-2xl rounded-[2.5rem] p-3 flex items-center justify-between">
+                        <button
+                            type="button"
+                            onClick={() => navigate('/dashboard')}
+                            className="px-6 py-4 text-[10px] font-bold text-slate-500 uppercase tracking-widest hover:text-slate-800 transition-colors"
+                        >
+                            Ignorar
+                        </button>
+                        <button
+                            type="submit"
+                            disabled={isSaving}
+                            className="btn-primary min-w-[200px] flex items-center justify-center gap-3 relative overflow-hidden"
+                        >
+                            {isSaving ? (
+                                <div className="w-5 h-5 border-2 border-white/20 border-t-white rounded-full animate-spin"></div>
+                            ) : (
+                                <>
+                                    <FaSave className="text-blue-200" />
+                                    <span>Guardar Perfil</span>
+                                </>
+                            )}
+                        </button>
+                    </div>
+                </div>
+            </form>
         </div>
     );
 };

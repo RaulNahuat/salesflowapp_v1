@@ -12,7 +12,8 @@ import {
     FaClock,
     FaTruckLoading,
     FaReceipt,
-    FaExternalLinkAlt
+    FaExternalLinkAlt,
+    FaHistory
 } from 'react-icons/fa';
 import { toast } from 'react-hot-toast';
 import saleApi from '../../services/saleApi';
@@ -47,7 +48,6 @@ const SalesHistoryPage = () => {
         fetchData();
     }, []);
 
-    // --- FILTERS ---
     const dateFilteredSales = useMemo(() => {
         let result = [...sales];
         const now = new Date();
@@ -121,180 +121,202 @@ const SalesHistoryPage = () => {
         setExpandedSale(expandedSale === id ? null : id);
     };
 
-    if (loading) return <div className="h-screen flex items-center justify-center text-blue-600 font-bold">Cargando historial...</div>;
+    if (loading) return (
+        <div className="flex flex-col items-center justify-center h-96 gap-4">
+            <div className="w-12 h-12 border-4 border-blue-600/20 border-t-blue-600 rounded-full animate-spin"></div>
+            <p className="text-slate-400 font-bold uppercase tracking-widest text-[10px]">Cargando Historial...</p>
+        </div>
+    );
 
     return (
-        <div className="space-y-6">
-            {/* Header Section */}
-            <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
-                <div>
-                    <h1 className="text-2xl font-bold text-gray-900 flex items-center gap-2">
-                        <FaFileInvoiceDollar className="text-blue-500" /> Historial de Ventas
-                    </h1>
-                    <p className="text-gray-500 text-sm">Administra y revisa todas tus transacciones</p>
-                </div>
+        <div className="space-y-8 pb-20 animate-fade-up">
+            {/* 1. Header Section - Vibrant Style */}
+            <div className="relative overflow-hidden bg-vibrant rounded-3xl p-6 sm:p-8 shadow-vibrant">
+                <div className="absolute top-0 right-0 w-64 h-64 bg-white/10 blur-3xl rounded-full -mr-32 -mt-32"></div>
+                <div className="relative z-10 flex flex-col md:flex-row md:items-end justify-between gap-6">
+                    <div>
+                        <div className="flex items-center gap-2 mb-3">
+                            <div className="w-8 h-8 rounded-lg bg-white/10 backdrop-blur-md flex items-center justify-center text-white border border-white/20">
+                                <FaHistory size={14} />
+                            </div>
+                            <span className="text-[10px] font-bold text-white/80 uppercase tracking-[0.2em]">Trazabilidad de Ventas</span>
+                        </div>
+                        <h1 className="text-2xl sm:text-3xl font-bold text-white tracking-tight mb-2">Historial de Ventas</h1>
+                        <p className="text-blue-50/70 text-xs font-medium max-w-lg leading-relaxed">
+                            Consulta transacciones y gestiona comprobantes digitales.
+                        </p>
+                    </div>
 
-                <div className="flex bg-gray-100 p-1 rounded-xl w-full md:w-auto">
-                    <button
-                        onClick={() => setFilterType('all')}
-                        className={`flex-1 md:px-4 py-2 rounded-lg text-sm font-bold transition-all ${filterType === 'all' ? 'bg-white text-blue-600 shadow-sm' : 'text-gray-500 hover:text-gray-700'}`}
-                    >
-                        Todas
-                    </button>
-                    <button
-                        onClick={() => setFilterType('this_week')}
-                        className={`flex-1 md:px-4 py-2 rounded-lg text-sm font-bold transition-all ${filterType === 'this_week' ? 'bg-white text-blue-600 shadow-sm' : 'text-gray-500 hover:text-gray-700'}`}
-                    >
-                        Esta Semana
-                    </button>
-                    <button
-                        onClick={() => setFilterType('today')}
-                        className={`flex-1 md:px-4 py-2 rounded-lg text-sm font-bold transition-all ${filterType === 'today' ? 'bg-white text-blue-600 shadow-sm' : 'text-gray-500 hover:text-gray-700'}`}
-                    >
-                        Hoy
-                    </button>
+                    <div className="flex bg-black/10 backdrop-blur-md p-1 rounded-2xl w-full md:w-auto border border-white/10">
+                        <button
+                            onClick={() => setFilterType('all')}
+                            className={`flex-1 px-5 py-2 rounded-[1rem] text-[9px] font-bold uppercase tracking-widest transition-all ${filterType === 'all' ? 'bg-white text-blue-600 shadow-lg' : 'text-white/60 hover:text-white'}`}
+                        >
+                            Todas
+                        </button>
+                        <button
+                            onClick={() => setFilterType('this_week')}
+                            className={`flex-1 px-5 py-2 rounded-[1rem] text-[9px] font-bold uppercase tracking-widest transition-all ${filterType === 'this_week' ? 'bg-white text-blue-600 shadow-lg' : 'text-white/60 hover:text-white'}`}
+                        >
+                            Semana
+                        </button>
+                        <button
+                            onClick={() => setFilterType('today')}
+                            className={`flex-1 px-5 py-2 rounded-[1rem] text-[9px] font-bold uppercase tracking-widest transition-all ${filterType === 'today' ? 'bg-white text-blue-600 shadow-lg' : 'text-white/60 hover:text-white'}`}
+                        >
+                            Hoy
+                        </button>
+                    </div>
                 </div>
             </div>
 
-            {/* Stats & Search */}
-            <div className="grid grid-cols-1 lg:grid-cols-4 gap-4">
-                <div className="lg:col-span-3 relative">
-                    <FaSearch className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" />
+            {/* 2. Search & Stats - Ultra Compact */}
+            <div className="flex flex-col lg:flex-row gap-4">
+                <div className="flex-1 relative group">
+                    <FaSearch className="absolute left-5 top-1/2 -translate-y-1/2 text-slate-300 group-focus-within:text-blue-500 transition-colors" />
                     <input
                         type="text"
-                        placeholder="Buscar por cliente o folio..."
-                        className="w-full pl-12 pr-4 py-3 bg-white border border-gray-100 rounded-xl shadow-sm focus:ring-2 focus:ring-blue-500 transition-all font-medium"
+                        placeholder="Buscar por cliente, folio o fecha..."
+                        className="w-full pl-14 pr-6 py-4 bg-white border border-slate-100 rounded-2xl shadow-sm focus:ring-4 focus:ring-blue-500/5 focus:border-blue-200 outline-none transition-all font-bold text-slate-800 placeholder:text-slate-300 text-sm"
                         value={searchTerm}
                         onChange={e => setSearchTerm(e.target.value)}
                     />
                 </div>
-                <div className="bg-blue-600 text-white p-4 rounded-xl shadow-lg flex flex-col justify-center">
-                    <p className="text-xs text-blue-100 font-medium">Total en vista</p>
-                    <p className="text-xl font-bold">${stats.total.toFixed(2)}</p>
-                    <p className="text-[10px] opacity-80">{stats.count} ventas encontradas</p>
+                <div className="bg-white border border-slate-100 px-6 py-3 rounded-2xl shadow-sm flex items-center gap-6 self-start">
+                    <div className="flex flex-col">
+                        <span className="text-[8px] font-bold text-slate-400 uppercase tracking-widest">En Vista</span>
+                        <span className="text-xl font-bold tracking-tighter text-blue-600 leading-none mt-1">${stats.total.toLocaleString('es-MX', { minimumFractionDigits: 1 })}</span>
+                    </div>
+                    <div className="w-px h-8 bg-slate-100"></div>
+                    <div className="flex flex-col">
+                        <span className="text-[8px] font-bold text-slate-400 uppercase tracking-widest">Transacciones</span>
+                        <span className="text-xl font-bold tracking-tighter leading-none mt-1">{stats.count}</span>
+                    </div>
                 </div>
             </div>
 
-            {/* Sales Content */}
-            <div className="space-y-3">
+            {/* 3. Infinite List / History Feed */}
+            <div className="space-y-4">
                 {filteredSales.length === 0 ? (
-                    <div className="bg-white p-12 text-center rounded-2xl border border-dashed border-gray-200">
-                        <FaFilter className="mx-auto text-4xl text-gray-200 mb-3" />
-                        <p className="text-gray-500 font-medium">No se encontraron ventas con los filtros actuales</p>
+                    <div className="premium-card py-24 text-center">
+                        <FaFilter className="mx-auto text-4xl text-slate-100 mb-4" />
+                        <p className="text-slate-400 font-bold uppercase tracking-widest text-xs italic">No hay transacciones registradas con estos filtros</p>
                     </div>
                 ) : (
-                    filteredSales.map(sale => (
-                        <div key={sale.id} className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden hover:border-blue-200 transition-colors">
+                    filteredSales.map((sale, index) => (
+                        <div
+                            key={sale.id}
+                            className={`premium-card group border-l-4 transition-all duration-300 ${expandedSale === sale.id ? 'border-l-blue-600 bg-blue-50/10' : 'border-l-transparent hover:border-l-slate-200'}`}
+                            style={{ animationDelay: `${index * 30}ms` }}
+                        >
                             <div
-                                className="p-4 flex items-center justify-between cursor-pointer"
+                                className="p-6 flex flex-col md:flex-row md:items-center justify-between cursor-pointer gap-6"
                                 onClick={() => toggleExpand(sale.id)}
                             >
-                                <div className="flex items-center gap-4">
-                                    <div className="w-10 h-10 rounded-full bg-blue-50 text-blue-600 flex items-center justify-center font-bold">
+                                <div className="flex items-center gap-5">
+                                    <div className="w-14 h-14 rounded-2xl bg-slate-50 border border-slate-100 flex items-center justify-center font-bold text-slate-400 text-lg shadow-sm group-hover:border-blue-400 group-hover:text-blue-600 transition-all">
                                         {sale.Client ? sale.Client.firstName.charAt(0) : 'C'}
                                     </div>
                                     <div>
-                                        <p className="font-bold text-gray-900">
+                                        <h3 className="font-bold text-slate-800 tracking-tight flex items-center gap-2">
                                             {sale.Client ? `${sale.Client.firstName} ${sale.Client.lastName}` : 'Cliente Casual'}
-                                        </p>
-                                        <div className="flex items-center gap-3 text-xs text-gray-500 mt-0.5">
-                                            <span className="flex items-center gap-1 font-medium bg-gray-100 px-2 py-0.5 rounded">
-                                                <FaClock className="text-[10px]" /> {new Date(sale.createdAt).toLocaleDateString()}
-                                            </span>
-                                            <span className="flex items-center gap-1">
-                                                Folio: <span className="text-gray-900 font-semibold">#{sale.id}</span>
-                                            </span>
+                                            <span className="text-[9px] bg-slate-100 text-slate-400 px-2 py-0.5 rounded-full font-bold uppercase">#{sale.id}</span>
+                                        </h3>
+                                        <div className="flex items-center gap-4 text-[10px] font-bold text-slate-400 uppercase mt-1">
+                                            <span className="flex items-center gap-1.5"><FaCalendarAlt size={10} className="text-blue-500" /> {new Date(sale.createdAt).toLocaleDateString('es-MX', { weekday: 'short', day: 'numeric', month: 'short' })}</span>
+                                            <span className="flex items-center gap-1.5"><FaClock size={10} /> {new Date(sale.createdAt).toLocaleTimeString('es-MX', { hour: '2-digit', minute: '2-digit' })}</span>
                                         </div>
                                     </div>
                                 </div>
 
-                                <div className="flex items-center gap-6">
-                                    <div className="text-right hidden sm:block">
-                                        <p className="font-bold text-gray-900 text-lg">${parseFloat(sale.total).toFixed(2)}</p>
-                                        <p className="text-[10px] text-gray-400 uppercase font-bold tracking-wider">{sale.paymentMethod === 'cash' ? 'Efectivo' : sale.paymentMethod}</p>
+                                <div className="flex items-center justify-between md:justify-end gap-10">
+                                    <div className="text-right">
+                                        <p className="text-2xl font-bold text-slate-800 tracking-tighter">${parseFloat(sale.total).toLocaleString('es-MX', { minimumFractionDigits: 1 })}</p>
+                                        <p className="text-[9px] font-bold text-slate-400 uppercase tracking-[0.2em]">{sale.paymentMethod || 'Contado'}</p>
                                     </div>
 
-                                    <div className="flex items-center gap-2">
+                                    <div className="flex items-center gap-3">
                                         {sale.receiptTokenId && (
-                                            <>
+                                            <div className="flex gap-2">
                                                 <button
                                                     onClick={(e) => { e.stopPropagation(); handleViewReceipt(sale); }}
-                                                    className="p-2.5 bg-blue-100 text-blue-600 rounded-lg hover:bg-blue-600 hover:text-white transition-all shadow-sm"
+                                                    className="w-12 h-12 bg-blue-50 text-blue-600 rounded-xl hover:bg-blue-600 hover:text-white transition-all shadow-sm flex items-center justify-center p-0"
                                                     title="Ver ticket digital"
                                                 >
-                                                    <FaReceipt className="text-lg" />
+                                                    <FaReceipt size={16} />
                                                 </button>
                                                 {sale.Client?.phone && (
                                                     <button
                                                         onClick={(e) => { e.stopPropagation(); handleShareWhatsApp(sale); }}
-                                                        className="p-2.5 bg-green-100 text-green-600 rounded-lg hover:bg-green-600 hover:text-white transition-all shadow-sm"
+                                                        className="w-12 h-12 bg-emerald-50 text-emerald-600 rounded-xl hover:bg-emerald-600 hover:text-white transition-all shadow-sm flex items-center justify-center p-0"
                                                         title="Compartir ticket por WhatsApp"
                                                     >
-                                                        <FaWhatsapp className="text-lg" />
+                                                        <FaWhatsapp size={18} />
                                                     </button>
                                                 )}
-                                            </>
+                                            </div>
                                         )}
-                                        <div className={`p-2 rounded-lg transition-colors ${expandedSale === sale.id ? 'bg-blue-50 text-blue-600' : 'text-gray-400'}`}>
-                                            {expandedSale === sale.id ? <FaChevronUp /> : <FaChevronDown />}
+                                        <div className={`w-10 h-10 rounded-xl flex items-center justify-center transition-all ${expandedSale === sale.id ? 'bg-blue-600 text-white shadow-lg' : 'bg-slate-50 text-slate-400 group-hover:bg-slate-100'}`}>
+                                            {expandedSale === sale.id ? <FaChevronUp size={12} /> : <FaChevronDown size={12} />}
                                         </div>
                                     </div>
                                 </div>
                             </div>
 
-                            {/* Expanded Details */}
+                            {/* Streamlined Expanded Details */}
                             {expandedSale === sale.id && (
-                                <div className="px-4 pb-4 border-t border-gray-50 bg-gray-50/30 animate-fade-in">
-                                    <div className="pt-4 space-y-3">
-                                        <p className="text-xs font-bold text-gray-400 uppercase tracking-widest px-1 flex items-center gap-2">
-                                            <FaBox className="text-blue-500" /> Detalle de Compra
-                                        </p>
-                                        <div className="bg-white rounded-xl border border-gray-100 overflow-hidden">
-                                            <table className="w-full text-sm">
-                                                <thead className="bg-gray-50 text-gray-500 font-medium">
-                                                    <tr>
-                                                        <th className="px-4 py-2 text-left">Producto</th>
-                                                        <th className="px-4 py-2 text-center">Cant.</th>
-                                                        <th className="px-4 py-2 text-right">Precio</th>
-                                                        <th className="px-4 py-2 text-right">Subtotal</th>
-                                                    </tr>
-                                                </thead>
-                                                <tbody className="divide-y divide-gray-50">
-                                                    {sale.SaleDetails?.map(detail => (
-                                                        <tr key={detail.id} className="hover:bg-gray-50 transition-colors">
-                                                            <td className="px-4 py-3 font-medium text-gray-700">
-                                                                {detail.Product?.name || 'Producto'}
-                                                            </td>
-                                                            <td className="px-4 py-3 text-center text-gray-600">{detail.quantity}</td>
-                                                            <td className="px-4 py-3 text-right text-gray-600">${parseFloat(detail.unitPrice).toFixed(2)}</td>
-                                                            <td className="px-4 py-3 text-right font-bold text-gray-900">${parseFloat(detail.subtotal).toFixed(2)}</td>
-                                                        </tr>
-                                                    ))}
-                                                </tbody>
-                                                <tfoot>
-                                                    <tr className="bg-blue-50/50">
-                                                        <td colSpan="3" className="px-4 py-3 text-right font-bold text-gray-600">Total Pagado:</td>
-                                                        <td className="px-4 py-3 text-right font-black text-blue-600 text-lg">${parseFloat(sale.total).toFixed(2)}</td>
-                                                    </tr>
-                                                </tfoot>
-                                            </table>
-                                        </div>
-
-                                        {/* Notes or extra info if available */}
-                                        {sale.notes && (
-                                            <div className="bg-yellow-50 p-3 rounded-lg border border-yellow-100 italic text-sm text-yellow-800">
-                                                <span className="font-bold not-italic mr-1">Nota:</span> {sale.notes}
+                                <div className="px-5 pb-5 animate-fade-up">
+                                    <div className="pt-4 border-t border-slate-50">
+                                        <div className="grid grid-cols-1 lg:grid-cols-12 gap-5">
+                                            {/* Articles Column */}
+                                            <div className="lg:col-span-8">
+                                                <div className="bg-slate-50/50 rounded-xl overflow-hidden border border-slate-100/50">
+                                                    <div className="px-4 py-2 bg-white/50 border-b border-slate-100 flex justify-between items-center">
+                                                        <span className="text-[8px] font-bold text-slate-400 uppercase tracking-widest">Resumen de Artículos</span>
+                                                        <span className="text-[8px] font-bold text-slate-400 uppercase tracking-widest">{sale.SaleDetails?.length || 0} items</span>
+                                                    </div>
+                                                    <div className="divide-y divide-slate-100/30">
+                                                        {sale.SaleDetails?.map((detail, dIdx) => (
+                                                            <div key={detail.id || dIdx} className="flex items-center justify-between p-2.5 px-4 hover:bg-white transition-colors">
+                                                                <div className="flex items-center gap-3">
+                                                                    <span className="text-[9px] font-bold text-slate-400 bg-white border border-slate-100 w-6 h-6 flex items-center justify-center rounded-md">{detail.quantity}</span>
+                                                                    <span className="font-bold text-slate-700 text-xs">{detail.Product?.name || 'Producto'}</span>
+                                                                </div>
+                                                                <p className="font-bold text-slate-800 text-xs">${parseFloat(detail.subtotal).toLocaleString('es-MX', { minimumFractionDigits: 1 })}</p>
+                                                            </div>
+                                                        ))}
+                                                    </div>
+                                                </div>
                                             </div>
-                                        )}
 
-                                        <div className="flex flex-wrap gap-4 pt-2">
-                                            <div className="flex items-center gap-2 text-xs text-gray-500">
-                                                <FaUser className="text-gray-300" />
-                                                Vendedor: <span className="font-bold text-gray-700">{sale.Seller?.User?.firstName || 'Sistema'}</span>
-                                            </div>
-                                            <div className="flex items-center gap-2 text-xs text-gray-500">
-                                                <FaTruckLoading className="text-gray-300" />
-                                                Estado: <span className="bg-green-100 text-green-700 px-2 py-0.5 rounded-full font-bold uppercase text-[9px]">{sale.status}</span>
+                                            {/* Info Column - Ultra Compact */}
+                                            <div className="lg:col-span-4 space-y-3">
+                                                <div className="bg-white border border-slate-100/80 rounded-xl p-4 shadow-sm/30">
+                                                    <div className="grid grid-cols-2 gap-y-2.5 gap-x-4">
+                                                        <div className="flex flex-col">
+                                                            <span className="text-[8px] font-bold text-slate-400 uppercase tracking-widest">Vendedor</span>
+                                                            <span className="text-[11px] text-slate-700 font-bold truncate">{sale.Seller?.User?.firstName || 'Admin'}</span>
+                                                        </div>
+                                                        <div className="flex flex-col">
+                                                            <span className="text-[8px] font-bold text-slate-400 uppercase tracking-widest">Método</span>
+                                                            <span className="text-[11px] text-slate-700 font-bold uppercase tracking-widest">{sale.paymentMethod}</span>
+                                                        </div>
+                                                        <div className="flex flex-col">
+                                                            <span className="text-[8px] font-bold text-slate-400 uppercase tracking-widest">Estado</span>
+                                                            <span className="text-[9px] font-bold text-emerald-600 uppercase tracking-tight">OPERACIÓN OK</span>
+                                                        </div>
+                                                        <div className="flex flex-col">
+                                                            <span className="text-[8px] font-bold text-slate-400 uppercase tracking-widest">Total Final</span>
+                                                            <span className="text-[13px] font-black text-blue-600 tracking-tighter leading-none mt-0.5">${parseFloat(sale.total).toLocaleString('es-MX', { minimumFractionDigits: 1 })}</span>
+                                                        </div>
+                                                    </div>
+                                                </div>
+
+                                                {sale.notes && (
+                                                    <div className="p-3 bg-amber-50/30 rounded-xl border border-amber-100/30">
+                                                        <p className="text-[10px] font-medium text-slate-500 italic leading-snug">"{sale.notes}"</p>
+                                                    </div>
+                                                )}
                                             </div>
                                         </div>
                                     </div>

@@ -1,7 +1,21 @@
 import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import clientApi from '../../services/clientApi';
-import { FaUser, FaPlus, FaSearch, FaEdit, FaTrash, FaExclamationTriangle, FaPhone, FaEnvelope, FaMapMarkerAlt } from 'react-icons/fa';
+import {
+    FaUser,
+    FaPlus,
+    FaSearch,
+    FaEdit,
+    FaTrash,
+    FaExclamationTriangle,
+    FaPhone,
+    FaEnvelope,
+    FaMapMarkerAlt,
+    FaArrowRight,
+    FaUserFriends,
+    FaChevronRight,
+    FaStar
+} from 'react-icons/fa';
 import ConfirmationModal from '../ui/ConfirmationModal';
 import { toast } from 'react-hot-toast';
 
@@ -32,9 +46,9 @@ const ClientList = () => {
         setModalConfig({
             isOpen: true,
             title: 'Eliminar Cliente',
-            message: '¿Estás seguro de que deseas eliminar este cliente? Se borrará de tu base de datos.',
+            message: '¿Estás seguro de que deseas eliminar este cliente? Se borrará de tu base de datos permanentemente.',
             isDatgerous: true,
-            confirmText: 'Eliminar',
+            confirmText: 'Eliminar Cliente',
             action: async () => {
                 try {
                     await clientApi.deleteClient(id);
@@ -54,206 +68,147 @@ const ClientList = () => {
     );
 
     if (loading) return (
-        <div className="flex justify-center items-center h-64">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+        <div className="flex flex-col items-center justify-center h-96 gap-4">
+            <div className="w-12 h-12 border-4 border-blue-600/20 border-t-blue-600 rounded-full animate-spin"></div>
+            <p className="text-slate-400 font-bold uppercase tracking-widest text-[10px]">Cargando Directorio...</p>
         </div>
     );
 
     return (
-        <div className="space-y-6">
-            {/* Header */}
-            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
-                <div>
-                    <h1 className="text-2xl font-bold text-gray-900">Clientes</h1>
-                    <p className="text-gray-500 text-sm">Administra tu base de datos de clientes</p>
+        <div className="space-y-8 pb-20 animate-fade-up">
+            {/* 1. Global Header */}
+            {/* 1. Slim Header - Vibrant Style */}
+            <div className="relative overflow-hidden bg-vibrant rounded-3xl p-6 mb-6 shadow-vibrant">
+                <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 blur-3xl rounded-full -mr-16 -mt-16"></div>
+                <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-4">
+                    <div>
+                        <h1 className="text-xl font-bold text-white tracking-tight">Directorio de Clientes</h1>
+                        <p className="text-[10px] font-medium text-blue-100/80 uppercase tracking-widest mt-0.5">Gestión de contactos y clientes frecuentas</p>
+                    </div>
+                    <Link
+                        to="/clients/new"
+                        className="bg-white text-blue-600 flex items-center justify-center gap-2 h-10 px-5 rounded-xl text-[10px] font-bold uppercase tracking-widest hover:bg-blue-50 active:scale-95 transition-all shadow-lg shadow-black/5"
+                    >
+                        <FaPlus size={10} />
+                        <span>Nuevo Cliente</span>
+                    </Link>
                 </div>
-                <Link
-                    to="/clients/new"
-                    className="flex items-center px-4 py-2.5 bg-blue-600 text-white rounded-xl font-medium shadow-lg shadow-blue-500/20 hover:bg-blue-700 hover:shadow-blue-500/30 transition-all"
-                >
-                    <FaPlus className="mr-2" /> Nuevo Cliente
-                </Link>
+            </div>
+
+            {/* 2. Compact Search */}
+            <div className="flex flex-col md:flex-row gap-3 mb-6">
+                <div className="relative flex-1 group">
+                    <div className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-300 pointer-events-none group-focus-within:text-blue-500 transition-colors">
+                        <FaSearch size={14} />
+                    </div>
+                    <input
+                        type="text"
+                        placeholder="Buscar por nombre, apellido o contacto..."
+                        value={searchTerm}
+                        onChange={(e) => setSearchTerm(e.target.value)}
+                        className="w-full pl-11 pr-4 py-3 bg-white border border-slate-100 rounded-2xl focus:outline-none focus:ring-4 focus:ring-blue-500/5 focus:border-blue-200 transition-all font-bold text-slate-800 placeholder:text-slate-300 shadow-sm text-sm"
+                    />
+                </div>
+                <button className="h-12 px-5 bg-white border border-slate-100 rounded-2xl text-slate-500 font-bold text-[10px] uppercase tracking-widest flex items-center gap-2 hover:bg-slate-50 active:scale-95 transition-all shadow-sm">
+                    <FaStar size={12} className="text-amber-400" /> Frecuentes
+                </button>
             </div>
 
             {/* Error Message */}
             {error && (
-                <div className="bg-red-50 border border-red-100 text-red-600 p-4 rounded-xl flex items-center">
-                    <FaExclamationTriangle className="mr-3 text-red-500" />
+                <div className="bg-rose-50 border border-rose-100 text-rose-600 p-4 rounded-2xl flex items-center mb-6 animate-fade-up">
+                    <FaExclamationTriangle className="mr-3 text-rose-500" size={18} />
                     <div>
-                        <p className="font-bold">Ha ocurrido un error</p>
-                        <p className="text-sm">{error}</p>
+                        <p className="font-bold text-sm">Error de Conectividad</p>
+                        <p className="text-[10px] opacity-80">{error}</p>
                     </div>
                 </div>
             )}
 
             {/* Empty State */}
             {!loading && clients.length === 0 && !error && (
-                <div className="text-center py-20 bg-white rounded-2xl border border-gray-100 border-dashed">
-                    <div className="mx-auto w-16 h-16 bg-blue-50 rounded-full flex items-center justify-center mb-4">
-                        <FaUser className="text-blue-200 text-3xl" />
+                <div className="bg-white rounded-3xl border border-slate-100 py-20 flex flex-col items-center text-center px-10 border-dashed">
+                    <div className="w-16 h-16 bg-slate-50 rounded-full flex items-center justify-center mb-4 border border-dashed border-slate-200">
+                        <FaUser className="text-slate-300 text-2xl" />
                     </div>
-                    <h3 className="text-lg font-bold text-gray-900">No tienes clientes aún</h3>
-                    <p className="text-gray-500 mb-6">Registra a tus clientes para vender más rápido.</p>
-                    <Link
-                        to="/clients/new"
-                        className="text-blue-600 font-medium hover:underline"
-                    >
-                        Registrar Cliente &rarr;
-                    </Link>
+                    <h3 className="text-lg font-bold text-slate-800 tracking-tight mb-1">Tu agenda está vacía</h3>
+                    <p className="text-slate-400 text-xs max-w-sm mb-6 font-medium">Registra clientes para agilizar tus ventas.</p>
+                    <Link to="/clients/new" className="px-6 py-3 bg-blue-600 text-white rounded-xl text-[10px] font-bold uppercase tracking-widest">Registrar Primero</Link>
                 </div>
             )}
 
-            {/* Client List */}
-            {clients.length > 0 && (
-                <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
-                    {/* Search Bar */}
-                    <div className="p-4 border-b border-gray-100">
-                        <div className="relative max-w-md">
-                            <FaSearch className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
-                            <input
-                                type="text"
-                                placeholder="Buscar cliente por nombre..."
-                                value={searchTerm}
-                                onChange={(e) => setSearchTerm(e.target.value)}
-                                className="w-full pl-10 pr-4 py-2 bg-gray-50 border border-gray-200 rounded-lg focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-100 focus:border-blue-500 transition-all"
-                            />
-                        </div>
-                    </div>
-
-                    {/* Desktop Table */}
-                    <div className="hidden md:block overflow-x-auto">
-                        <table className="w-full text-left">
-                            <thead className="bg-gray-50 text-gray-600 text-xs uppercase font-semibold">
-                                <tr>
-                                    <th className="px-6 py-4">Cliente</th>
-                                    <th className="px-6 py-4">Contacto</th>
-                                    <th className="px-6 py-4">Ubicación</th>
-                                    <th className="px-6 py-4 text-center">Acciones</th>
-                                </tr>
-                            </thead>
-                            <tbody className="divide-y divide-gray-100">
-                                {filteredClients.map((client) => (
-                                    <tr key={client.id} className="hover:bg-gray-50/50 transition-colors">
-                                        <td className="px-6 py-4">
-                                            <div className="flex items-center">
-                                                <div className="h-10 w-10 rounded-full bg-indigo-100 text-indigo-600 flex items-center justify-center font-bold mr-3 flex-shrink-0">
-                                                    {client.firstName.charAt(0)}
-                                                </div>
-                                                <div>
-                                                    <p className="font-bold text-gray-900">{client.firstName} {client.lastName}</p>
-                                                    <p className="text-xs text-gray-500">Registrado recientemente</p>
-                                                </div>
-                                            </div>
-                                        </td>
-                                        <td className="px-6 py-4">
-                                            <div className="text-sm text-gray-600 space-y-1">
-                                                {client.phone && (
-                                                    <div className="flex items-center">
-                                                        <FaPhone className="text-gray-400 mr-2 text-xs" />
-                                                        {client.phone}
-                                                    </div>
-                                                )}
-                                                {client.email && (
-                                                    <div className="flex items-center">
-                                                        <FaEnvelope className="text-gray-400 mr-2 text-xs" />
-                                                        {client.email}
-                                                    </div>
-                                                )}
-                                                {!client.phone && !client.email && <span className="text-gray-400 italic">Sin contacto</span>}
-                                            </div>
-                                        </td>
-                                        <td className="px-6 py-4 text-sm text-gray-600">
-                                            {client.address || <span className="text-gray-400 italic">No especificada</span>}
-                                        </td>
-                                        <td className="px-6 py-4 text-center">
-                                            <div className="flex items-center justify-center space-x-2">
-                                                <Link
-                                                    to={`/clients/edit/${client.id}`}
-                                                    className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
-                                                    title="Editar"
-                                                >
-                                                    <FaEdit />
-                                                </Link>
-                                                <button
-                                                    onClick={() => confirmDelete(client.id)}
-                                                    className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors"
-                                                    title="Eliminar"
-                                                >
-                                                    <FaTrash />
-                                                </button>
-                                            </div>
-                                        </td>
-                                    </tr>
-                                ))}
-                            </tbody>
-                        </table>
-                    </div>
-
-                    {/* Mobile Cards */}
-                    <div className="md:hidden divide-y divide-gray-100">
-                        {filteredClients.map((client) => (
-                            <div key={client.id} className="p-4 hover:bg-gray-50/50 transition-colors">
-                                <div className="flex items-start gap-3">
-                                    {/* Avatar */}
-                                    <div className="h-12 w-12 rounded-full bg-indigo-100 text-indigo-600 flex items-center justify-center font-bold text-lg flex-shrink-0">
-                                        {client.firstName.charAt(0)}
-                                    </div>
-
-                                    {/* Content */}
-                                    <div className="flex-1 min-w-0">
-                                        <h3 className="font-bold text-gray-900 mb-2">
-                                            {client.firstName} {client.lastName}
-                                        </h3>
-
-                                        {/* Contact Info */}
-                                        <div className="text-sm text-gray-600 space-y-1 mb-2">
-                                            {client.phone && (
-                                                <div className="flex items-center gap-2">
-                                                    <FaPhone className="text-gray-400 text-xs" />
-                                                    <a href={`tel:${client.phone}`} className="hover:text-blue-600">
-                                                        {client.phone}
-                                                    </a>
-                                                </div>
-                                            )}
-                                            {client.email && (
-                                                <div className="flex items-center gap-2">
-                                                    <FaEnvelope className="text-gray-400 text-xs" />
-                                                    <a href={`mailto:${client.email}`} className="hover:text-blue-600 truncate">
-                                                        {client.email}
-                                                    </a>
-                                                </div>
-                                            )}
-                                            {client.address && (
-                                                <div className="flex items-start gap-2">
-                                                    <FaMapMarkerAlt className="text-gray-400 text-xs mt-0.5" />
-                                                    <span className="text-xs">{client.address}</span>
-                                                </div>
-                                            )}
-                                        </div>
-
-                                        {/* Actions */}
-                                        <div className="flex gap-2 mt-3">
-                                            <Link
-                                                to={`/clients/edit/${client.id}`}
-                                                className="flex-1 flex items-center justify-center gap-2 px-3 py-2 text-blue-600 bg-blue-50 hover:bg-blue-100 rounded-lg transition-colors text-sm font-medium"
-                                            >
-                                                <FaEdit /> Editar
-                                            </Link>
-                                            <button
-                                                onClick={() => confirmDelete(client.id)}
-                                                className="flex-1 flex items-center justify-center gap-2 px-3 py-2 text-red-600 bg-red-50 hover:bg-red-100 rounded-lg transition-colors text-sm font-medium"
-                                            >
-                                                <FaTrash /> Eliminar
-                                            </button>
-                                        </div>
-                                    </div>
+            {/* 3. List Content (Ultra-Compact) */}
+            <div className="space-y-2">
+                <div className="hidden md:grid grid-cols-12 gap-4 px-6 py-1 opacity-40">
+                    <div className="col-span-5 text-[8px] font-bold text-slate-500 uppercase tracking-widest">Resumen Cliente</div>
+                    <div className="col-span-4 text-[8px] font-bold text-slate-500 uppercase tracking-widest px-2">Contacto Directo</div>
+                    <div className="col-span-3 text-[8px] font-bold text-slate-500 uppercase tracking-widest text-right">Acciones</div>
+                </div>
+                <div className="space-y-2">
+                    {filteredClients.map((client, index) => (
+                        <div
+                            key={client.id}
+                            className="grid grid-cols-1 md:grid-cols-12 gap-4 px-5 py-3 bg-white border border-slate-100/60 rounded-xl hover:border-blue-200 hover:shadow-soft transition-all items-center group animate-fade-up shadow-sm/30"
+                        >
+                            <div className="col-span-1 md:col-span-5 flex items-center gap-3">
+                                <div className="w-8 h-8 rounded-[11px] bg-gradient-to-br from-blue-50 to-indigo-50 text-blue-600 flex items-center justify-center font-bold text-[11px] flex-shrink-0 group-hover:bg-blue-600 group-hover:text-white transition-all shadow-sm">
+                                    {client.firstName.charAt(0)}{client.lastName?.charAt(0) || ''}
+                                </div>
+                                <div className="min-w-0">
+                                    <h3 className="text-xs font-bold text-slate-800 tracking-tight leading-tight truncate">
+                                        {client.firstName} {client.lastName}
+                                        {client.esFrecuente && (
+                                            <FaStar size={8} className="text-amber-400 inline ml-1.5" />
+                                        )}
+                                    </h3>
+                                    <p className="text-[8px] font-bold text-slate-400 uppercase tracking-widest leading-none mt-0.5">ID: {client.id.slice(0, 8)}</p>
                                 </div>
                             </div>
-                        ))}
+
+                            <div className="col-span-1 md:col-span-4 px-0 md:px-2 flex items-center gap-4">
+                                <p className="text-[11px] font-bold text-slate-600 flex items-center gap-1.5">
+                                    <FaPhone className="text-blue-400" size={9} /> {client.phone || '---'}
+                                </p>
+                                <p className="text-[10px] font-medium text-slate-400 truncate hidden lg:block">{client.email || ''}</p>
+                            </div>
+
+                            <div className="col-span-1 md:col-span-3 flex items-center justify-end gap-1.5">
+                                <Link
+                                    to={`/clients/edit/${client.id}`}
+                                    className="p-2 text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-all active:scale-90 border border-transparent hover:border-blue-100"
+                                    title="Editar"
+                                >
+                                    <FaEdit size={12} />
+                                </Link>
+                                <button
+                                    onClick={() => confirmDelete(client.id)}
+                                    className="p-2 text-slate-400 hover:text-rose-500 hover:bg-rose-50 rounded-lg transition-all active:scale-90 border border-transparent hover:border-rose-100"
+                                    title="Eliminar"
+                                >
+                                    <FaTrash size={12} />
+                                </button>
+                                <button
+                                    className="p-2 bg-slate-900 text-white hover:bg-blue-600 rounded-lg transition-all active:scale-90 shadow-sm"
+                                    title="Ver Detalles"
+                                >
+                                    <FaChevronRight size={10} />
+                                </button>
+                            </div>
+                        </div>
+                    ))}
+                </div>
+            </div>
+
+            {filteredClients.length === 0 && searchTerm && (
+                <div className="py-20 text-center animate-fade-up">
+                    <div className="w-16 h-16 bg-slate-50 rounded-full flex items-center justify-center mx-auto mb-4 border border-dashed border-slate-200">
+                        <FaSearch size={20} className="text-slate-300" />
                     </div>
+                    <p className="text-slate-400 font-bold">No se encontró a "{searchTerm}"</p>
+                    <button onClick={() => setSearchTerm('')} className="mt-4 text-sm font-bold text-blue-600 uppercase tracking-widest hover:underline decoration-blue-200 underline-offset-4">Ver todos</button>
                 </div>
             )}
-            {/* Modal de Confirmación */}
+
             <ConfirmationModal
                 isOpen={modalConfig.isOpen}
                 onClose={() => setModalConfig(prev => ({ ...prev, isOpen: false }))}
@@ -262,6 +217,7 @@ const ClientList = () => {
                 message={modalConfig.message}
                 isDatgerous={modalConfig.isDatgerous}
                 confirmText={modalConfig.confirmText}
+                cancelText="Mantener Cliente"
             />
         </div>
     );

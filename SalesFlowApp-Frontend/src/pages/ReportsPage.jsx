@@ -1,5 +1,22 @@
 import React, { useState, useEffect } from 'react';
-import { FaChartLine, FaCalendar, FaDollarSign, FaShoppingCart, FaBoxOpen, FaUsers, FaTrophy, FaFilter, FaDownload } from 'react-icons/fa';
+import {
+    FaChartLine,
+    FaCalendar,
+    FaDollarSign,
+    FaShoppingCart,
+    FaBoxOpen,
+    FaUsers,
+    FaTrophy,
+    FaFilter,
+    FaDownload,
+    FaChevronRight,
+    FaArrowRight,
+    FaRegChartBar,
+    FaCalendarAlt,
+    FaTimes,
+    FaFilePdf,
+    FaEye
+} from 'react-icons/fa';
 import { toast } from 'react-hot-toast';
 import saleApi from '../services/saleApi';
 import jsPDF from 'jspdf';
@@ -108,7 +125,6 @@ const ReportsPage = () => {
         doc.setFontSize(10);
         doc.setFont(undefined, 'normal');
 
-        // Summary in 2 columns
         const col1X = 20;
         const col2X = 110;
 
@@ -146,7 +162,6 @@ const ReportsPage = () => {
         doc.setTextColor(0, 0, 0);
         doc.setFontSize(9);
 
-        // Table header
         doc.setFillColor(240, 240, 240);
         doc.rect(15, yPos - 2, 180, 6, 'F');
         doc.setFont(undefined, 'bold');
@@ -166,12 +181,10 @@ const ReportsPage = () => {
                 doc.addPage();
                 yPos = 20;
             }
-
             if (index % 2 === 0) {
                 doc.setFillColor(250, 250, 250);
                 doc.rect(15, yPos - 3, 180, 6, 'F');
             }
-
             doc.text(`${index + 1}`, 20, yPos);
             doc.text(product.name.substring(0, 50), 30, yPos);
             doc.text(`${product.quantity}`, 130, yPos);
@@ -218,12 +231,10 @@ const ReportsPage = () => {
                 doc.addPage();
                 yPos = 20;
             }
-
             if (index % 2 === 0) {
                 doc.setFillColor(250, 250, 250);
                 doc.rect(15, yPos - 3, 180, 6, 'F');
             }
-
             doc.text(`${index + 1}`, 20, yPos);
             doc.text(client.name.substring(0, 50), 30, yPos);
             doc.text(`${client.purchases}`, 130, yPos);
@@ -231,7 +242,6 @@ const ReportsPage = () => {
             yPos += 6;
         });
 
-        // Footer
         const pageCount = doc.internal.getNumberOfPages();
         for (let i = 1; i <= pageCount; i++) {
             doc.setPage(i);
@@ -263,173 +273,168 @@ const ReportsPage = () => {
 
     if (loading) {
         return (
-            <div className="flex items-center justify-center h-screen">
-                <div className="text-center">
-                    <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
-                    <p className="mt-4 text-gray-600">Cargando reportes...</p>
-                </div>
+            <div className="flex flex-col items-center justify-center h-96 gap-4">
+                <div className="w-12 h-12 border-4 border-blue-600/20 border-t-blue-600 rounded-full animate-spin"></div>
+                <p className="text-slate-400 font-bold uppercase tracking-widest text-[10px]">Analizando Datos...</p>
             </div>
         );
     }
 
+    const StatCard = ({ title, value, icon: Icon, colorClass, gradientClass }) => (
+        <div className="premium-card p-6 flex items-center gap-5 hover:translate-y-[-4px] active:scale-[0.98] transition-all">
+            <div className={`w-14 h-14 rounded-2xl ${gradientClass} flex items-center justify-center text-white shadow-lg`}>
+                <Icon size={24} />
+            </div>
+            <div>
+                <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">{title}</p>
+                <h3 className="text-2xl font-bold text-slate-800 tracking-tighter leading-none">
+                    {value}
+                </h3>
+            </div>
+        </div>
+    );
+
     return (
-        <div className="p-6 max-w-7xl mx-auto">
-            {/* Header */}
-            <div className="mb-6 flex flex-col md:flex-row md:items-center justify-between gap-4">
+        <div className="space-y-8 pb-20 animate-fade-up">
+            {/* 1. Header Section */}
+            <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
                 <div>
-                    <h1 className="text-3xl font-bold text-gray-900 flex items-center gap-3">
-                        <FaChartLine className="text-blue-600" />
-                        Reportes de Ventas
-                    </h1>
-                    <p className="text-gray-500 mt-1">Análisis y estadísticas de tu negocio</p>
+                    <div className="flex items-center gap-2 mb-2">
+                        <div className="w-8 h-8 rounded-lg bg-blue-100 flex items-center justify-center text-blue-600">
+                            <FaRegChartBar size={14} />
+                        </div>
+                        <span className="text-[10px] font-bold text-blue-500 uppercase tracking-[0.2em]">Analítica Empresarial</span>
+                    </div>
+                    <h1 className="text-3xl font-bold text-slate-800 tracking-tight mb-2">Reportes de Ventas</h1>
+                    <p className="text-slate-500 font-medium max-w-lg">
+                        Visualiza el rendimiento de tu negocio y toma decisiones basadas en datos reales.
+                    </p>
                 </div>
                 {reports && (
-                    <div className="flex flex-wrap gap-2">
+                    <div className="flex gap-3">
                         <button
                             onClick={previewPDF}
-                            className="flex items-center gap-2 px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors"
+                            className="bg-white border border-slate-100 px-6 py-3 rounded-2xl font-bold text-[10px] uppercase tracking-widest text-slate-500 hover:bg-slate-50 active:scale-95 transition-all flex items-center gap-2 shadow-sm"
                         >
-                            <FaFilter />
-                            Visualizar
+                            <FaEye /> Vista Previa
                         </button>
                         <button
                             onClick={downloadPDF}
-                            className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors shadow-sm shadow-blue-200"
+                            className="btn-primary flex items-center justify-center gap-2"
                         >
-                            <FaDownload />
-                            Descargar PDF
+                            <FaFilePdf size={16} className="text-blue-200" />
+                            <span>Exportar PDF</span>
                         </button>
                     </div>
                 )}
             </div>
 
-            {/* Filters */}
-            <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4 mb-6">
-                <div className="flex items-center gap-2 mb-4">
-                    <FaFilter className="text-gray-400" />
-                    <h2 className="font-semibold text-gray-700">Filtros</h2>
-                </div>
-
-                <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-                    <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">Fecha Inicio</label>
+            {/* 2. Filters & Intelligence */}
+            <div className="bg-white rounded-[2.5rem] border border-slate-100 shadow-sm p-6 sm:p-8 flex flex-col lg:flex-row gap-8 items-start lg:items-center">
+                <div className="flex flex-col sm:flex-row gap-6 flex-1 w-full">
+                    <div className="flex-1 min-w-0">
+                        <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-[0.2em] mb-3 ml-2 flex items-center gap-2">
+                            <FaCalendarAlt className="text-blue-500" /> Fecha Inicio
+                        </label>
                         <input
                             type="date"
                             value={filters.startDate}
                             onChange={(e) => setFilters(prev => ({ ...prev, startDate: e.target.value }))}
-                            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                            className="w-full px-5 py-3.5 bg-slate-50 border-0 rounded-2xl focus:bg-white focus:ring-4 focus:ring-blue-500/10 outline-none transition-all font-bold text-slate-800"
                         />
                     </div>
 
-                    <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">Fecha Fin</label>
+                    <div className="flex-1 min-w-0">
+                        <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-[0.2em] mb-3 ml-2 flex items-center gap-2">
+                            <FaCalendarAlt className="text-blue-500" /> Fecha Fin
+                        </label>
                         <input
                             type="date"
                             value={filters.endDate}
                             onChange={(e) => setFilters(prev => ({ ...prev, endDate: e.target.value }))}
-                            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                            className="w-full px-5 py-3.5 bg-slate-50 border-0 rounded-2xl focus:bg-white focus:ring-4 focus:ring-blue-500/10 outline-none transition-all font-bold text-slate-800"
                         />
                     </div>
+                </div>
 
-                    <div className="flex items-end">
-                        <label className="flex items-center gap-2 cursor-pointer">
+                <div className="flex flex-col gap-4 w-full lg:w-auto">
+                    <div className="flex flex-wrap gap-2">
+                        <button onClick={() => setQuickFilter(7)} className="px-4 py-2 text-[10px] font-bold uppercase tracking-widest bg-slate-50 text-slate-500 hover:bg-blue-50 hover:text-blue-600 rounded-xl transition-all">7D</button>
+                        <button onClick={() => setQuickFilter(30)} className="px-4 py-2 text-[10px] font-bold uppercase tracking-widest bg-slate-50 text-slate-500 hover:bg-blue-50 hover:text-blue-600 rounded-xl transition-all">30D</button>
+                        <button onClick={() => setYearFilter(new Date().getFullYear())} className="px-4 py-2 text-[10px] font-bold uppercase tracking-widest bg-blue-50 text-blue-600 rounded-xl transition-all">Este Año</button>
+                    </div>
+                    <label className="flex items-center gap-3 cursor-pointer group">
+                        <div className="relative">
                             <input
                                 type="checkbox"
                                 checked={filters.liveDaysOnly}
                                 onChange={(e) => setFilters(prev => ({ ...prev, liveDaysOnly: e.target.checked }))}
-                                className="w-4 h-4 text-blue-600 rounded focus:ring-2 focus:ring-blue-500"
+                                className="sr-only"
                             />
-                            <span className="text-sm font-medium text-gray-700">Solo días de live</span>
-                        </label>
-                    </div>
-                </div>
-
-                <div className="flex flex-wrap gap-2 mt-4">
-                    <button onClick={() => setQuickFilter(7)} className="px-3 py-1 text-sm bg-gray-100 hover:bg-gray-200 rounded-lg">Últimos 7 días</button>
-                    <button onClick={() => setQuickFilter(30)} className="px-3 py-1 text-sm bg-gray-100 hover:bg-gray-200 rounded-lg">Últimos 30 días</button>
-                    <button onClick={() => setQuickFilter(90)} className="px-3 py-1 text-sm bg-gray-100 hover:bg-gray-200 rounded-lg">Últimos 90 días</button>
-                    <div className="w-px h-6 bg-gray-300 mx-1 hidden md:block"></div>
-                    <button onClick={() => setYearFilter(new Date().getFullYear())} className="px-3 py-1 text-sm bg-blue-50 text-blue-600 hover:bg-blue-100 rounded-lg">Este Año</button>
-                    <button onClick={() => setYearFilter(new Date().getFullYear() - 1)} className="px-3 py-1 text-sm bg-blue-50 text-blue-600 hover:bg-blue-100 rounded-lg">Año Pasado</button>
+                            <div className={`w-10 h-6 rounded-full transition-colors ${filters.liveDaysOnly ? 'bg-blue-600' : 'bg-slate-200'}`}></div>
+                            <div className={`absolute top-1 left-1 w-4 h-4 bg-white rounded-full transition-transform ${filters.liveDaysOnly ? 'translate-x-4' : ''}`}></div>
+                        </div>
+                        <span className="text-xs font-bold text-slate-500 uppercase tracking-widest group-hover:text-slate-800 transition-colors">Solo días de envío</span>
+                    </label>
                 </div>
             </div>
 
             {reports && (
                 <>
                     {/* Summary Cards */}
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
-                        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-                            <div className="flex items-center justify-between">
-                                <div>
-                                    <p className="text-sm font-medium text-gray-500">Ventas Totales</p>
-                                    <p className="text-2xl font-bold text-gray-900 mt-1">
-                                        ${reports.summary.totalSales.toLocaleString('es-MX', { minimumFractionDigits: 2 })}
-                                    </p>
-                                </div>
-                                <div className="p-3 bg-green-100 rounded-lg">
-                                    <FaDollarSign className="text-2xl text-green-600" />
-                                </div>
-                            </div>
-                        </div>
-
-                        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-                            <div className="flex items-center justify-between">
-                                <div>
-                                    <p className="text-sm font-medium text-gray-500">Transacciones</p>
-                                    <p className="text-2xl font-bold text-gray-900 mt-1">{reports.summary.totalTransactions}</p>
-                                </div>
-                                <div className="p-3 bg-blue-100 rounded-lg">
-                                    <FaShoppingCart className="text-2xl text-blue-600" />
-                                </div>
-                            </div>
-                        </div>
-
-                        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-                            <div className="flex items-center justify-between">
-                                <div>
-                                    <p className="text-sm font-medium text-gray-500">Venta Promedio</p>
-                                    <p className="text-2xl font-bold text-gray-900 mt-1">
-                                        ${reports.summary.averageSale.toLocaleString('es-MX', { minimumFractionDigits: 2 })}
-                                    </p>
-                                </div>
-                                <div className="p-3 bg-purple-100 rounded-lg">
-                                    <FaChartLine className="text-2xl text-purple-600" />
-                                </div>
-                            </div>
-                        </div>
-
-                        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-                            <div className="flex items-center justify-between">
-                                <div>
-                                    <p className="text-sm font-medium text-gray-500">Productos Vendidos</p>
-                                    <p className="text-2xl font-bold text-gray-900 mt-1">{reports.summary.totalItemsSold}</p>
-                                </div>
-                                <div className="p-3 bg-orange-100 rounded-lg">
-                                    <FaBoxOpen className="text-2xl text-orange-600" />
-                                </div>
-                            </div>
-                        </div>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
+                        <StatCard
+                            title="Capital Recaudado"
+                            value={`$${reports.summary.totalSales.toLocaleString('es-MX', { minimumFractionDigits: 2 })}`}
+                            icon={FaDollarSign}
+                            gradientClass="bg-gradient-to-br from-blue-500 to-blue-700"
+                        />
+                        <StatCard
+                            title="Transacciones"
+                            value={reports.summary.totalTransactions}
+                            icon={FaShoppingCart}
+                            gradientClass="bg-gradient-to-br from-emerald-500 to-teal-700"
+                        />
+                        <StatCard
+                            title="Ticket Promedio"
+                            value={`$${reports.summary.averageSale.toLocaleString('es-MX', { minimumFractionDigits: 2 })}`}
+                            icon={FaChartLine}
+                            gradientClass="bg-gradient-to-br from-indigo-500 to-purple-700"
+                        />
+                        <StatCard
+                            title="Volumen Envío"
+                            value={reports.summary.totalItemsSold}
+                            icon={FaBoxOpen}
+                            gradientClass="bg-gradient-to-br from-orange-400 to-red-600"
+                        />
                     </div>
 
-                    {/* Sales by Day */}
-                    <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6 mb-6">
-                        <h2 className="text-lg font-bold text-gray-900 mb-4">Ventas por Día de la Semana</h2>
-                        <div className="space-y-3">
+                    {/* Sales Performance Visualization */}
+                    <div className="premium-card p-6 sm:p-10">
+                        <div className="flex items-center justify-between mb-8">
+                            <div>
+                                <h2 className="text-xl font-bold text-slate-800 tracking-tight">Rendimiento Temporal</h2>
+                                <p className="text-[10px] font-bold text-slate-400 uppercase tracking-[0.2em] mt-1">Ventas acumuladas por día</p>
+                            </div>
+                        </div>
+                        <div className="space-y-6">
                             {reports.salesByDay.map((day) => {
                                 const maxSales = Math.max(...reports.salesByDay.map(d => d.sales));
                                 const percentage = maxSales > 0 ? (day.sales / maxSales) * 100 : 0;
 
                                 return (
-                                    <div key={day.dayNumber}>
-                                        <div className="flex items-center justify-between text-sm mb-1">
-                                            <span className="font-medium text-gray-700">{day.day}</span>
-                                            <span className="text-gray-600">
-                                                ${day.sales.toLocaleString('es-MX', { minimumFractionDigits: 2 })} ({day.transactions} ventas)
+                                    <div key={day.dayNumber} className="group">
+                                        <div className="flex items-end justify-between text-[11px] font-bold uppercase tracking-widest mb-3">
+                                            <span className="text-slate-800 flex items-center gap-2">
+                                                <div className="w-1.5 h-1.5 rounded-full bg-blue-500"></div> {day.day}
+                                            </span>
+                                            <span className="text-slate-400 group-hover:text-blue-600 transition-colors">
+                                                ${day.sales.toLocaleString('es-MX', { minimumFractionDigits: 2 })} <span className="text-slate-300 font-bold ml-1">/ {day.transactions} vtas</span>
                                             </span>
                                         </div>
-                                        <div className="w-full bg-gray-200 rounded-full h-2">
+                                        <div className="w-full bg-slate-50 rounded-full h-3 overflow-hidden border border-slate-100/50">
                                             <div
-                                                className="bg-blue-600 h-2 rounded-full transition-all duration-300"
+                                                className="bg-gradient-to-r from-blue-600 to-blue-400 h-full rounded-full transition-all duration-1000 ease-out shadow-[0_0_15px_rgba(59,130,246,0.2)]"
                                                 style={{ width: `${percentage}%` }}
                                             ></div>
                                         </div>
@@ -439,142 +444,140 @@ const ReportsPage = () => {
                         </div>
                     </div>
 
-                    {/* Top Products and Clients */}
-                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-10">
-                        {/* Top Products */}
-                        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-                            <div className="flex items-center justify-between mb-4">
-                                <h2 className="text-lg font-bold text-gray-900 flex items-center gap-2">
-                                    <FaTrophy className="text-yellow-500" />
-                                    {showAllProducts ? 'Todos los Productos' : (sortProducts === 'desc' ? 'Top 10 Productos' : 'Productos con menos ventas')}
-                                </h2>
+                    {/* Top Lists */}
+                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                        {/* Products Ranking */}
+                        <div className="premium-card flex flex-col overflow-hidden">
+                            <div className="px-8 py-6 border-b border-slate-50 flex items-center justify-between bg-slate-50/20">
                                 <div className="flex items-center gap-3">
-                                    <select
-                                        value={sortProducts}
-                                        onChange={(e) => setSortProducts(e.target.value)}
-                                        className="text-sm border-none bg-transparent text-gray-500 focus:ring-0 cursor-pointer"
-                                    >
-                                        <option value="desc">Más vendidos</option>
-                                        <option value="asc">Menos vendidos</option>
-                                    </select>
-                                    <button
-                                        onClick={() => setShowAllProducts(!showAllProducts)}
-                                        className="text-sm text-blue-600 hover:underline"
-                                    >
-                                        {showAllProducts ? 'Ver top 10' : 'Ver todos'}
-                                    </button>
+                                    <FaTrophy className="text-amber-400" />
+                                    <div>
+                                        <h2 className="text-lg font-bold text-slate-800 tracking-tight leading-none">Ranking de Productos</h2>
+                                        <p className="text-[9px] font-bold text-slate-400 uppercase tracking-widest mt-1">Por volumen de ingresos</p>
+                                    </div>
                                 </div>
+                                <select
+                                    value={sortProducts}
+                                    onChange={(e) => setSortProducts(e.target.value)}
+                                    className="text-[10px] font-bold uppercase tracking-widest border-none bg-blue-50 text-blue-600 rounded-xl focus:ring-0 cursor-pointer px-3 py-1.5"
+                                >
+                                    <option value="desc">Más Vendidos</option>
+                                    <option value="asc">Menos Vendidos</option>
+                                </select>
                             </div>
-                            <div className="space-y-3">
+                            <div className="p-4 space-y-2 flex-1">
                                 {[...reports.products]
                                     .sort((a, b) => sortProducts === 'desc' ? b.revenue - a.revenue : a.revenue - b.revenue)
                                     .slice(0, showAllProducts ? undefined : 10)
                                     .map((product, index) => (
-                                        <div key={product.id || `prod-${index}`} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors">
-                                            <div className="flex items-center gap-3">
-                                                <span className={`flex items-center justify-center w-6 h-6 ${sortProducts === 'desc' ? 'bg-blue-600' : 'bg-red-500'} text-white text-xs font-bold rounded-full`}>
+                                        <div key={product.id || `prod-${index}`} className="group flex items-center justify-between p-4 bg-white hover:bg-slate-50 rounded-[1.5rem] transition-all border border-transparent hover:border-slate-100 active:scale-[0.98]">
+                                            <div className="flex items-center gap-4">
+                                                <span className={`flex items-center justify-center w-8 h-8 ${index < 3 ? 'bg-blue-600 text-white' : 'bg-slate-100 text-slate-400'} text-[10px] font-bold rounded-xl shadow-sm`}>
                                                     {index + 1}
                                                 </span>
-                                                <div>
-                                                    <p className="font-medium text-gray-900">{product.name}</p>
-                                                    <p className="text-sm text-gray-500">{product.quantity} unidades</p>
+                                                <div className="min-w-0">
+                                                    <p className="font-bold text-slate-800 tracking-tight text-sm truncate max-w-[150px] md:max-w-[200px]">{product.name}</p>
+                                                    <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">{product.quantity} Unidades</p>
                                                 </div>
                                             </div>
-                                            <span className="font-bold text-green-600">
-                                                ${product.revenue.toLocaleString('es-MX', { minimumFractionDigits: 2 })}
-                                            </span>
+                                            <div className="text-right">
+                                                <p className="font-bold text-slate-800 tracking-tighter">${product.revenue.toLocaleString('es-MX', { minimumFractionDigits: 1 })}</p>
+                                                <FaArrowRight size={8} className="text-blue-500 opacity-0 group-hover:opacity-100 translate-x-1 group-hover:translate-x-0 transition-all inline-block mt-1" />
+                                            </div>
                                         </div>
                                     ))}
-                                {reports.products.length === 0 && (
-                                    <p className="text-center text-gray-500 py-4">No hay datos de productos</p>
-                                )}
+                                <button
+                                    onClick={() => setShowAllProducts(!showAllProducts)}
+                                    className="w-full py-4 text-[10px] font-bold text-blue-600 uppercase tracking-[0.2em] hover:bg-blue-50 rounded-2xl transition-all"
+                                >
+                                    {showAllProducts ? 'Colapsar Lista' : 'Ver Todos los Productos'}
+                                </button>
                             </div>
                         </div>
 
-                        {/* Top Clients */}
-                        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-                            <div className="flex items-center justify-between mb-4">
-                                <h2 className="text-lg font-bold text-gray-900 flex items-center gap-2">
-                                    <FaUsers className="text-blue-500" />
-                                    {showAllClients ? 'Todos los Clientes' : (sortClients === 'desc' ? 'Top 10 Clientes' : 'Clientes con menos compras')}
-                                </h2>
+                        {/* Clients Ranking */}
+                        <div className="premium-card flex flex-col overflow-hidden">
+                            <div className="px-8 py-6 border-b border-slate-50 flex items-center justify-between bg-slate-50/20">
                                 <div className="flex items-center gap-3">
-                                    <select
-                                        value={sortClients}
-                                        onChange={(e) => setSortClients(e.target.value)}
-                                        className="text-sm border-none bg-transparent text-gray-500 focus:ring-0 cursor-pointer"
-                                    >
-                                        <option value="desc">Más compras</option>
-                                        <option value="asc">Menos compras</option>
-                                    </select>
-                                    <button
-                                        onClick={() => setShowAllClients(!showAllClients)}
-                                        className="text-sm text-blue-600 hover:underline"
-                                    >
-                                        {showAllClients ? 'Ver top 10' : 'Ver todos'}
-                                    </button>
+                                    <FaUsers className="text-blue-500" />
+                                    <div>
+                                        <h2 className="text-lg font-bold text-slate-800 tracking-tight leading-none">Clientes Potenciales</h2>
+                                        <p className="text-[9px] font-bold text-slate-400 uppercase tracking-widest mt-1">Inversión acumulada</p>
+                                    </div>
                                 </div>
+                                <select
+                                    value={sortClients}
+                                    onChange={(e) => setSortClients(e.target.value)}
+                                    className="text-[10px] font-bold uppercase tracking-widest border-none bg-blue-50 text-blue-600 rounded-xl focus:ring-0 cursor-pointer px-3 py-1.5"
+                                >
+                                    <option value="desc">Mayor Gasto</option>
+                                    <option value="asc">Menor Gasto</option>
+                                </select>
                             </div>
-                            <div className="space-y-3">
+                            <div className="p-4 space-y-2 flex-1">
                                 {[...reports.clients]
                                     .sort((a, b) => sortClients === 'desc' ? b.total - a.total : a.total - b.total)
                                     .slice(0, showAllClients ? undefined : 10)
                                     .map((client, index) => (
-                                        <div key={client.id || `client-${index}`} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors">
-                                            <div className="flex items-center gap-3">
-                                                <span className={`flex items-center justify-center w-6 h-6 ${sortClients === 'desc' ? 'bg-purple-600' : 'bg-red-500'} text-white text-xs font-bold rounded-full`}>
-                                                    {index + 1}
-                                                </span>
-                                                <div>
-                                                    <p className="font-medium text-gray-900">{client.name}</p>
-                                                    <p className="text-sm text-gray-500">{client.purchases} compras</p>
+                                        <div key={client.id || `client-${index}`} className="group flex items-center justify-between p-4 bg-white hover:bg-slate-50 rounded-[1.5rem] transition-all border border-transparent hover:border-slate-100 active:scale-[0.98]">
+                                            <div className="flex items-center gap-4">
+                                                <div className="w-10 h-10 rounded-xl bg-slate-50 text-slate-400 flex items-center justify-center font-bold group-hover:bg-blue-600 group-hover:text-white transition-all">
+                                                    {client.name.charAt(0)}
+                                                </div>
+                                                <div className="min-w-0">
+                                                    <p className="font-bold text-slate-800 tracking-tight text-sm truncate max-w-[150px] md:max-w-[200px]">{client.name}</p>
+                                                    <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">{client.purchases} Compras</p>
                                                 </div>
                                             </div>
-                                            <span className="font-bold text-green-600">
-                                                ${client.total.toLocaleString('es-MX', { minimumFractionDigits: 2 })}
-                                            </span>
+                                            <div className="text-right">
+                                                <p className="font-bold text-slate-800 tracking-tighter">${client.total.toLocaleString('es-MX', { minimumFractionDigits: 1 })}</p>
+                                                <FaChevronRight size={10} className="text-blue-500 opacity-0 group-hover:opacity-100 transition-all inline-block mt-1" />
+                                            </div>
                                         </div>
                                     ))}
-                                {reports.clients.length === 0 && (
-                                    <p className="text-center text-gray-500 py-4">No hay datos de clientes</p>
-                                )}
+                                <button
+                                    onClick={() => setShowAllClients(!showAllClients)}
+                                    className="w-full py-4 text-[10px] font-bold text-blue-600 uppercase tracking-[0.2em] hover:bg-blue-50 rounded-2xl transition-all"
+                                >
+                                    {showAllClients ? 'Colapsar Lista' : 'Ver Todos los Clientes'}
+                                </button>
                             </div>
                         </div>
                     </div>
                 </>
             )}
-            {/* PDF Preview Modal */}
+
+            {/* Premium PDF Preview Modal */}
             {pdfPreview && (
-                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-75 p-4">
-                    <div className="bg-white rounded-xl shadow-2xl w-full max-w-5xl h-[90vh] flex flex-col overflow-hidden animate-in fade-in zoom-in duration-200">
-                        <div className="p-4 border-b flex items-center justify-between bg-gray-50">
-                            <h3 className="text-lg font-bold text-gray-800">Vista Previa del Reporte</h3>
-                            <div className="flex items-center gap-3">
+                <div className="fixed inset-0 z-[100] flex items-center justify-center bg-slate-900/90 backdrop-blur-xl p-4 sm:p-10 animate-fade-up">
+                    <div className="bg-white rounded-[3rem] shadow-2xl w-full max-w-6xl h-full flex flex-col overflow-hidden border border-white/50">
+                        <div className="p-6 sm:p-8 border-b flex items-center justify-between bg-slate-50/50">
+                            <div>
+                                <h3 className="text-xl font-bold text-slate-800 tracking-tight">Previsualización de Reporte</h3>
+                                <p className="text-[10px] font-bold text-slate-400 uppercase tracking-[0.2em] mt-1">Listo para exportar</p>
+                            </div>
+                            <div className="flex items-center gap-4">
                                 <button
                                     onClick={downloadPDF}
-                                    className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors flex items-center gap-2"
+                                    className="px-6 py-3 bg-blue-600 text-white rounded-[1.5rem] font-bold text-[10px] uppercase tracking-widest hover:bg-blue-700 active:scale-95 transition-all shadow-xl shadow-blue-500/20 flex items-center gap-2"
                                 >
-                                    <FaDownload />
-                                    Descargar
+                                    <FaDownload /> Descargar
                                 </button>
                                 <button
                                     onClick={() => {
                                         URL.revokeObjectURL(pdfPreview);
                                         setPdfPreview(null);
                                     }}
-                                    className="p-2 text-gray-500 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
-                                    title="Cerrar"
+                                    className="p-3 bg-white border border-slate-100 text-slate-400 hover:text-rose-500 rounded-2xl hover:bg-rose-50 transition-all active:scale-90 shadow-sm"
                                 >
-                                    <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                                    </svg>
+                                    <FaTimes size={20} />
                                 </button>
                             </div>
                         </div>
-                        <div className="flex-1 overflow-hidden">
+                        <div className="flex-1 bg-slate-200/50 p-4 sm:p-8">
                             <iframe
-                                src={pdfPreview}
-                                className="w-full h-full border-none"
+                                src={`${pdfPreview}#toolbar=0`}
+                                className="w-full h-full rounded-[2rem] shadow-2xl border border-white"
                                 title="Report Preview"
                             ></iframe>
                         </div>

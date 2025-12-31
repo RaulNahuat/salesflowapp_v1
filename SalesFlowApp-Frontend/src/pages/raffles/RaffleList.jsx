@@ -2,7 +2,18 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'react-hot-toast';
 import raffleApi from '../../services/raffleApi';
-import { FaPlus, FaGift, FaTrophy, FaTicketAlt, FaCalendar, FaTrash, FaEye } from 'react-icons/fa';
+import {
+    FaPlus,
+    FaGift,
+    FaTrophy,
+    FaTicketAlt,
+    FaCalendar,
+    FaTrash,
+    FaEye,
+    FaArrowRight,
+    FaRegStar,
+    FaClock
+} from 'react-icons/fa';
 import ConfirmationModal from '../../componentes/ui/ConfirmationModal';
 
 const RaffleList = () => {
@@ -30,9 +41,9 @@ const RaffleList = () => {
         setModalConfig({
             isOpen: true,
             title: 'Eliminar Sorteo',
-            message: '¿Estás seguro de que deseas eliminar este sorteo?',
+            message: '¿Estás seguro de que deseas eliminar este sorteo permanentemente?',
             isDatgerous: true,
-            confirmText: 'Eliminar',
+            confirmText: 'Eliminar Sorteo',
             action: async () => {
                 try {
                     await raffleApi.deleteRaffle(id);
@@ -45,109 +56,119 @@ const RaffleList = () => {
         });
     };
 
-    if (loading) {
-        return (
-            <div className="flex justify-center items-center h-64">
-                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
-            </div>
-        );
-    }
+    if (loading) return (
+        <div className="flex flex-col items-center justify-center h-96 gap-4">
+            <div className="w-12 h-12 border-4 border-blue-600/20 border-t-blue-600 rounded-full animate-spin"></div>
+            <p className="text-slate-400 font-bold uppercase tracking-widest text-[10px]">Cargando Eventos...</p>
+        </div>
+    );
 
     return (
-        <div className="p-4 sm:p-6 lg:p-8">
-            {/* Header */}
-            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
+        <div className="space-y-10 pb-20 animate-fade-up">
+            {/* 1. Global Header */}
+            <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
                 <div>
-                    <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 flex items-center gap-2">
-                        <FaGift className="text-blue-600" />
-                        Sorteos
-                    </h1>
-                    <p className="text-gray-600 text-sm mt-1">Gestiona tus sorteos y rifas</p>
+                    <div className="flex items-center gap-2 mb-2">
+                        <div className="w-8 h-8 rounded-lg bg-amber-100 flex items-center justify-center text-amber-600">
+                            <FaGift size={14} />
+                        </div>
+                        <span className="text-[10px] font-bold text-amber-600 uppercase tracking-[0.2em]">Fidelización & Dinámicas</span>
+                    </div>
+                    <h1 className="text-3xl font-bold text-slate-800 tracking-tight mb-2">Sorteos y Rifas</h1>
+                    <p className="text-slate-500 font-medium max-w-lg">
+                        Crea experiencias inolvidables para tus clientes y aumenta el engagement de tu comunidad.
+                    </p>
                 </div>
                 <button
                     onClick={() => navigate('/raffles/new')}
-                    className="w-full sm:w-auto bg-gradient-to-r from-blue-600 to-indigo-600 text-white px-6 py-3 rounded-xl font-bold shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 transition-all flex items-center justify-center gap-2"
+                    className="btn-primary flex items-center justify-center gap-2 group sm:min-w-[220px]"
                 >
-                    <FaPlus /> Nuevo Sorteo
+                    <FaPlus className="text-blue-200 group-hover:rotate-90 transition-transform" />
+                    <span>Nuevo Sorteo</span>
                 </button>
             </div>
 
-            {/* Raffles Grid */}
+            {/* Empty State */}
             {raffles.length === 0 ? (
-                <div className="text-center py-12 bg-gray-50 rounded-2xl">
-                    <FaGift className="mx-auto text-6xl text-gray-300 mb-4" />
-                    <h3 className="text-xl font-bold text-gray-700 mb-2">No hay sorteos</h3>
-                    <p className="text-gray-500 mb-6">Crea tu primer sorteo para comenzar</p>
-                    <button
-                        onClick={() => navigate('/raffles/new')}
-                        className="bg-blue-600 text-white px-6 py-2 rounded-lg font-semibold hover:bg-blue-700 transition-colors"
-                    >
-                        Crear Sorteo
-                    </button>
+                <div className="premium-card py-24 flex flex-col items-center text-center px-10">
+                    <div className="w-24 h-24 bg-slate-50 rounded-full flex items-center justify-center mb-6 border border-dashed border-slate-200">
+                        <FaRegStar className="text-slate-300 text-4xl" />
+                    </div>
+                    <h3 className="text-xl font-bold text-slate-800 tracking-tight mb-2">Aún no hay dinámicas activas</h3>
+                    <p className="text-slate-500 text-sm max-w-sm mb-8 font-medium italic">Los sorteos son una excelente manera de premiar a tus clientes frecuentes.</p>
+                    <button onClick={() => navigate('/raffles/new')} className="btn-primary">Lanzar Primer Sorteo</button>
                 </div>
             ) : (
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                    {raffles.map(raffle => (
+                <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-8">
+                    {raffles.map((raffle, index) => (
                         <div
                             key={raffle.id}
-                            className="bg-white rounded-2xl shadow-md hover:shadow-xl transition-all border border-gray-100 overflow-hidden"
+                            className="premium-card group hover:shadow-2xl hover:shadow-blue-900/5 hover:-translate-y-2 transition-all flex flex-col overflow-hidden animate-fade-up"
+                            style={{ animationDelay: `${index * 50}ms` }}
                         >
-                            {/* Status Badge */}
-                            <div className={`px-4 py-3 ${raffle.status === 'active' ? 'bg-gradient-to-r from-green-500 to-emerald-500' : 'bg-gradient-to-r from-gray-500 to-gray-600'}`}>
-                                <div className="flex items-center justify-between text-white">
-                                    <span className="font-bold text-sm uppercase tracking-wide">
-                                        {raffle.status === 'active' ? '🎯 Activo' : '🏆 Finalizado'}
+                            {/* Status Header */}
+                            <div className={`p-5 flex items-center justify-between ${raffle.status === 'active' ? 'bg-gradient-to-r from-emerald-500 to-teal-600' : 'bg-slate-900'}`}>
+                                <div className="flex items-center gap-2">
+                                    <div className="w-2 h-2 rounded-full bg-white animate-pulse"></div>
+                                    <span className="text-[10px] font-bold text-white uppercase tracking-widest">
+                                        {raffle.status === 'active' ? 'Sorteo Activo' : 'Evento Finalizado'}
                                     </span>
-                                    <FaTrophy className="text-white/80" />
                                 </div>
+                                <FaTrophy className="text-white/30" size={14} />
                             </div>
 
-                            {/* Content */}
-                            <div className="p-6">
-                                <h3 className="text-xl font-bold text-gray-900 mb-2 line-clamp-2">
+                            <div className="p-8 flex-1 flex flex-col">
+                                <h3 className="text-xl font-bold text-slate-800 tracking-tight mb-4 group-hover:text-blue-600 transition-colors line-clamp-2 leading-tight">
                                     {raffle.motive}
                                 </h3>
 
-                                {raffle.prize && (
-                                    <p className="text-gray-600 mb-4 flex items-center gap-2">
-                                        <FaGift className="text-blue-500" />
-                                        <span className="font-semibold">{raffle.prize}</span>
-                                    </p>
-                                )}
+                                <div className="space-y-4 mb-8">
+                                    <div className="flex items-center gap-3">
+                                        <div className="w-10 h-10 rounded-xl bg-blue-50 flex items-center justify-center text-blue-600">
+                                            <FaGift size={16} />
+                                        </div>
+                                        <div>
+                                            <p className="text-[9px] font-bold text-slate-400 uppercase tracking-widest">Premio Mayor</p>
+                                            <p className="text-sm font-bold text-slate-700">{raffle.prize || 'Misterio'}</p>
+                                        </div>
+                                    </div>
 
-                                <div className="space-y-2 mb-4">
-                                    <div className="flex items-center gap-2 text-sm text-gray-600">
-                                        <FaTicketAlt className="text-blue-500" />
-                                        <span><strong>{raffle.ticketCount || 0}</strong> boletos</span>
+                                    <div className="grid grid-cols-2 gap-4">
+                                        <div className="bg-slate-50/50 p-4 rounded-2xl border border-slate-100">
+                                            <div className="flex items-center gap-2 mb-1">
+                                                <FaTicketAlt className="text-blue-500" size={12} />
+                                                <span className="text-[9px] font-bold text-slate-400 uppercase tracking-widest tracking-tighter">Boletos</span>
+                                            </div>
+                                            <p className="text-lg font-bold text-slate-800 leading-none">{raffle.ticketCount || 0}</p>
+                                        </div>
+                                        <div className="bg-slate-50/50 p-4 rounded-2xl border border-slate-100">
+                                            <div className="flex items-center gap-2 mb-1">
+                                                <FaClock className="text-blue-500" size={12} />
+                                                <span className="text-[9px] font-bold text-slate-400 uppercase tracking-widest tracking-tighter">Costo</span>
+                                            </div>
+                                            <p className="text-lg font-bold text-slate-800 leading-none">${parseFloat(raffle.ticketPrice).toFixed(0)}</p>
+                                        </div>
                                     </div>
-                                    <div className="flex items-center gap-2 text-sm text-gray-600">
-                                        <FaCalendar className="text-blue-500" />
-                                        <span>
-                                            {raffle.drawDate
-                                                ? new Date(raffle.drawDate).toLocaleDateString('es-MX')
-                                                : 'Sin fecha'}
-                                        </span>
-                                    </div>
-                                    <div className="text-sm text-gray-600">
-                                        <span className="font-semibold text-blue-600">
-                                            ${parseFloat(raffle.ticketPrice).toFixed(2)}
-                                        </span> por boleto
+
+                                    <div className="flex items-center gap-2 text-[10px] font-bold text-slate-400">
+                                        <FaCalendar className="text-slate-300" />
+                                        <span>Fecha del sorteo: <span className="text-slate-800">{raffle.drawDate ? new Date(raffle.drawDate).toLocaleDateString('es-MX', { month: 'long', day: 'numeric', year: 'numeric' }) : 'Por definir'}</span></span>
                                     </div>
                                 </div>
 
-                                {/* Actions */}
-                                <div className="flex gap-2">
+                                <div className="mt-auto pt-6 border-t border-slate-50 flex gap-3">
                                     <button
                                         onClick={() => navigate(`/raffles/${raffle.id}`)}
-                                        className="flex-1 bg-blue-600 text-white py-2 rounded-lg font-semibold hover:bg-blue-700 transition-colors flex items-center justify-center gap-2"
+                                        className="flex-1 btn-primary h-12 flex items-center justify-center gap-2 shadow-sm"
                                     >
-                                        <FaEye /> Ver
+                                        <FaEye size={12} className="text-blue-200" />
+                                        <span>Gestionar</span>
                                     </button>
                                     <button
                                         onClick={() => handleDelete(raffle.id)}
-                                        className="bg-red-50 text-red-600 px-4 py-2 rounded-lg font-semibold hover:bg-red-100 transition-colors"
+                                        className="w-12 h-12 bg-slate-50 text-slate-300 hover:text-rose-500 hover:bg-rose-50 rounded-xl flex items-center justify-center transition-all active:scale-95 border border-transparent hover:border-rose-100"
                                     >
-                                        <FaTrash />
+                                        <FaTrash size={14} />
                                     </button>
                                 </div>
                             </div>
@@ -156,7 +177,6 @@ const RaffleList = () => {
                 </div>
             )}
 
-            {/* Modal de Confirmación */}
             <ConfirmationModal
                 isOpen={modalConfig.isOpen}
                 onClose={() => setModalConfig(prev => ({ ...prev, isOpen: false }))}
@@ -165,6 +185,7 @@ const RaffleList = () => {
                 message={modalConfig.message}
                 isDatgerous={modalConfig.isDatgerous}
                 confirmText={modalConfig.confirmText}
+                cancelText="Mantener Sorteo"
             />
         </div>
     );

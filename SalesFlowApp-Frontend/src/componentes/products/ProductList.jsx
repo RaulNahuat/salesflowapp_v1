@@ -1,7 +1,19 @@
 import React, { useEffect, useState, useCallback } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import productApi from '../../services/productApi';
-import { FaBox, FaPlus, FaSearch, FaEdit, FaTrash, FaExclamationTriangle } from 'react-icons/fa';
+import {
+    FaBox,
+    FaPlus,
+    FaSearch,
+    FaEdit,
+    FaTrash,
+    FaExclamationTriangle,
+    FaRegListAlt,
+    FaLayerGroup,
+    FaArrowRight,
+    FaEllipsisV,
+    FaBoxes
+} from 'react-icons/fa';
 import ConfirmationModal from '../ui/ConfirmationModal';
 import { toast } from 'react-hot-toast';
 
@@ -13,7 +25,6 @@ const ProductList = () => {
     const [modalConfig, setModalConfig] = useState({ isOpen: false, title: '', message: '', action: null });
     const location = useLocation();
 
-    // Stable fetch function using useCallback
     const fetchProducts = useCallback(async () => {
         try {
             setLoading(true);
@@ -28,14 +39,11 @@ const ProductList = () => {
         }
     }, []);
 
-    // Initial fetch on mount
     useEffect(() => {
         fetchProducts();
     }, [fetchProducts]);
 
-    // Refetch when navigating back to this page (e.g., after creating/editing a product)
     useEffect(() => {
-        // Only refetch if not initial mount (location.key changes on navigation)
         if (location.key !== 'default') {
             fetchProducts();
         }
@@ -45,9 +53,9 @@ const ProductList = () => {
         setModalConfig({
             isOpen: true,
             title: 'Eliminar Producto',
-            message: '¿Estás seguro de que deseas eliminar este producto? Se eliminará del inventario.',
+            message: '¿Estás seguro de que deseas eliminar este producto? Esta acción no se puede deshacer.',
             isDatgerous: true,
-            confirmText: 'Eliminar',
+            confirmText: 'Eliminar Producto',
             action: async () => {
                 try {
                     await productApi.deleteProduct(id);
@@ -62,194 +70,150 @@ const ProductList = () => {
     };
 
     const filteredProducts = products.filter(product =>
-        product.name.toLowerCase().includes(searchTerm.toLowerCase())
+        product.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        (product.sku && product.sku.toLowerCase().includes(searchTerm.toLowerCase()))
     );
 
     if (loading) return (
-        <div className="flex justify-center items-center h-64">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+        <div className="flex flex-col items-center justify-center h-96 gap-4">
+            <div className="w-12 h-12 border-4 border-blue-600/20 border-t-blue-600 rounded-full animate-spin"></div>
+            <p className="text-slate-400 font-bold uppercase tracking-widest text-[10px]">Cargando Inventario...</p>
         </div>
     );
 
     return (
-        <div className="space-y-6">
-            {/* Header */}
-            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
-                <div>
-                    <h1 className="text-2xl font-bold text-gray-900">Inventario</h1>
-                    <p className="text-gray-500 text-sm">Gestiona tus productos y existencias</p>
+        <div className="space-y-8 pb-20 animate-fade-up">
+            {/* 1. Slim Header - Vibrant Style */}
+            <div className="relative overflow-hidden bg-vibrant rounded-3xl p-6 mb-6 shadow-vibrant">
+                <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 blur-3xl rounded-full -mr-16 -mt-16"></div>
+                <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-4">
+                    <div>
+                        <h1 className="text-xl font-bold text-white tracking-tight">Inventario de Productos</h1>
+                        <p className="text-[10px] font-medium text-blue-100/80 uppercase tracking-widest mt-0.5">Administra stock, precios y categorías</p>
+                    </div>
+                    <Link
+                        to="/products/new"
+                        className="bg-white text-blue-600 flex items-center justify-center gap-2 h-10 px-5 rounded-xl text-[10px] font-bold uppercase tracking-widest hover:bg-blue-50 active:scale-95 transition-all shadow-lg shadow-black/5"
+                    >
+                        <FaPlus size={10} />
+                        <span>Nuevo Producto</span>
+                    </Link>
                 </div>
-                <Link
-                    to="/products/new"
-                    className="flex items-center px-4 py-2.5 bg-blue-600 text-white rounded-xl font-medium shadow-lg shadow-blue-500/20 hover:bg-blue-700 hover:shadow-blue-500/30 transition-all"
-                >
-                    <FaPlus className="mr-2" /> Nuevo Producto
-                </Link>
+            </div>
+
+            {/* 2. Compact Search */}
+            <div className="flex flex-col md:flex-row gap-3 mb-6">
+                <div className="relative flex-1 group">
+                    <div className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-300 pointer-events-none group-focus-within:text-blue-500 transition-colors">
+                        <FaSearch size={14} />
+                    </div>
+                    <input
+                        type="text"
+                        placeholder="Buscar por nombre, categoría o SKU..."
+                        value={searchTerm}
+                        onChange={(e) => setSearchTerm(e.target.value)}
+                        className="w-full pl-11 pr-4 py-3 bg-white border border-slate-100 rounded-2xl focus:outline-none focus:ring-4 focus:ring-blue-500/5 focus:border-blue-200 transition-all font-bold text-slate-800 placeholder:text-slate-300 shadow-sm text-sm"
+                    />
+                </div>
             </div>
 
             {/* Error Message */}
             {error && (
-                <div className="bg-red-50 border border-red-100 text-red-600 p-4 rounded-xl flex items-center">
-                    <FaExclamationTriangle className="mr-3 text-red-500" />
-                    {error}
+                <div className="bg-rose-50 border border-rose-100 text-rose-600 p-6 rounded-[2rem] flex items-center animate-fade-up">
+                    <FaExclamationTriangle className="mr-4 text-rose-500" size={24} />
+                    <p className="font-bold">{error}</p>
                 </div>
             )}
 
-            {/* Empty State */}
+            {/* Empty States */}
             {!loading && products.length === 0 && !error && (
-                <div className="text-center py-20 bg-white rounded-2xl border border-gray-100 border-dashed">
-                    <div className="mx-auto w-16 h-16 bg-blue-50 rounded-full flex items-center justify-center mb-4">
-                        <FaBox className="text-blue-200 text-3xl" />
+                <div className="bg-white rounded-3xl border border-slate-100 py-20 flex flex-col items-center text-center px-10 border-dashed">
+                    <div className="w-16 h-16 bg-slate-50 rounded-full flex items-center justify-center mb-4 border border-dashed border-slate-200">
+                        <FaBox className="text-slate-300 text-2xl" />
                     </div>
-                    <h3 className="text-lg font-bold text-gray-900">Tu inventario está vacío</h3>
-                    <p className="text-gray-500 mb-6">Agrega tu primer producto para comenzar a vender.</p>
-                    <Link
-                        to="/products/new"
-                        className="text-blue-600 font-medium hover:underline"
-                    >
-                        Crear Producto ahora &rarr;
-                    </Link>
+                    <h3 className="text-lg font-bold text-slate-800 tracking-tight mb-1">Tu almacén está vacío</h3>
+                    <p className="text-slate-400 text-xs max-w-sm mb-6 font-medium">Registra productos para comenzar a vender.</p>
+                    <Link to="/products/new" className="px-6 py-3 bg-blue-600 text-white rounded-xl text-[10px] font-bold uppercase tracking-widest">Crear Producto</Link>
                 </div>
             )}
 
-            {/* Product Grid / List */}
-            {products.length > 0 && (
-                <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
-                    {/* Search Bar */}
-                    <div className="p-4 border-b border-gray-100">
-                        <div className="relative max-w-md">
-                            <FaSearch className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
-                            <input
-                                type="text"
-                                placeholder="Buscar productos..."
-                                value={searchTerm}
-                                onChange={(e) => setSearchTerm(e.target.value)}
-                                className="w-full pl-10 pr-4 py-2 bg-gray-50 border border-gray-200 rounded-lg focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-100 focus:border-blue-500 transition-all"
-                            />
-                        </div>
-                    </div>
-
-                    {/* Desktop Table - hidden on mobile */}
-                    <div className="hidden md:block overflow-x-auto">
-                        <table className="w-full text-left">
-                            <thead className="bg-gray-50 text-gray-600 text-xs uppercase font-semibold">
-                                <tr>
-                                    <th className="px-6 py-4">Producto</th>
-                                    <th className="px-6 py-4 text-center">Stock</th>
-                                    <th className="px-6 py-4 text-right">Precio</th>
-                                    <th className="px-6 py-4 text-center">Acciones</th>
-                                </tr>
-                            </thead>
-                            <tbody className="divide-y divide-gray-100">
-                                {filteredProducts.map((product) => (
-                                    <tr key={product.id} className="hover:bg-gray-50/50 transition-colors">
-                                        <td className="px-6 py-4">
-                                            <div className="flex items-center">
-                                                <div className="h-10 w-10 rounded-lg bg-gray-100 flex items-center justify-center text-gray-400 mr-3 flex-shrink-0">
-                                                    {product.imageUrl ? (
-                                                        <img src={product.imageUrl} alt="" className="h-full w-full object-cover rounded-lg" />
-                                                    ) : (
-                                                        <FaBox />
-                                                    )}
-                                                </div>
-                                                <div>
-                                                    <p className="font-bold text-gray-900">{product.name}</p>
-                                                    <p className="text-xs text-gray-500 truncate max-w-xs">{product.description}</p>
-                                                </div>
-                                            </div>
-                                        </td>
-                                        <td className="px-6 py-4 text-center">
-                                            <span className={`px-2.5 py-0.5 rounded-full text-xs font-bold ${product.stock > 10 ? 'bg-green-100 text-green-700' :
-                                                product.stock > 0 ? 'bg-yellow-100 text-yellow-700' : 'bg-red-100 text-red-700'
-                                                }`}>
-                                                {product.stock} unids.
-                                            </span>
-                                        </td>
-                                        <td className="px-6 py-4 text-right font-medium text-gray-900">
-                                            ${parseFloat(product.sellingPrice).toFixed(2)}
-                                        </td>
-                                        <td className="px-6 py-4 text-center">
-                                            <div className="flex items-center justify-center space-x-2">
-                                                <Link
-                                                    to={`/products/edit/${product.id}`}
-                                                    className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
-                                                >
-                                                    <FaEdit />
-                                                </Link>
-                                                <button
-                                                    onClick={() => confirmDelete(product.id)}
-                                                    className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors"
-                                                >
-                                                    <FaTrash />
-                                                </button>
-                                            </div>
-                                        </td>
-                                    </tr>
-                                ))}
-                            </tbody>
-                        </table>
-                    </div>
-
-                    {/* Mobile Cards - hidden on desktop */}
-                    <div className="md:hidden divide-y divide-gray-100">
-                        {filteredProducts.map((product) => (
-                            <div key={product.id} className="p-4 hover:bg-gray-50/50 transition-colors">
-                                <div className="flex items-start gap-3">
-                                    {/* Image */}
-                                    <div className="h-16 w-16 rounded-lg bg-gray-100 flex items-center justify-center text-gray-400 flex-shrink-0">
-                                        {product.imageUrl ? (
-                                            <img src={product.imageUrl} alt="" className="h-full w-full object-cover rounded-lg" />
-                                        ) : (
-                                            <FaBox className="text-2xl" />
-                                        )}
-                                    </div>
-
-                                    {/* Content */}
-                                    <div className="flex-1 min-w-0">
-                                        <h3 className="font-bold text-gray-900 mb-1">{product.name}</h3>
-                                        {product.description && (
-                                            <p className="text-xs text-gray-500 mb-2 line-clamp-2">{product.description}</p>
-                                        )}
-
-                                        {/* Info Row */}
-                                        <div className="flex items-center gap-3 mb-3">
-                                            <span className={`px-2.5 py-1 rounded-full text-xs font-bold ${product.stock > 10 ? 'bg-green-100 text-green-700' :
-                                                product.stock > 0 ? 'bg-yellow-100 text-yellow-700' : 'bg-red-100 text-red-700'
-                                                }`}>
-                                                {product.stock} unids.
-                                            </span>
-                                            <span className="font-bold text-gray-900">
-                                                ${parseFloat(product.sellingPrice).toFixed(2)}
-                                            </span>
-                                        </div>
-
-                                        {/* Actions */}
-                                        <div className="flex gap-2">
-                                            <Link
-                                                to={`/products/edit/${product.id}`}
-                                                className="flex-1 flex items-center justify-center gap-2 px-3 py-2 text-blue-600 bg-blue-50 hover:bg-blue-100 rounded-lg transition-colors text-sm font-medium"
-                                            >
-                                                <FaEdit /> Editar
-                                            </Link>
-                                            <button
-                                                onClick={() => confirmDelete(product.id)}
-                                                className="flex-1 flex items-center justify-center gap-2 px-3 py-2 text-red-600 bg-red-50 hover:bg-red-100 rounded-lg transition-colors text-sm font-medium"
-                                            >
-                                                <FaTrash /> Eliminar
-                                            </button>
-                                        </div>
+            {/* 3. List Content (Ultra-Compact) */}
+            <div className="space-y-2">
+                <div className="hidden md:grid grid-cols-12 gap-4 px-6 py-1 opacity-40">
+                    <div className="col-span-12 md:col-span-5 text-[8px] font-bold text-slate-500 uppercase tracking-widest font-sans">Producto / Identidad</div>
+                    <div className="col-span-12 md:col-span-4 text-[8px] font-bold text-slate-500 uppercase tracking-widest font-sans">Comercial</div>
+                    <div className="col-span-12 md:col-span-3 text-[8px] font-bold text-slate-500 uppercase tracking-widest text-right font-sans">Gestionar</div>
+                </div>
+                <div className="space-y-2">
+                    {filteredProducts.map((product, index) => (
+                        <div
+                            key={product.id}
+                            className="grid grid-cols-1 md:grid-cols-12 gap-4 px-5 py-3 bg-white border border-slate-100/60 rounded-xl hover:border-blue-200 hover:shadow-soft transition-all items-center group animate-fade-up shadow-sm/30"
+                        >
+                            <div className="col-span-1 md:col-span-5 flex items-center gap-3">
+                                <div className="w-10 h-10 rounded-lg bg-slate-50 border border-slate-100 overflow-hidden flex items-center justify-center text-slate-200 flex-shrink-0 group-hover:scale-105 transition-transform">
+                                    {product.imageUrl ? (
+                                        <img src={product.imageUrl} alt={product.name} className="w-full h-full object-cover" />
+                                    ) : (
+                                        <FaBox size={14} />
+                                    )}
+                                </div>
+                                <div className="min-w-0">
+                                    <h3 className="text-xs font-bold text-slate-800 tracking-tight leading-tight truncate group-hover:text-blue-600 transition-colors">
+                                        {product.name}
+                                    </h3>
+                                    <div className="flex items-center gap-2 mt-0.5">
+                                        <p className="text-[8px] font-bold text-blue-500 uppercase tracking-widest leading-none">{product.category || 'General'}</p>
+                                        <span className="text-[8px] text-slate-200 tracking-tighter">|</span>
+                                        <p className="text-[8px] font-bold text-slate-400 uppercase tracking-widest leading-none">SKU: {product.sku || '---'}</p>
                                     </div>
                                 </div>
                             </div>
-                        ))}
-                    </div>    {filteredProducts.length === 0 && searchTerm && (
-                        <div className="p-8 text-center text-gray-500">
-                            No se encontraron productos con "{searchTerm}"
+
+                            <div className="col-span-1 md:col-span-4 flex items-center gap-6">
+                                <div className="text-xs font-bold text-slate-800 tracking-tight">
+                                    ${parseFloat(product.sellingPrice).toLocaleString('es-MX', { minimumFractionDigits: 1 })}
+                                </div>
+                                <div className={`px-2 py-0.5 rounded-md font-bold text-[8px] uppercase tracking-widest border ${product.stock > 10 ? 'bg-emerald-50 text-emerald-600 border-emerald-100/50' :
+                                    product.stock > 0 ? 'bg-amber-50 text-amber-600 border-amber-100/50' :
+                                        'bg-rose-50 text-rose-600 border-rose-100/50'
+                                    }`}>
+                                    {product.stock} Dispo
+                                </div>
+                            </div>
+
+                            <div className="col-span-1 md:col-span-3 flex items-center justify-end gap-1.5">
+                                <Link
+                                    to={`/products/edit/${product.id}`}
+                                    className="p-2 text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-all active:scale-90 border border-transparent hover:border-blue-100"
+                                    title="Editar"
+                                >
+                                    <FaEdit size={12} />
+                                </Link>
+                                <button
+                                    onClick={() => confirmDelete(product.id)}
+                                    className="p-2 text-slate-400 hover:text-rose-500 hover:bg-rose-50 rounded-lg transition-all active:scale-90 border border-transparent hover:border-rose-100"
+                                    title="Eliminar"
+                                >
+                                    <FaTrash size={12} />
+                                </button>
+                            </div>
                         </div>
-                    )}
+                    ))}
+                </div>
+            </div>
+
+            {filteredProducts.length === 0 && searchTerm && (
+                <div className="py-20 text-center animate-fade-up">
+                    <div className="w-16 h-16 bg-slate-50 rounded-full flex items-center justify-center mx-auto mb-4 border border-dashed border-slate-200">
+                        <FaSearch size={20} className="text-slate-300" />
+                    </div>
+                    <p className="text-slate-400 font-bold">No encontramos coincidencias para "{searchTerm}"</p>
+                    <button onClick={() => setSearchTerm('')} className="mt-4 text-sm font-bold text-blue-600 uppercase tracking-widest hover:underline decoration-blue-200 underline-offset-4">Limpiar búsqueda</button>
                 </div>
             )}
-            {/* Modal de Confirmación */}
+
+            {/* Modal Premium */}
             <ConfirmationModal
                 isOpen={modalConfig.isOpen}
                 onClose={() => setModalConfig(prev => ({ ...prev, isOpen: false }))}
@@ -258,6 +222,7 @@ const ProductList = () => {
                 message={modalConfig.message}
                 isDatgerous={modalConfig.isDatgerous}
                 confirmText={modalConfig.confirmText}
+                cancelText="Mantener Producto"
             />
         </div>
     );

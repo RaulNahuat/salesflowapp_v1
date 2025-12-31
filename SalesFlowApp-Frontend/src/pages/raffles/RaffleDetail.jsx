@@ -436,7 +436,7 @@ const RaffleDetail = () => {
                             <button
                                 onClick={confirmDraw}
                                 disabled={drawing}
-                                className="px-12 py-4 bg-gradient-to-r from-yellow-500 via-orange-500 to-red-500 text-white font-black text-xl rounded-2xl shadow-xl hover:shadow-2xl hover:scale-105 active:scale-95 transition-all disabled:opacity-50 flex items-center gap-3"
+                                className="px-12 py-4 bg-gradient-to-r from-yellow-500 via-orange-500 to-red-500 text-white font-bold text-xl rounded-2xl shadow-xl hover:shadow-2xl hover:scale-105 active:scale-95 transition-all disabled:opacity-50 flex items-center gap-3"
                             >
                                 <FaTrophy className={drawing ? 'animate-bounce' : ''} />
                                 {drawing ? 'SORTEANDO...' : '¡INICIAR SORTEO!'}
@@ -450,7 +450,7 @@ const RaffleDetail = () => {
             {drawing && (
                 <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-md p-4">
                     <div className="max-w-xl w-full text-center">
-                        <h2 className="text-3xl font-black text-white mb-8 tracking-tighter uppercase italic">
+                        <h2 className="text-3xl font-bold text-white mb-8 tracking-tighter uppercase italic">
                             Sorteando {drawPlace}° Lugar
                         </h2>
 
@@ -459,7 +459,7 @@ const RaffleDetail = () => {
                             <div className={`absolute inset-0 rounded-full border-8 border-dashed border-yellow-500/50 ${currentDraw?.isAnimating ? 'animate-spin' : ''}`}></div>
                             <div className="w-48 h-48 bg-gradient-to-br from-yellow-400 to-orange-600 rounded-full shadow-[0_0_50px_rgba(245,158,11,0.5)] flex flex-col items-center justify-center p-4 border-4 border-white transform transition-transform duration-500 scale-110">
                                 <p className="text-white/80 text-xs font-bold uppercase mb-1">Boleto</p>
-                                <p className="text-5xl font-black text-white drop-shadow-lg">
+                                <p className="text-5xl font-bold text-white drop-shadow-lg">
                                     {currentDraw?.ticketNumber || currentDraw?.number || '??'}
                                 </p>
                                 {currentDraw && !currentDraw.isAnimating && (
@@ -472,7 +472,7 @@ const RaffleDetail = () => {
 
                         {/* Draw Progress */}
                         <div className="space-y-4">
-                            <p className="text-yellow-500 font-black text-xl italic uppercase">
+                            <p className="text-yellow-500 font-bold text-xl italic uppercase">
                                 Intento {currentDraw?.attempt || 0} de {drawAttempts}
                             </p>
                             <div className="flex justify-center gap-2">
@@ -564,20 +564,20 @@ const RaffleDetail = () => {
                     {/* Mapping Table / Preview */}
                     <div className="mt-8 pt-8 border-t border-gray-100">
                         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
-                            <h3 className="text-lg font-black text-gray-800 flex items-center gap-2">
+                            <h3 className="text-lg font-bold text-gray-800 flex items-center gap-2">
                                 <FaUsers className="text-indigo-500" /> Mapeo de Ventas
                             </h3>
                             <div className="bg-indigo-50 border border-indigo-100 px-4 py-2 rounded-xl flex items-center gap-3">
                                 <div className="text-right">
-                                    <p className="text-[10px] font-black text-indigo-600 uppercase tracking-wider">Total Pendiente</p>
-                                    <p className="text-xl font-black text-indigo-900">
+                                    <p className="text-[10px] font-bold text-indigo-600 uppercase tracking-wider">Total Pendiente</p>
+                                    <p className="text-xl font-bold text-indigo-900">
                                         {eligibleSales.reduce((acc, sale) => acc + sale.pendingTickets, 0)} <span className="text-sm font-bold">Boletos</span>
                                     </p>
                                 </div>
                                 <div className="h-8 w-[1px] bg-indigo-200"></div>
                                 <div className="text-right">
-                                    <p className="text-[10px] font-black text-indigo-600 uppercase tracking-wider">Ventas</p>
-                                    <p className="text-xl font-black text-indigo-900">{eligibleSales.length}</p>
+                                    <p className="text-[10px] font-bold text-indigo-600 uppercase tracking-wider">Ventas</p>
+                                    <p className="text-xl font-bold text-indigo-900">{eligibleSales.length}</p>
                                 </div>
                             </div>
                         </div>
@@ -612,17 +612,17 @@ const RaffleDetail = () => {
                                                     </td>
                                                     <td className="px-4 py-3 font-medium text-gray-900">{sale.client}</td>
                                                     <td className="px-4 py-3 text-right text-gray-700 font-mono">${parseFloat(sale.total).toFixed(2)}</td>
-                                                    <td className="px-4 py-3 text-center font-black text-indigo-600">
+                                                    <td className="px-4 py-3 text-center font-bold text-indigo-600">
                                                         {sale.pendingTickets > 0 ? `+${sale.pendingTickets}` : '-'}
                                                     </td>
                                                     <td className="px-4 py-3">
                                                         <div className="flex justify-center">
                                                             {sale.pendingTickets === 0 ? (
-                                                                <span className="bg-green-100 text-green-700 px-3 py-1 rounded-full text-[10px] font-black uppercase">
+                                                                <span className="bg-green-100 text-green-700 px-3 py-1 rounded-full text-[10px] font-bold uppercase">
                                                                     Completado
                                                                 </span>
                                                             ) : (
-                                                                <span className="bg-amber-100 text-amber-700 px-3 py-1 rounded-full text-[10px] font-black uppercase">
+                                                                <span className="bg-amber-100 text-amber-700 px-3 py-1 rounded-full text-[10px] font-bold uppercase">
                                                                     Pendiente
                                                                 </span>
                                                             )}
@@ -640,14 +640,14 @@ const RaffleDetail = () => {
                                         <div key={sale.id} className="bg-gray-50 p-4 rounded-xl border border-gray-100">
                                             <div className="flex justify-between items-start mb-2">
                                                 <div>
-                                                    <p className="font-black text-gray-900">{sale.client}</p>
+                                                    <p className="font-bold text-gray-900">{sale.client}</p>
                                                     <p className="text-xs text-gray-500">{new Date(sale.createdAt).toLocaleDateString()}</p>
                                                 </div>
                                                 <p className="font-mono font-bold text-gray-700">${parseFloat(sale.total).toFixed(2)}</p>
                                             </div>
                                             <div className="flex justify-between items-center bg-white p-2 rounded-lg border border-gray-100">
                                                 <p className="text-xs font-bold text-gray-500 uppercase">Boletos Pendientes</p>
-                                                <p className={`font-black ${sale.pendingTickets > 0 ? 'text-indigo-600' : 'text-green-600'}`}>
+                                                <p className={`font-bold ${sale.pendingTickets > 0 ? 'text-indigo-600' : 'text-green-600'}`}>
                                                     {sale.pendingTickets > 0 ? `+${sale.pendingTickets}` : '✓'}
                                                 </p>
                                             </div>
@@ -677,7 +677,7 @@ const RaffleDetail = () => {
                                     <span className="bg-white/30 px-3 py-1 rounded-full text-xs">#{win.number}</span>
                                 </h2>
                                 <div className="space-y-1">
-                                    <p className="text-lg font-black truncate">
+                                    <p className="text-lg font-bold truncate">
                                         {win.Owner?.firstName} {win.Owner?.lastName}
                                     </p>
                                     <p className="text-sm opacity-90 flex items-center gap-1">
@@ -817,7 +817,7 @@ const RaffleDetail = () => {
                                                 {hasMore && (
                                                     <button
                                                         onClick={() => toggleExpandGroup(clientId)}
-                                                        className="text-[10px] font-black uppercase text-blue-600 hover:text-blue-800 transition-colors mt-auto pt-2"
+                                                        className="text-[10px] font-bold uppercase text-blue-600 hover:text-blue-800 transition-colors mt-auto pt-2"
                                                     >
                                                         {isExpanded ? 'Ver menos' : 'Ver todos'}
                                                     </button>

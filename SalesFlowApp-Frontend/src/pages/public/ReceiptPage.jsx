@@ -299,12 +299,12 @@ const ReceiptPage = () => {
                             {data.business?.logoURL ? (
                                 <img src={data.business.logoURL} alt="Logo" className="w-full h-full object-cover" />
                             ) : (
-                                <span className="text-2xl font-black text-blue-600 tracking-tighter">
+                                <span className="text-2xl font-bold text-blue-600 tracking-tighter">
                                     {businessName.substring(0, 2).toUpperCase()}
                                 </span>
                             )}
                         </div>
-                        <h1 className="text-2xl font-black text-gray-900 tracking-tight uppercase mb-1">{businessName}</h1>
+                        <h1 className="text-2xl font-bold text-gray-900 tracking-tight uppercase mb-1">{businessName}</h1>
                         <p className="text-sm text-gray-400 font-medium tracking-wide">TICKET DE COMPRA</p>
                     </div>
 
@@ -379,7 +379,7 @@ const ReceiptPage = () => {
                     <div className="flex justify-between items-end mb-1">
                         <span className="text-sm font-bold text-gray-500 uppercase tracking-widest">Total a Pagar</span>
                         <div className="text-right">
-                            <span className="text-4xl font-black text-gray-900 tracking-tighter shadow-blue-200 drop-shadow-sm">
+                            <span className="text-4xl font-bold text-gray-900 tracking-tighter shadow-blue-200 drop-shadow-sm">
                                 ${parseFloat(data.total).toFixed(2)}
                             </span>
                         </div>

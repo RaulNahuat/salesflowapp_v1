@@ -105,7 +105,7 @@ const ReceiptHistoryPage = () => {
             <div className="max-w-7xl mx-auto">
                 {/* Header */}
                 <div className="mb-6">
-                    <h1 className="text-2xl sm:text-3xl font-black text-gray-900 mb-1">Historial de Tickets</h1>
+                    <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-1">Historial de Tickets</h1>
                     <p className="text-sm sm:text-base text-gray-600">Gestiona y comparte los tickets generados</p>
                 </div>
 
@@ -116,7 +116,7 @@ const ReceiptHistoryPage = () => {
                             <div className="flex items-center justify-between">
                                 <div>
                                     <p className="text-xs text-gray-500 font-medium mb-1">Total Tickets</p>
-                                    <p className="text-2xl sm:text-3xl font-black text-gray-900">{stats.totalReceipts}</p>
+                                    <p className="text-2xl sm:text-3xl font-bold text-gray-900">{stats.totalReceipts}</p>
                                 </div>
                                 <div className="w-10 h-10 sm:w-12 sm:h-12 bg-blue-100 rounded-lg flex items-center justify-center">
                                     <FaReceipt className="text-blue-600 text-lg sm:text-xl" />
@@ -128,7 +128,7 @@ const ReceiptHistoryPage = () => {
                             <div className="flex items-center justify-between">
                                 <div>
                                     <p className="text-xs text-gray-500 font-medium mb-1">Total Vistas</p>
-                                    <p className="text-2xl sm:text-3xl font-black text-gray-900">{stats.totalViews}</p>
+                                    <p className="text-2xl sm:text-3xl font-bold text-gray-900">{stats.totalViews}</p>
                                 </div>
                                 <div className="w-10 h-10 sm:w-12 sm:h-12 bg-green-100 rounded-lg flex items-center justify-center">
                                     <FaEye className="text-green-600 text-lg sm:text-xl" />
@@ -140,7 +140,7 @@ const ReceiptHistoryPage = () => {
                             <div className="flex items-center justify-between">
                                 <div>
                                     <p className="text-xs text-gray-500 font-medium mb-1">Promedio</p>
-                                    <p className="text-2xl sm:text-3xl font-black text-gray-900">{stats.averageViews}</p>
+                                    <p className="text-2xl sm:text-3xl font-bold text-gray-900">{stats.averageViews}</p>
                                 </div>
                                 <div className="w-10 h-10 sm:w-12 sm:h-12 bg-purple-100 rounded-lg flex items-center justify-center">
                                     <FaChartLine className="text-purple-600 text-lg sm:text-xl" />
@@ -152,7 +152,7 @@ const ReceiptHistoryPage = () => {
                             <div className="flex items-center justify-between">
                                 <div>
                                     <p className="text-xs text-gray-500 font-medium mb-1">Más Visto</p>
-                                    <p className="text-2xl sm:text-3xl font-black text-gray-900">{stats.mostViewed}</p>
+                                    <p className="text-2xl sm:text-3xl font-bold text-gray-900">{stats.mostViewed}</p>
                                 </div>
                                 <div className="w-10 h-10 sm:w-12 sm:h-12 bg-orange-100 rounded-lg flex items-center justify-center">
                                     <FaEye className="text-orange-600 text-lg sm:text-xl" />
@@ -284,7 +284,7 @@ const ReceiptHistoryPage = () => {
                                             </p>
                                         </div>
                                         <div className="text-right">
-                                            <p className="font-black text-gray-900 text-lg">${receipt.parameters.total.toFixed(2)}</p>
+                                            <p className="font-bold text-gray-900 text-lg">${receipt.parameters.total.toFixed(2)}</p>
                                             <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-bold bg-blue-100 text-blue-800">
                                                 {receipt.viewCount} {receipt.viewCount === 1 ? 'vista' : 'vistas'}
                                             </span>
