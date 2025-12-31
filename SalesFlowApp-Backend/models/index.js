@@ -60,8 +60,8 @@ db.Client.hasMany(db.Sale, { foreignKey: 'clientId', onDelete: 'SET NULL' });
 db.Sale.belongsTo(db.Client, { foreignKey: 'clientId' });
 
 // Ventas y Vendedores (BusinessMembers)
-db.BusinessMember.hasMany(db.Sale, { foreignKey: 'createdById', onDelete: 'SET NULL' });
-db.Sale.belongsTo(db.BusinessMember, { as: 'Seller', foreignKey: 'createdById' });
+db.BusinessMember.hasMany(db.Sale, { foreignKey: 'SellerId', onDelete: 'SET NULL' });
+db.Sale.belongsTo(db.BusinessMember, { as: 'Seller', foreignKey: 'SellerId' });
 
 // Detalles de Venta
 db.Sale.hasMany(db.SaleDetail, { onDelete: 'CASCADE' });

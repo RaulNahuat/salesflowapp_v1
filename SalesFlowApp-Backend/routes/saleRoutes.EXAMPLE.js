@@ -13,39 +13,39 @@ import { validateCreateSale } from '../middlewares/validationMiddleware.js';
 
 const router = express.Router();
 
-// 🔒 SECURITY: Public route for receipts (by design, validated internally)
+// 🔒 SECURITY: Ruta pública para recibos (por diseño)
+// El endpoint ya valida businessId internamente
 router.get('/receipt-data/:token', getReceiptData);
 
-// 🔒 SECURITY: Protect all other routes
+// 🔒 SECURITY: Proteger todas las demás rutas
 router.use(protect);
 router.use(ensureBusinessAccess);
 
-// 🔒 ZERO TRUST: All write operations require RBAC + Validation
+// 🔒 RBAC + Validation aplicados
 router.post('/',
-    authorize(PERMISSIONS.SALE_CREATE, 'pos'),
+    authorize(PERMISSIONS.SALE_CREATE),
     validateCreateSale,
     createSale
 );
 
 router.get('/',
-    authorize(PERMISSIONS.SALE_READ, 'pos'),
+    authorize(PERMISSIONS.SALE_READ),
     getSales
 );
 
 router.post('/receipt-token',
-    authorize(PERMISSIONS.SALE_READ, 'pos'),
+    authorize(PERMISSIONS.SALE_READ),
     generateReceiptToken
 );
 
 router.get('/receipt-history',
-    authorize(PERMISSIONS.SALE_READ, 'pos'),
+    authorize(PERMISSIONS.SALE_READ),
     getReceiptHistory
 );
 
 router.get('/reports',
-    authorize(PERMISSIONS.SALE_READ, 'reports'),
+    authorize(PERMISSIONS.SALE_READ),
     getReports
 );
 
 export default router;
-

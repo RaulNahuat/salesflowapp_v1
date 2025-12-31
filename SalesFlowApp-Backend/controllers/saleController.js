@@ -1,10 +1,14 @@
 import { sequelize } from '../config/db.js';
 import db from '../models/index.js';
+import { cache, getCacheKey } from '../utils/cache.js';
 
 const { Sale, SaleDetail, Product, Client, BusinessMember, User, ProductVariant, ReceiptToken } = db;
 
 export const createSale = async (req, res) => {
-    const t = await sequelize.transaction();
+    // 🔒 SECURITY FIX: Isolation level para prevenir race conditions
+    const t = await sequelize.transaction({
+        isolationLevel: db.Sequelize.Transaction.ISOLATION_LEVELS.READ_COMMITTED
+    });
 
     try {
         const { items, clientId, paymentMethod, notes, total } = req.body;
@@ -30,10 +34,20 @@ export const createSale = async (req, res) => {
 
         // Validate items and calculate total first before creating anything
         for (const item of items) {
-            const product = await Product.findByPk(item.productId, { transaction: t });
+            // 🔒 ROW-LEVEL LOCK: Previene race conditions en stock
+            // CRITICAL: lock: true adquiere un lock exclusivo en la fila
+            const product = await Product.findByPk(item.productId, {
+                transaction: t,
+                lock: t.LOCK.UPDATE // Bloquea la fila para actualizaciones
+            });
 
             if (!product) {
-                throw new Error(`Producto no encontrado: ${item.name}`);
+                throw new Error(`Producto no encontrado: ${item.name} `);
+            }
+
+            // 🔒 IDOR PROTECTION: Verificar que el producto pertenece al negocio del usuario
+            if (product.BusinessId !== businessId) {
+                throw new Error(`Acceso denegado: El producto no pertenece a su negocio`);
             }
 
             // Price Integrity: Use server-side price
@@ -43,16 +57,20 @@ export const createSale = async (req, res) => {
 
             let variant = null;
             if (item.variantId) {
-                variant = await ProductVariant.findByPk(item.variantId, { transaction: t });
+                // 🔒 ROW-LEVEL LOCK en variante también
+                variant = await ProductVariant.findByPk(item.variantId, {
+                    transaction: t,
+                    lock: t.LOCK.UPDATE
+                });
                 if (!variant) {
-                    throw new Error(`Variante no encontrada para: ${item.name}`);
+                    throw new Error(`Variante no encontrada para: ${item.name} `);
                 }
                 if (variant.stock < item.quantity) {
-                    throw new Error(`Stock insuficiente para variante: ${item.name}`);
+                    throw new Error(`Stock insuficiente para variante: ${item.name} `);
                 }
             } else {
                 if (product.stock < item.quantity) {
-                    throw new Error(`Stock insuficiente para: ${product.name}`);
+                    throw new Error(`Stock insuficiente para: ${product.name} `);
                 }
             }
 
@@ -68,7 +86,7 @@ export const createSale = async (req, res) => {
         // Validate Total (Allow 0.5 difference for rounding issues)
         const submittedTotal = parseFloat(total);
         if (Math.abs(submittedTotal - calculatedTotal) > 0.50) {
-            throw new Error(`Discrepancia de precios detectada. Total Frontend: ${submittedTotal}, Total Real: ${calculatedTotal}`);
+            throw new Error(`Discrepancia de precios detectada.Total Frontend: ${submittedTotal}, Total Real: ${calculatedTotal} `);
         }
 
         // 2. Create Sale Record with Verified Total
@@ -79,7 +97,7 @@ export const createSale = async (req, res) => {
             notes,
             BusinessId: businessId,
             clientId: clientId || null,
-            createdById: sellerId
+            SellerId: req.user.businessMemberId || null
         }, { transaction: t });
 
         // 3. Process Items (Deduct Stock & Create Details)
@@ -113,27 +131,22 @@ export const createSale = async (req, res) => {
         }
 
         // 4. Create Payment Record (Financial Ledger)
-        // Access Payment model correctly from db object if not imported directly, 
-        // but considering imports at top: const { Sale, SaleDetail, ... } = db;
-        // We need to ensure Payment is in the destructured list or access via db.Payment
         await db.Payment.create({
             amount: calculatedTotal,
             method: paymentMethod,
             date: new Date(),
-            SaleId: sale.id,
-            BusinessId: businessId // Ensure Payment model has this or association supports it. 
-            // Checking step 35: Payment model only has amount, method, date. 
-            // Checking step 12: db.Sale.hasMany(db.Payment). 
-            // So SaleId is valid. BusinessId might not be in Payment model unless added by hook or manual column.
-            // Let's stick to relation via SaleId for now as per schema in Step 35.
+            SaleId: sale.id
         }, { transaction: t });
 
         await t.commit();
 
+        // ✅ INVALIDAR CACHE de productos para este negocio tras la venta
+        cache.del(getCacheKey('products', businessId));
+
         // Generate receipt token automatically for this sale
         try {
             const clientName = clientId
-                ? await Client.findByPk(clientId).then(c => c ? `${c.firstName} ${c.lastName}` : 'Cliente')
+                ? await Client.findByPk(clientId).then(c => c ? `${c.firstName} ${c.lastName} ` : 'Cliente')
                 : 'Cliente Casual';
 
             const expiresAt = new Date();
@@ -180,8 +193,16 @@ export const getSales = async (req, res) => {
         const businessId = req.user.businessId;
         const { limit = 20, offset = 0 } = req.query;
 
+        // Build where clause
+        const whereClause = { BusinessId: businessId };
+
+        // If user is an employee, only show their own sales
+        if (req.user.role === 'employee' && req.user.businessMemberId) {
+            whereClause.SellerId = req.user.businessMemberId;
+        }
+
         const sales = await Sale.findAll({
-            where: { BusinessId: businessId },
+            where: whereClause,
             include: [
                 {
                     model: Client,
@@ -237,7 +258,7 @@ export const generateReceiptToken = async (req, res) => {
         }
 
         const clientName = sale.Client
-            ? `${sale.Client.firstName} ${sale.Client.lastName}`
+            ? `${sale.Client.firstName} ${sale.Client.lastName} `
             : 'Cliente Casual';
 
         // Create a token valid for 30 days
@@ -333,6 +354,11 @@ export const getReceiptHistory = async (req, res) => {
             BusinessId: businessId,
             receiptTokenId: { [db.Sequelize.Op.ne]: null } // Only sales with receipt tokens
         };
+
+        // If user is an employee, only show their own sales
+        if (req.user.role === 'employee' && req.user.businessMemberId) {
+            whereClause.SellerId = req.user.businessMemberId;
+        }
 
         // Add filters
         if (startDate || endDate) {
@@ -442,10 +468,10 @@ export const getReports = async (req, res) => {
             whereClause.createdAt = {
                 [db.Sequelize.Op.between]: [
                     `${startDate} 00:00:00`,
-                    `${endDate} 23:59:59`
+                    `${endDate} 23: 59: 59`
                 ]
             };
-            console.log('Date filter applied:', `${startDate} 00:00:00 to ${endDate} 23:59:59`);
+            console.log('Date filter applied:', `${startDate} 00:00:00 to ${endDate} 23: 59: 59`);
         }
 
         console.log('Executing query...');
@@ -519,7 +545,7 @@ export const getReports = async (req, res) => {
         const clientStats = {};
         filteredSales.forEach(sale => {
             const clientId = sale.ClientId || 'casual';
-            const clientName = sale.Client ? `${sale.Client.firstName} ${sale.Client.lastName}` : 'Cliente Casual';
+            const clientName = sale.Client ? `${sale.Client.firstName} ${sale.Client.lastName} ` : 'Cliente Casual';
 
             if (!clientStats[clientId]) {
                 clientStats[clientId] = { id: clientId, name: clientName, purchases: 0, total: 0 };

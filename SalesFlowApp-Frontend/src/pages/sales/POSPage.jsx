@@ -59,16 +59,29 @@ const POSPage = () => {
     }, [cart]);
 
     // Helper: Get available stock for a product/variant considering cart
-    const getAvailableStock = (productId, variantId = null) => {
-        const product = products.find(p => p.id === productId);
+    const getAvailableStock = (targetProductOrId, variantId = null) => {
+        const product = typeof targetProductOrId === 'string'
+            ? products.find(p => p.id === targetProductOrId)
+            : targetProductOrId;
+
         if (!product) return 0;
 
-        // Find quantity already in cart
-        const cartItemId = variantId ? `${productId}-${variantId}` : `${productId}`;
-        const cartItem = cart.find(item => item.cartItemId === cartItemId);
-        const inCart = cartItem ? cartItem.quantity : 0;
+        const productId = product.id;
+        let inCart = 0;
 
-        // Get real stock
+        if (variantId) {
+            // Specific variant check
+            const cartItemId = `${productId}-${variantId}`;
+            const cartItem = cart.find(item => item.cartItemId === cartItemId);
+            inCart = cartItem ? cartItem.quantity : 0;
+        } else {
+            // Total product check (sum of all variants of this product in cart)
+            inCart = cart
+                .filter(item => item.productId === productId)
+                .reduce((sum, item) => sum + item.quantity, 0);
+        }
+
+        // Get real base stock
         let realStock = 0;
         if (variantId) {
             const variant = product.ProductVariants?.find(v => v.id === variantId);
@@ -458,7 +471,7 @@ const POSPage = () => {
                     <div className="flex-1 overflow-y-auto pb-4">
                         <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-4">
                             {filteredProducts.map(product => {
-                                const availableStock = getAvailableStock(product.id);
+                                const availableStock = getAvailableStock(product);
                                 const isOutOfStock = availableStock === 0;
 
                                 return (
@@ -625,14 +638,16 @@ const POSPage = () => {
                                 </div>
                                 <div>
                                     <p className="font-bold text-gray-800">{variantModal.product.name}</p>
-                                    <p className="text-xs text-gray-500">Stock Total: {variantModal.product.stock}</p>
+                                    <p className="text-[10px] font-bold text-blue-600 bg-blue-50 px-2 py-0.5 rounded-full inline-block">
+                                        Disponible ahora: {getAvailableStock(variantModal.product)}
+                                    </p>
                                 </div>
                             </div>
 
                             <div className="space-y-2 max-h-60 overflow-y-auto">
                                 {variantModal.product.ProductVariants && variantModal.product.ProductVariants.length > 0 ? (
                                     variantModal.product.ProductVariants.map(variant => {
-                                        const availableStock = getAvailableStock(variantModal.product.id, variant.id);
+                                        const availableStock = getAvailableStock(variantModal.product, variant.id);
                                         const isOutOfStock = availableStock === 0;
 
                                         return (

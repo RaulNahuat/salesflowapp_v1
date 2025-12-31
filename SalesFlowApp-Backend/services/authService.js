@@ -119,7 +119,7 @@ const login = async (email, password) => {
             businessMemberId = member.id;
         }
 
-        const payload = { userId: user.id, businessId, role, businessMemberId };
+        const payload = { userId: user.id, businessId, role, permissions, businessMemberId };
 
         const token = jwt.sign(
             payload,

@@ -12,7 +12,11 @@ export const getClients = async () => {
         const response = await api.get("/");
         return response.data;
     } catch (error) {
-        throw error.response?.data || error;
+        const errorMessage = error.response?.data?.message || error.message || 'Error al obtener clientes';
+        const errorObj = new Error(errorMessage);
+        errorObj.status = error.response?.status;
+        errorObj.data = error.response?.data; // Preserve full error data for special cases
+        throw errorObj;
     }
 };
 
@@ -21,7 +25,11 @@ export const getClient = async (id) => {
         const response = await api.get(`/${id}`);
         return response.data;
     } catch (error) {
-        throw error.response?.data || error;
+        const errorMessage = error.response?.data?.message || error.message || 'Error al obtener el cliente';
+        const errorObj = new Error(errorMessage);
+        errorObj.status = error.response?.status;
+        errorObj.data = error.response?.data;
+        throw errorObj;
     }
 };
 
@@ -30,7 +38,11 @@ export const createClient = async (clientData) => {
         const response = await api.post("/", clientData);
         return response.data;
     } catch (error) {
-        throw error.response?.data || error;
+        const errorMessage = error.response?.data?.message || error.message || 'Error al crear el cliente';
+        const errorObj = new Error(errorMessage);
+        errorObj.status = error.response?.status;
+        errorObj.data = error.response?.data;
+        throw errorObj;
     }
 };
 
@@ -39,7 +51,11 @@ export const updateClient = async (id, clientData) => {
         const response = await api.put(`/${id}`, clientData);
         return response.data;
     } catch (error) {
-        throw error.response?.data || error;
+        const errorMessage = error.response?.data?.message || error.message || 'Error al actualizar el cliente';
+        const errorObj = new Error(errorMessage);
+        errorObj.status = error.response?.status;
+        errorObj.data = error.response?.data;
+        throw errorObj;
     }
 };
 
@@ -48,7 +64,11 @@ export const deleteClient = async (id) => {
         const response = await api.delete(`/${id}`);
         return response.data;
     } catch (error) {
-        throw error.response?.data || error;
+        const errorMessage = error.response?.data?.message || error.message || 'Error al eliminar el cliente';
+        const errorObj = new Error(errorMessage);
+        errorObj.status = error.response?.status;
+        errorObj.data = error.response?.data;
+        throw errorObj;
     }
 };
 

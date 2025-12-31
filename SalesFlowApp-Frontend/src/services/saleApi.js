@@ -10,7 +10,11 @@ const saleApi = {
             });
             return response.data;
         } catch (error) {
-            throw error.response?.data || { message: 'Error procesando la venta' };
+            const errorMessage = error.response?.data?.message || error.message || 'Error procesando la venta';
+            const errorObj = new Error(errorMessage);
+            errorObj.status = error.response?.status;
+            errorObj.data = error.response?.data;
+            throw errorObj;
         }
     },
 
@@ -22,7 +26,10 @@ const saleApi = {
             });
             return response.data;
         } catch (error) {
-            throw error.response?.data || { message: 'Error obteniendo historial de ventas' };
+            const errorMessage = error.response?.data?.message || error.message || 'Error obteniendo historial de ventas';
+            const errorObj = new Error(errorMessage);
+            errorObj.status = error.response?.status;
+            throw errorObj;
         }
     },
 

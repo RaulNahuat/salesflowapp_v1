@@ -67,18 +67,23 @@ const ClientForm = () => {
             }
             navigate('/clients');
         } catch (err) {
-            let msg = err.message || 'Error al guardar el cliente';
+            let msg = 'Error al guardar el cliente';
 
-            // Check if it's a duplicate phone error
-            if (err.response?.status === 409 && err.response?.data?.existingClient) {
-                const existing = err.response.data.existingClient;
+            // Handle specific error types
+            if (err.status === 403) {
+                msg = `❌ Permiso denegado: ${err.message}. Contacta al propietario del negocio.`;
+            } else if (err.status === 409 && err.data?.existingClient) {
+                // Duplicate phone error
+                const existing = err.data.existingClient;
                 msg = `El teléfono ${existing.phone} ya está registrado para ${existing.firstName} ${existing.lastName}`;
-                toast.error(msg, { duration: 5000 });
+            } else if (err.status === 400) {
+                msg = `⚠️ Validación: ${err.message}`;
             } else {
-                toast.error(msg);
+                msg = err.message || msg;
             }
 
             setError(msg);
+            toast.error(msg, { duration: 5000 });
             setLoading(false);
         }
     };

@@ -87,50 +87,58 @@ const Dashboard = () => {
                     <h1 className="text-xl sm:text-2xl font-bold text-gray-900">
                         ¡Hola, {user?.firstName}! 👋
                     </h1>
-                    <p className="text-gray-500 text-sm sm:text-base">Aquí tienes el resumen de tu negocio hoy.</p>
+                    <p className="text-gray-500 text-sm sm:text-base">
+                        {user?.role === 'employee'
+                            ? `Trabajador de ${user?.businessName || 'este negocio'}`
+                            : 'Aquí tienes el resumen de tu negocio hoy.'}
+                    </p>
                 </div>
-                <div className="flex gap-3">
-                    <Link
-                        to="/pos"
-                        className="flex-1 md:flex-none flex items-center justify-center px-4 py-2.5 bg-blue-600 text-white rounded-xl font-medium shadow-lg shadow-blue-500/20 hover:shadow-blue-500/30 hover:-translate-y-0.5 transition-all"
-                    >
-                        <FaPlus className="mr-2" /> Nueva Venta
-                    </Link>
-                </div>
+                {user?.permissions?.pos !== false && (
+                    <div className="flex gap-3">
+                        <Link
+                            to="/pos"
+                            className="flex-1 md:flex-none flex items-center justify-center px-4 py-2.5 bg-blue-600 text-white rounded-xl font-medium shadow-lg shadow-blue-500/20 hover:shadow-blue-500/30 hover:-translate-y-0.5 transition-all"
+                        >
+                            <FaPlus className="mr-2" /> Nueva Venta
+                        </Link>
+                    </div>
+                )}
             </div>
 
-            {/* 2. KPI Stats Grid */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-                <StatCard
-                    title="Ventas Totales"
-                    value={`$${parseFloat(stats.revenue).toFixed(2)}`}
-                    icon={FaChartLine}
-                    color="bg-blue-500"
-                    isLoading={loading}
-                // trend="12%" 
-                />
-                <StatCard
-                    title="Productos Totales"
-                    value={stats.products}
-                    icon={FaBoxOpen}
-                    color="bg-emerald-500"
-                    isLoading={loading}
-                />
-                <StatCard
-                    title="Clientes Activos"
-                    value={stats.clients}
-                    icon={FaUsers}
-                    color="bg-indigo-500"
-                    isLoading={loading}
-                />
-                <StatCard
-                    title="Sorteos Activos"
-                    value={stats.raffles}
-                    icon={FaTicketAlt}
-                    color="bg-orange-500"
-                    isLoading={loading}
-                />
-            </div>
+            {/* 2. KPI Stats Grid - Only show to owners/admins */}
+            {user?.role !== 'employee' && (
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+                    <StatCard
+                        title="Ventas Totales"
+                        value={`$${parseFloat(stats.revenue).toFixed(2)}`}
+                        icon={FaChartLine}
+                        color="bg-blue-500"
+                        isLoading={loading}
+                    // trend="12%" 
+                    />
+                    <StatCard
+                        title="Productos Totales"
+                        value={stats.products}
+                        icon={FaBoxOpen}
+                        color="bg-emerald-500"
+                        isLoading={loading}
+                    />
+                    <StatCard
+                        title="Clientes Activos"
+                        value={stats.clients}
+                        icon={FaUsers}
+                        color="bg-indigo-500"
+                        isLoading={loading}
+                    />
+                    <StatCard
+                        title="Sorteos Activos"
+                        value={stats.raffles}
+                        icon={FaTicketAlt}
+                        color="bg-orange-500"
+                        isLoading={loading}
+                    />
+                </div>
+            )}
 
             {/* 3. Main Content Grid */}
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
@@ -193,56 +201,58 @@ const Dashboard = () => {
                     </div>
                 </div>
 
-                {/* Right Column: Quick Actions & Tips (Taking up 1/3) */}
-                <div className="space-y-6">
-                    <div className="bg-indigo-900 text-white p-6 rounded-2xl relative overflow-hidden">
-                        <div className="relative z-10">
-                            <h3 className="font-bold text-lg mb-2">Configura tu Negocio</h3>
-                            <p className="text-indigo-200 text-sm mb-4">
-                                Completa tu perfil para que tus tickets salgan personalizados.
-                            </p>
-                            <Link
-                                to="/business-profile"
-                                className="inline-block px-4 py-2 bg-white text-indigo-900 rounded-lg text-sm font-bold hover:bg-indigo-50 transition-colors"
-                            >
-                                Ir a Configuración
-                            </Link>
+                {/* Right Column: Quick Actions & Tips (Taking up 1/3) - Only for owners */}
+                {user?.role !== 'employee' && (
+                    <div className="space-y-6">
+                        <div className="bg-indigo-900 text-white p-6 rounded-2xl relative overflow-hidden">
+                            <div className="relative z-10">
+                                <h3 className="font-bold text-lg mb-2">Configura tu Negocio</h3>
+                                <p className="text-indigo-200 text-sm mb-4">
+                                    Completa tu perfil para que tus tickets salgan personalizados.
+                                </p>
+                                <Link
+                                    to="/business-profile"
+                                    className="inline-block px-4 py-2 bg-white text-indigo-900 rounded-lg text-sm font-bold hover:bg-indigo-50 transition-colors"
+                                >
+                                    Ir a Configuración
+                                </Link>
+                            </div>
+                            {/* Decorative Circle */}
+                            <div className="absolute -bottom-8 -right-8 w-32 h-32 bg-indigo-700 rounded-full opacity-50 blur-2xl"></div>
                         </div>
-                        {/* Decorative Circle */}
-                        <div className="absolute -bottom-8 -right-8 w-32 h-32 bg-indigo-700 rounded-full opacity-50 blur-2xl"></div>
-                    </div>
 
-                    <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
-                        <h3 className="font-bold text-gray-800 mb-4">Accesos Rápidos</h3>
-                        <div className="space-y-3">
-                            <Link
-                                to="/products/new"
-                                className="flex items-center p-3 rounded-xl hover:bg-gray-50 transition-colors group"
-                            >
-                                <div className="w-10 h-10 rounded-lg bg-emerald-100 text-emerald-600 flex items-center justify-center mr-3 group-hover:bg-emerald-200 transition-colors">
-                                    <FaPlus />
-                                </div>
-                                <div>
-                                    <p className="font-medium text-gray-800">Agregar Producto</p>
-                                    <p className="text-xs text-gray-500">Suma inventario rápidamente</p>
-                                </div>
-                            </Link>
+                        <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
+                            <h3 className="font-bold text-gray-800 mb-4">Accesos Rápidos</h3>
+                            <div className="space-y-3">
+                                <Link
+                                    to="/products/new"
+                                    className="flex items-center p-3 rounded-xl hover:bg-gray-50 transition-colors group"
+                                >
+                                    <div className="w-10 h-10 rounded-lg bg-emerald-100 text-emerald-600 flex items-center justify-center mr-3 group-hover:bg-emerald-200 transition-colors">
+                                        <FaPlus />
+                                    </div>
+                                    <div>
+                                        <p className="font-medium text-gray-800">Agregar Producto</p>
+                                        <p className="text-xs text-gray-500">Suma inventario rápidamente</p>
+                                    </div>
+                                </Link>
 
-                            <Link
-                                to="/raffles"
-                                className="flex items-center p-3 rounded-xl hover:bg-gray-50 transition-colors group"
-                            >
-                                <div className="w-10 h-10 rounded-lg bg-orange-100 text-orange-600 flex items-center justify-center mr-3 group-hover:bg-orange-200 transition-colors">
-                                    <FaTicketAlt />
-                                </div>
-                                <div>
-                                    <p className="font-medium text-gray-800">Crear Sorteo</p>
-                                    <p className="text-xs text-gray-500">Organiza una rifa</p>
-                                </div>
-                            </Link>
+                                <Link
+                                    to="/raffles"
+                                    className="flex items-center p-3 rounded-xl hover:bg-gray-50 transition-colors group"
+                                >
+                                    <div className="w-10 h-10 rounded-lg bg-orange-100 text-orange-600 flex items-center justify-center mr-3 group-hover:bg-orange-200 transition-colors">
+                                        <FaTicketAlt />
+                                    </div>
+                                    <div>
+                                        <p className="font-medium text-gray-800">Crear Sorteo</p>
+                                        <p className="text-xs text-gray-500">Organiza una rifa</p>
+                                    </div>
+                                </Link>
+                            </div>
                         </div>
                     </div>
-                </div>
+                )}
             </div>
         </div>
     );

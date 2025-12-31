@@ -1,5 +1,5 @@
-import React, { useEffect, useState } from 'react';
-import { Link } from 'react-router-dom';
+import React, { useEffect, useState, useCallback } from 'react';
+import { Link, useLocation } from 'react-router-dom';
 import productApi from '../../services/productApi';
 import { FaBox, FaPlus, FaSearch, FaEdit, FaTrash, FaExclamationTriangle } from 'react-icons/fa';
 import ConfirmationModal from '../ui/ConfirmationModal';
@@ -11,22 +11,35 @@ const ProductList = () => {
     const [loading, setLoading] = useState(true);
     const [searchTerm, setSearchTerm] = useState('');
     const [modalConfig, setModalConfig] = useState({ isOpen: false, title: '', message: '', action: null });
+    const location = useLocation();
 
-    useEffect(() => {
-        const fetchProducts = async () => {
-            try {
-                const data = await productApi.getProducts();
-                setProducts(data);
-            } catch (err) {
-                setError('Error al cargar productos');
-                console.error(err);
-            } finally {
-                setLoading(false);
-            }
-        };
-
-        fetchProducts();
+    // Stable fetch function using useCallback
+    const fetchProducts = useCallback(async () => {
+        try {
+            setLoading(true);
+            const data = await productApi.getProducts();
+            setProducts(data);
+            setError(null);
+        } catch (err) {
+            setError('Error al cargar productos');
+            console.error(err);
+        } finally {
+            setLoading(false);
+        }
     }, []);
+
+    // Initial fetch on mount
+    useEffect(() => {
+        fetchProducts();
+    }, [fetchProducts]);
+
+    // Refetch when navigating back to this page (e.g., after creating/editing a product)
+    useEffect(() => {
+        // Only refetch if not initial mount (location.key changes on navigation)
+        if (location.key !== 'default') {
+            fetchProducts();
+        }
+    }, [location.key, fetchProducts]);
 
     const confirmDelete = async (id) => {
         setModalConfig({

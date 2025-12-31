@@ -15,6 +15,7 @@ const protect = (req, res, next) => {
             userId: decoded.userId,
             businessId: decoded.businessId,
             role: decoded.role,
+            permissions: decoded.permissions || {}, // Extract permissions from token
             businessMemberId: decoded.businessMemberId // Ensure this is in token or fetched
         };
 

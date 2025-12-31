@@ -10,6 +10,9 @@ import cookieParser from 'cookie-parser';
 import cors from 'cors';
 // import { seedEstatus } from './seed/status.seed.js';
 
+// 🔒 SECURITY: Import secure error handlers
+import { errorHandler, notFoundHandler } from './middlewares/errorHandler.js';
+
 dotenv.config();
 const PORT = process.env.PORT || 5000;
 
@@ -122,21 +125,12 @@ const startServer = async () => {
 };
 
 // ----------------------------------------------------
-// MIDDLEWARE DE MANEJO DE ERRORES GLOBAL
+// 🔒 SECURITY: SECURE ERROR HANDLING (MUST BE LAST)
 // ----------------------------------------------------
-app.use((err, req, res, next) => {
-    console.error(err.stack); // Siempre loguear en el servidor para debug interno
+// Handle 404 - Route not found
+app.use(notFoundHandler);
 
-    const statusCode = err.statusCode || 500;
-    const message = process.env.NODE_ENV === 'production'
-        ? 'Ocurrió un error en el servidor. Por favor intente más tarde.'
-        : err.message;
-
-    res.status(statusCode).json({
-        success: false,
-        message: message,
-        stack: process.env.NODE_ENV === 'production' ? null : err.stack,
-    });
-});
+// Global error handler - sanitizes errors and hides sensitive info
+app.use(errorHandler);
 
 startServer();

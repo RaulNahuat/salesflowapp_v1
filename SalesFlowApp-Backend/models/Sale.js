@@ -34,6 +34,14 @@ export default (sequelize, DataTypes) => {
             type: DataTypes.UUID,
             allowNull: true
         },
+        SellerId: {
+            type: DataTypes.UUID,
+            allowNull: true,
+            references: {
+                model: 'BusinessMembers',
+                key: 'id'
+            }
+        },
         createdAt: {
             type: DataTypes.DATE,
             allowNull: false,

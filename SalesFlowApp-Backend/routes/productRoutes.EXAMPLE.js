@@ -10,39 +10,38 @@ import {
 
 const router = express.Router();
 
-// 🔒 SECURITY: Apply authentication and business validation to all routes
+// 🔒 SECURITY: Aplicar autenticación a todas las rutas
 router.use(protect);
 router.use(ensureBusinessAccess);
 
-// 🔒 ZERO TRUST: All write operations require RBAC + Validation
+// 🔒 RBAC + Validation aplicados a cada ruta
 router.post('/',
-    authorize(PERMISSIONS.PRODUCT_CREATE, 'products'),
+    authorize(PERMISSIONS.PRODUCT_CREATE),
     validateCreateProduct,
     productController.createProduct
 );
 
 router.get('/',
-    authorize(PERMISSIONS.PRODUCT_READ, 'products'),
+    authorize(PERMISSIONS.PRODUCT_READ),
     productController.getProducts
 );
 
 router.get('/:id',
-    authorize(PERMISSIONS.PRODUCT_READ, 'products'),
+    authorize(PERMISSIONS.PRODUCT_READ),
     validateIdParam,
     productController.getProduct
 );
 
 router.put('/:id',
-    authorize(PERMISSIONS.PRODUCT_UPDATE, 'products'),
+    authorize(PERMISSIONS.PRODUCT_UPDATE),
     validateUpdateProduct,
     productController.updateProduct
 );
 
 router.delete('/:id',
-    authorize(PERMISSIONS.PRODUCT_DELETE, 'products'),
+    authorize(PERMISSIONS.PRODUCT_DELETE),
     validateIdParam,
     productController.deleteProduct
 );
 
 export default router;
-
