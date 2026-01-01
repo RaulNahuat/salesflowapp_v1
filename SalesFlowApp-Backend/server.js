@@ -63,6 +63,8 @@ app.post('/api/auth/logout', (req, res) => {
     res.cookie('token', 'none', {
         expires: new Date(Date.now() + 5 * 1000),
         httpOnly: true,
+        secure: process.env.NODE_ENV === 'production',
+        sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax'
     });
     res.status(200).json({ success: true, message: 'Sesión cerrada correctamente.' });
 });
