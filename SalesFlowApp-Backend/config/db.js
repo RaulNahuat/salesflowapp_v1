@@ -11,21 +11,21 @@ const poolConfig = {
     development: {
         max: 5,
         min: 1,
-        acquire: 30000,
+        acquire: 60000,  // Aumentado a 60s para mejor tolerancia con Aiven
         idle: 10000,
         evict: 1000
     },
     production: {
         max: 8,          // Bajamos de 20 a 8 para ser conservadores con el Free Tier
         min: 2,
-        acquire: 30000,
+        acquire: 60000,  // Aumentado a 60s para mejor tolerancia con Aiven
         idle: 10000,
         evict: 1000
     },
     test: {
         max: 2,
         min: 1,
-        acquire: 10000,
+        acquire: 30000,  // Aumentado a 30s
         idle: 5000
     }
 };
@@ -45,7 +45,7 @@ const sequelize = new Sequelize(
             }
         },
 
-        logging: env === 'development' ? console.log : false,
+        logging: console.log, // Temporalmente habilitado para Debug
         pool: poolConfig[env],
 
         retry: {
@@ -55,7 +55,7 @@ const sequelize = new Sequelize(
 
         benchmark: env === 'development',
         define: {
-            timestamps: false,
+            timestamps: true,
             underscored: false
         }
     }

@@ -14,6 +14,7 @@ export default (sequelize, DataTypes) => {
             defaultValue: false
         }
     }, {
+        tableName: 'productimages',
         timestamps: true,
         paranoid: true
     });

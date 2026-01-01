@@ -18,6 +18,7 @@ export default (sequelize, DataTypes) => {
             allowNull: false
         }
     }, {
+        tableName: 'saledetails',
         timestamps: true,
         paranoid: true
     });

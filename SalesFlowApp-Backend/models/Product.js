@@ -32,5 +32,9 @@ export default (sequelize, DataTypes) => {
             type: DataTypes.ENUM('active', 'inactive'),
             defaultValue: 'active'
         }
-    }, { paranoid: true });
+    }, {
+        tableName: 'products',
+        timestamps: true,
+        paranoid: true
+    });
 };

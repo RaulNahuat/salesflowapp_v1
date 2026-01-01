@@ -13,12 +13,24 @@ export default (sequelize, DataTypes) => {
             type: DataTypes.BOOLEAN,
             defaultValue: false
         },
+        RaffleId: {
+            type: DataTypes.UUID,
+            allowNull: true
+        },
+        SaleId: {
+            type: DataTypes.UUID,
+            allowNull: true
+        },
+        clientId: {
+            type: DataTypes.UUID,
+            allowNull: true
+        },
         place: {
             type: DataTypes.INTEGER,
-            allowNull: true,
-            comment: '1st, 2nd, or 3rd place'
+            allowNull: true
         }
     }, {
+        tableName: 'raffletickets',
         timestamps: true,
         paranoid: true
     });

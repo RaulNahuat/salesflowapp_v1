@@ -26,6 +26,7 @@ export default (sequelize, DataTypes) => {
             defaultValue: 'active'
         }
     }, {
+        tableName: 'businessmembers',
         timestamps: true,
         paranoid: true
     });

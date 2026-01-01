@@ -17,6 +17,7 @@ export default (sequelize, DataTypes) => {
             defaultValue: DataTypes.NOW
         }
     }, {
+        tableName: 'payments',
         timestamps: true,
         paranoid: true
     });

@@ -41,6 +41,7 @@ export default (sequelize, DataTypes) => {
             allowNull: false
         }
     }, {
+        tableName: 'clients',
         paranoid: true,
         timestamps: true
     });

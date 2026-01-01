@@ -1,0 +1,24 @@
+{
+  "timestamp": "2026-01-01T20:10:13.693Z",
+  "database": "defaultdb",
+  "host": "db-salesflowapp-salesflowapp.c.aivencloud.com",
+  "tables": [
+    "Businesses",
+    "Users",
+    "businesses",
+    "businessmembers",
+    "clients",
+    "payments",
+    "productimages",
+    "products",
+    "productvariants",
+    "raffles",
+    "raffletickets",
+    "receipttokens",
+    "saledetails",
+    "sales",
+    "users"
+  ],
+  "tableCount": 15,
+  "backupFile": "schema_2026-01-01T20-10-07.sql"
+}

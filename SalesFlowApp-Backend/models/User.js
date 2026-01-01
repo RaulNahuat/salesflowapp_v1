@@ -20,6 +20,7 @@ export default (sequelize, DataTypes) => {
         },
         password: { type: DataTypes.STRING }
     }, {
+        tableName: 'users',
         timestamps: true,
         paranoid: true
     });

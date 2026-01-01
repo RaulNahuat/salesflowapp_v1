@@ -11,38 +11,30 @@ export default (sequelize, DataTypes) => {
         },
         slug: {
             type: DataTypes.STRING,
-            unique: true,
-            allowNull: false
+            allowNull: false,
+            unique: true
         },
         logoURL: {
             type: DataTypes.STRING
         },
-        phone: {
-            type: DataTypes.STRING
+        settings: {
+            type: DataTypes.JSON,
+            defaultValue: {}
         },
-        email: {
-            type: DataTypes.STRING
-        },
-        address: {
-            type: DataTypes.TEXT
-        },
-        returnPolicy: {
-            type: DataTypes.TEXT
-        },
+        phone: { type: DataTypes.STRING },
+        email: { type: DataTypes.STRING },
+        address: { type: DataTypes.TEXT },
+        returnPolicy: { type: DataTypes.TEXT },
         weekStartDay: {
             type: DataTypes.INTEGER,
-            defaultValue: 1, // Monday
-            validate: {
-                min: 0,
-                max: 6
-            }
+            defaultValue: 1 // 1 for Monday
         },
         liveDays: {
-            type: DataTypes.JSON,
-            defaultValue: []
-        },
-        settings: {
-            type: DataTypes.JSON
+            type: DataTypes.JSON, // Array of days [1, 2, 3, 4, 5, 6, 0]
+            defaultValue: [1, 2, 3, 4, 5, 6, 0]
         }
-    }, { paranoid: true });
+    }, {
+        tableName: 'businesses',
+        timestamps: false
+    });
 };

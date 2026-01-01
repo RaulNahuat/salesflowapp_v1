@@ -1,8 +1,9 @@
 export default (sequelize, DataTypes) => {
     return sequelize.define('ProductVariant', {
         id: {
-            type: DataTypes.UUID, defaultValue:
-                DataTypes.UUIDV4, primaryKey: true
+            type: DataTypes.UUID,
+            defaultValue: DataTypes.UUIDV4,
+            primaryKey: true
         },
         color: {
             type: DataTypes.STRING
@@ -18,6 +19,7 @@ export default (sequelize, DataTypes) => {
             type: DataTypes.STRING
         }
     }, {
+        tableName: 'productvariants',
         timestamps: true,
         paranoid: true
     });

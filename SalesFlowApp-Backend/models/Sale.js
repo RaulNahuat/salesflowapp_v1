@@ -38,7 +38,7 @@ export default (sequelize, DataTypes) => {
             type: DataTypes.UUID,
             allowNull: true,
             references: {
-                model: 'BusinessMembers',
+                model: 'businessmembers',
                 key: 'id'
             }
         },
@@ -53,6 +53,7 @@ export default (sequelize, DataTypes) => {
             defaultValue: DataTypes.NOW
         }
     }, {
+        tableName: 'sales',
         timestamps: true,
         paranoid: true
     });

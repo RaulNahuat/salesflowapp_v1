@@ -116,7 +116,7 @@ const startServer = async () => {
     //    await db.BusinessMember.sync({ alter: true });
     // }
 
-    await sequelize.sync(); // alter: true disabled to prevent ER_TOO_MANY_KEYS
+    // await sequelize.sync(); // alter: true disabled to prevent ER_TOO_MANY_KEYS
     // console.log('Base de datos sincronizada correctamente');
 
     // await seedEstatus();
