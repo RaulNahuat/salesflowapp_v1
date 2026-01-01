@@ -12,7 +12,8 @@ const RegisterForm = () => {
         businessName: '',
         email: '',
         phone: '',
-        password: ''
+        password: '',
+        confirmPassword: ''
     });
     const [error, setError] = useState('');
     const [loading, setLoading] = useState(false);
@@ -31,10 +32,20 @@ const RegisterForm = () => {
     const handleSubmit = async (e) => {
         e.preventDefault();
         setError('');
+
+        // Validar que las contraseñas coincidan
+        if (userData.password !== userData.confirmPassword) {
+            setError('Las contraseñas no coinciden');
+            toast.error('Las contraseñas no coinciden');
+            return;
+        }
+
         setLoading(true);
 
         try {
-            await registerUser(userData);
+            // No enviar confirmPassword al backend
+            const { confirmPassword, ...dataToSend } = userData;
+            await registerUser(dataToSend);
             toast.success('¡Cuenta creada exitosamente!');
             navigate('/dashboard');
         } catch (err) {
@@ -175,6 +186,27 @@ const RegisterForm = () => {
                             onChange={handleChange}
                             className="w-full pl-11 pr-4 py-3.5 bg-gray-50 border border-gray-200 rounded-xl focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-100 focus:border-blue-500 transition-all font-medium text-gray-700"
                             placeholder="Mínimo 6 caracteres"
+                            required
+                        />
+                    </div>
+                </div>
+
+                <div className="group">
+                    <label className="block text-sm font-semibold text-gray-700 mb-2 ml-1" htmlFor="confirmPassword">
+                        Confirmar Contraseña
+                    </label>
+                    <div className="relative">
+                        <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                            <FaLock className="text-gray-400 group-focus-within:text-blue-500 transition-colors" />
+                        </div>
+                        <input
+                            type="password"
+                            id="confirmPassword"
+                            name="confirmPassword"
+                            value={userData.confirmPassword}
+                            onChange={handleChange}
+                            className="w-full pl-11 pr-4 py-3.5 bg-gray-50 border border-gray-200 rounded-xl focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-100 focus:border-blue-500 transition-all font-medium text-gray-700"
+                            placeholder="Repite tu contraseña"
                             required
                         />
                     </div>

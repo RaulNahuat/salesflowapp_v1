@@ -1,0 +1,21 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">
+  <!-- Background -->
+  <rect width="100" height="100" fill="#3B82F6" rx="20"/>
+  
+  <!-- Chart line icon in white -->
+  <g fill="none" stroke="#ffffff" stroke-width="6" stroke-linecap="round" stroke-linejoin="round">
+    <!-- Base line -->
+    <line x1="20" y1="75" x2="80" y2="75" stroke-width="4"/>
+    <line x1="20" y1="75" x2="20" y2="25" stroke-width="4"/>
+    
+    <!-- Trending up line -->
+    <polyline points="25,65 35,55 50,45 65,35 75,25" stroke-width="7"/>
+    
+    <!-- Data points -->
+    <circle cx="25" cy="65" r="4" fill="#ffffff"/>
+    <circle cx="35" cy="55" r="4" fill="#ffffff"/>
+    <circle cx="50" cy="45" r="4" fill="#ffffff"/>
+    <circle cx="65" cy="35" r="4" fill="#ffffff"/>
+    <circle cx="75" cy="25" r="4" fill="#ffffff"/>
+  </g>
+</svg>

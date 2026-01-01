@@ -2,6 +2,8 @@ import db from '../models/index.js';
 import bcrypt from 'bcryptjs';
 
 const User = db.User;
+const BusinessMember = db.BusinessMember;
+const Business = db.Business;
 
 export const getProfile = async (req, res) => {
     try {
@@ -57,5 +59,49 @@ export const updatePassword = async (req, res) => {
         res.json({ message: 'Contraseña actualizada exitosamente' });
     } catch (error) {
         res.status(500).json({ message: error.message });
+    }
+};
+
+export const deleteAccount = async (req, res) => {
+    try {
+        const { password } = req.body;
+        const userId = req.user.userId;
+
+        // 1. Validar contraseña
+        const user = await User.findByPk(userId);
+        if (!user) {
+            return res.status(404).json({ message: 'Usuario no encontrado' });
+        }
+
+        const isMatch = await user.comparePassword(password);
+        if (!isMatch) {
+            return res.status(400).json({ message: 'Contraseña incorrecta' });
+        }
+
+        // 2. Buscar todos los BusinessMember del usuario
+        const businessMembers = await BusinessMember.findAll({
+            where: { UserId: userId },
+            include: [{ model: Business }]
+        });
+
+        // 3. Eliminar negocios donde el usuario es owner
+        for (const member of businessMembers) {
+            if (member.role === 'owner' && member.Business) {
+                // Esto eliminará en cascada: productos, ventas, clientes, rifas, etc.
+                await member.Business.destroy();
+            }
+        }
+
+        // 4. Eliminar el usuario (esto eliminará en cascada los BusinessMembers)
+        // Usar soft delete (paranoid: true en el modelo)
+        await user.destroy();
+
+        res.json({
+            message: 'Cuenta eliminada exitosamente',
+            success: true
+        });
+    } catch (error) {
+        console.error('Error al eliminar cuenta:', error);
+        res.status(500).json({ message: 'Error al eliminar la cuenta' });
     }
 };

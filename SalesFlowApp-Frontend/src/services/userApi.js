@@ -34,6 +34,15 @@ const userApi = {
             console.error("Error in updatePassword:", error);
             throw error;
         }
+    },
+    deleteAccount: async (password) => {
+        try {
+            const res = await api.delete("/delete-account", { data: { password } });
+            return res.data;
+        } catch (error) {
+            console.error("Error in deleteAccount:", error);
+            throw error;
+        }
     }
 };
 
