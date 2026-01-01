@@ -24,6 +24,17 @@ export const updateProfile = async (req, res) => {
 
         if (!user) return res.status(404).json({ message: 'Usuario no encontrado' });
 
+        // Check if phone is being changed and if it's already in use by another active user
+        if (phone && phone !== user.phone) {
+            const existingPhone = await User.findOne({
+                where: { phone },
+                paranoid: false // Include soft-deleted records
+            });
+            if (existingPhone && !existingPhone.deletedAt && existingPhone.id !== user.id) {
+                return res.status(400).json({ message: 'Este número de teléfono ya está en uso' });
+            }
+        }
+
         await user.update({ firstName, lastName, phone });
 
         res.json({

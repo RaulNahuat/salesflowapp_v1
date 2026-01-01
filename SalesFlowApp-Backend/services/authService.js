@@ -6,16 +6,26 @@ import crypto from "crypto";
 const register = async (userData) => {
     const { firstName, lastName, email, phone, password, businessName } = userData;
 
-    // Check for duplicate email
-    const existingEmail = await db.User.findOne({ where: { email } });
-    if (existingEmail) {
+    if (!password || password.length < 8) {
+        throw new Error("La contraseña debe tener al menos 8 caracteres");
+    }
+
+    // Check for duplicate email (excluding soft-deleted users)
+    const existingEmail = await db.User.findOne({
+        where: { email },
+        paranoid: false // Include soft-deleted records
+    });
+    if (existingEmail && !existingEmail.deletedAt) {
         throw new Error("Ya existe una cuenta con este correo electrónico");
     }
 
-    // Check for duplicate phone (only if phone is provided)
+    // Check for duplicate phone (only if phone is provided, excluding soft-deleted users)
     if (phone) {
-        const existingPhone = await db.User.findOne({ where: { phone } });
-        if (existingPhone) {
+        const existingPhone = await db.User.findOne({
+            where: { phone },
+            paranoid: false // Include soft-deleted records
+        });
+        if (existingPhone && !existingPhone.deletedAt) {
             throw new Error("Ya existe una cuenta con este número de teléfono");
         }
     }

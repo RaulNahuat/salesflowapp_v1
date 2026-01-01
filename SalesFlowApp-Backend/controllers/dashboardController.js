@@ -19,16 +19,22 @@ export const getDashboardStats = async (req, res) => {
             where: { BusinessId: businessId }
         });
 
+        // Build where clause for sales
+        const saleWhere = { BusinessId: businessId };
+        if (req.user.role === 'employee' && req.user.businessMemberId) {
+            saleWhere.SellerId = req.user.businessMemberId;
+        }
+
         // Sum Sales for Today (or total for now as MVP)
         // For complex queries ideally we use Op.between for timestamps. 
         // For MVP let's just count total sales.
         const saleCount = await Sale.count({
-            where: { BusinessId: businessId }
+            where: saleWhere
         });
 
         // Calculate Total Revenue (optional, if Sale has total)
         const totalRevenue = await Sale.sum('total', {
-            where: { BusinessId: businessId }
+            where: saleWhere
         }) || 0;
 
         // Count Active Raffles

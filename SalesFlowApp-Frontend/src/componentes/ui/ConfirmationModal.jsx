@@ -12,7 +12,7 @@ const ConfirmationModal = ({ isOpen, onClose, onConfirm, onCancel, title, messag
     };
 
     return (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm animate-fadeIn">
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm animate-fadeIn">
             <div className="bg-white rounded-2xl shadow-xl max-w-md w-full overflow-hidden transform transition-all animate-scaleIn">
                 {/* Header */}
                 <div className={`px-6 py-4 flex items-center justify-between border-b ${isDatgerous ? 'bg-red-50 border-red-100' : 'bg-gray-50 border-gray-100'}`}>

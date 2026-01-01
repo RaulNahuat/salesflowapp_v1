@@ -26,56 +26,56 @@ router.use(ensureBusinessAccess);
 
 // Client tickets
 router.get('/client/:clientId',
-    authorize(PERMISSIONS.RAFFLE_READ),
+    authorize(PERMISSIONS.RAFFLE_READ, 'raffles'),
     getTicketsByClient
 );
 
 // CRUD routes
 router.post('/',
-    authorize(PERMISSIONS.RAFFLE_CREATE),
+    authorize(PERMISSIONS.RAFFLE_CREATE, 'raffles'),
     validateCreateRaffle,
     createRaffle
 );
 
 router.get('/',
-    authorize(PERMISSIONS.RAFFLE_READ),
+    authorize(PERMISSIONS.RAFFLE_READ, 'raffles'),
     getRaffles
 );
 
 router.get('/:id',
-    authorize(PERMISSIONS.RAFFLE_READ),
+    authorize(PERMISSIONS.RAFFLE_READ, 'raffles'),
     validateIdParam,
     getRaffle
 );
 
 router.put('/:id',
-    authorize(PERMISSIONS.RAFFLE_UPDATE),
+    authorize(PERMISSIONS.RAFFLE_UPDATE, 'raffles'),
     validateUpdateRaffle,
     updateRaffle
 );
 
 router.delete('/:id',
-    authorize(PERMISSIONS.RAFFLE_DELETE),
+    authorize(PERMISSIONS.RAFFLE_DELETE, 'raffles'),
     validateIdParam,
     deleteRaffle
 );
 
 // Batch generation
 router.get('/:id/eligible-sales',
-    authorize(PERMISSIONS.RAFFLE_READ),
+    authorize(PERMISSIONS.RAFFLE_READ, 'raffles'),
     validateIdParam,
     getEligibleSales
 );
 
 router.post('/:id/generate-batch',
-    authorize(PERMISSIONS.RAFFLE_CREATE),
+    authorize(PERMISSIONS.RAFFLE_CREATE, 'raffles'),
     validateIdParam,
     generateBatchTickets
 );
 
 // Draw winner
 router.post('/:id/draw',
-    authorize(PERMISSIONS.RAFFLE_DRAW),
+    authorize(PERMISSIONS.RAFFLE_DRAW, 'raffles'),
     validateIdParam,
     drawWinner
 );

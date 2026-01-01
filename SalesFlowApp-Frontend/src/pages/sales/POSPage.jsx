@@ -613,22 +613,16 @@ const POSPage = () => {
             </div>
 
             {/* Mobile Tab Float Overlay (Fixed position to avoid overlap) */}
-            <div className="lg:hidden fixed bottom-6 right-6 z-50">
+            <div className={`lg:hidden fixed bottom-6 right-6 z-50 transition-all duration-300 ${activeTab === 'cart' ? 'scale-0 opacity-0 pointer-events-none' : 'scale-100 opacity-100'}`}>
                 <button
                     onClick={() => setActiveTab(activeTab === 'products' ? 'cart' : 'products')}
                     className="w-14 h-14 bg-blue-600 rounded-2xl shadow-xl shadow-blue-500/30 text-white flex items-center justify-center relative transition-all active:scale-95 hover:bg-blue-700"
                 >
-                    {activeTab === 'products' ? (
-                        <>
-                            <FaShoppingCart size={20} />
-                            {cartItemCount > 0 && (
-                                <span className="absolute -top-2 -right-2 bg-rose-500 text-white text-[9px] font-bold w-6 h-6 rounded-full flex items-center justify-center border-[3px] border-white shadow-sm animate-bounce">
-                                    {cartItemCount}
-                                </span>
-                            )}
-                        </>
-                    ) : (
-                        <FaArrowLeft size={18} />
+                    <FaShoppingCart size={20} />
+                    {cartItemCount > 0 && (
+                        <span className="absolute -top-2 -right-2 bg-rose-500 text-white text-[9px] font-bold w-6 h-6 rounded-full flex items-center justify-center border-[3px] border-white shadow-sm animate-bounce">
+                            {cartItemCount}
+                        </span>
                     )}
                 </button>
             </div>

@@ -246,47 +246,53 @@ const Dashboard = () => {
                             <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-1">Herramientas de gestión</p>
                         </div>
                         <div className="space-y-4">
-                            <Link
-                                to="/products/new"
-                                className="flex items-center gap-4 p-4 rounded-3xl hover:bg-slate-50 transition-all group border border-transparent hover:border-slate-100"
-                            >
-                                <div className="w-12 h-12 rounded-2xl bg-emerald-50 text-emerald-600 flex items-center justify-center group-hover:scale-110 transition-transform shadow-sm">
-                                    <FaPlus size={16} />
-                                </div>
-                                <div className="flex-1">
-                                    <p className="text-sm font-bold text-slate-800 tracking-tight">Nuevo Producto</p>
-                                    <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest">Suma inventario</p>
-                                </div>
-                                <FaChevronRight className="text-slate-200" size={12} />
-                            </Link>
+                            {(user?.role === 'owner' || user?.permissions?.products === true) && (
+                                <Link
+                                    to="/products/new"
+                                    className="flex items-center gap-4 p-4 rounded-3xl hover:bg-slate-50 transition-all group border border-transparent hover:border-slate-100"
+                                >
+                                    <div className="w-12 h-12 rounded-2xl bg-emerald-50 text-emerald-600 flex items-center justify-center group-hover:scale-110 transition-transform shadow-sm">
+                                        <FaPlus size={16} />
+                                    </div>
+                                    <div className="flex-1">
+                                        <p className="text-sm font-bold text-slate-800 tracking-tight">Nuevo Producto</p>
+                                        <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest">Suma inventario</p>
+                                    </div>
+                                    <FaChevronRight className="text-slate-200" size={12} />
+                                </Link>
+                            )}
 
-                            <Link
-                                to="/raffles"
-                                className="flex items-center gap-4 p-4 rounded-3xl hover:bg-slate-50 transition-all group border border-transparent hover:border-slate-100"
-                            >
-                                <div className="w-12 h-12 rounded-2xl bg-orange-50 text-orange-600 flex items-center justify-center group-hover:scale-110 transition-transform shadow-sm">
-                                    <FaTicketAlt size={16} />
-                                </div>
-                                <div className="flex-1">
-                                    <p className="text-sm font-bold text-slate-800 tracking-tight">Crear Sorteo</p>
-                                    <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest">Impulsa ventas</p>
-                                </div>
-                                <FaChevronRight className="text-slate-200" size={12} />
-                            </Link>
+                            {(user?.role === 'owner' || user?.permissions?.raffles === true) && (
+                                <Link
+                                    to="/raffles"
+                                    className="flex items-center gap-4 p-4 rounded-3xl hover:bg-slate-50 transition-all group border border-transparent hover:border-slate-100"
+                                >
+                                    <div className="w-12 h-12 rounded-2xl bg-orange-50 text-orange-600 flex items-center justify-center group-hover:scale-110 transition-transform shadow-sm">
+                                        <FaTicketAlt size={16} />
+                                    </div>
+                                    <div className="flex-1">
+                                        <p className="text-sm font-bold text-slate-800 tracking-tight">Crear Sorteo</p>
+                                        <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest">Impulsa ventas</p>
+                                    </div>
+                                    <FaChevronRight className="text-slate-200" size={12} />
+                                </Link>
+                            )}
 
-                            <Link
-                                to="/reports"
-                                className="flex items-center gap-4 p-4 rounded-3xl hover:bg-slate-50 transition-all group border border-transparent hover:border-slate-100"
-                            >
-                                <div className="w-12 h-12 rounded-2xl bg-indigo-50 text-indigo-600 flex items-center justify-center group-hover:scale-110 transition-transform shadow-sm">
-                                    <FaChartLine size={16} />
-                                </div>
-                                <div className="flex-1">
-                                    <p className="text-sm font-bold text-slate-800 tracking-tight">Analítica</p>
-                                    <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest">Ver estadísticas</p>
-                                </div>
-                                <FaChevronRight className="text-slate-200" size={12} />
-                            </Link>
+                            {(user?.role === 'owner' || user?.permissions?.reports === true) && (
+                                <Link
+                                    to="/reports"
+                                    className="flex items-center gap-4 p-4 rounded-3xl hover:bg-slate-50 transition-all group border border-transparent hover:border-slate-100"
+                                >
+                                    <div className="w-12 h-12 rounded-2xl bg-indigo-50 text-indigo-600 flex items-center justify-center group-hover:scale-110 transition-transform shadow-sm">
+                                        <FaChartLine size={16} />
+                                    </div>
+                                    <div className="flex-1">
+                                        <p className="text-sm font-bold text-slate-800 tracking-tight">Analítica</p>
+                                        <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest">Ver estadísticas</p>
+                                    </div>
+                                    <FaChevronRight className="text-slate-200" size={12} />
+                                </Link>
+                            )}
                         </div>
                     </div>
                 </div>

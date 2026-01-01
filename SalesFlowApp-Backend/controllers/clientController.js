@@ -44,7 +44,8 @@ export const createClient = async (req, res) => {
             address,
             notes,
             status,
-            BusinessId: businessId // Explicitly set BusinessId
+            BusinessId: businessId, // Explicitly set BusinessId
+            createdById: req.user.userId // Track who created the client
         });
 
         res.status(201).json(client);

@@ -39,6 +39,10 @@ export default (sequelize, DataTypes) => {
         BusinessId: {
             type: DataTypes.UUID,
             allowNull: false
+        },
+        createdById: {
+            type: DataTypes.UUID,
+            allowNull: true // Set to true to avoid issues with existing records
         }
     }, {
         tableName: 'clients',

@@ -463,15 +463,21 @@ export const getReports = async (req, res) => {
 
         const whereClause = { BusinessId: businessId };
 
+        // If user is an employee, only show their own sales data
+        if (req.user.role === 'employee' && req.user.businessMemberId) {
+            whereClause.SellerId = req.user.businessMemberId;
+            console.log('Isolation applied: Filtering reports by SellerId:', req.user.businessMemberId);
+        }
+
         // Add date filters - use string comparison to avoid timezone issues
         if (startDate && endDate) {
             whereClause.createdAt = {
                 [db.Sequelize.Op.between]: [
                     `${startDate} 00:00:00`,
-                    `${endDate} 23: 59: 59`
+                    `${endDate} 23:59:59`
                 ]
             };
-            console.log('Date filter applied:', `${startDate} 00:00:00 to ${endDate} 23: 59: 59`);
+            console.log('Date filter applied:', `${startDate} 00:00:00 to ${endDate} 23:59:59`);
         }
 
         console.log('Executing query...');

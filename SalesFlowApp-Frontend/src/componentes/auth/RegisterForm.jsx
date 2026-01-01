@@ -185,7 +185,8 @@ const RegisterForm = () => {
                             value={userData.password}
                             onChange={handleChange}
                             className="w-full pl-11 pr-4 py-3.5 bg-gray-50 border border-gray-200 rounded-xl focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-100 focus:border-blue-500 transition-all font-medium text-gray-700"
-                            placeholder="Mínimo 6 caracteres"
+                            placeholder="Mínimo 8 caracteres"
+                            minLength={8}
                             required
                         />
                     </div>
@@ -207,6 +208,7 @@ const RegisterForm = () => {
                             onChange={handleChange}
                             className="w-full pl-11 pr-4 py-3.5 bg-gray-50 border border-gray-200 rounded-xl focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-100 focus:border-blue-500 transition-all font-medium text-gray-700"
                             placeholder="Repite tu contraseña"
+                            minLength={8}
                             required
                         />
                     </div>
