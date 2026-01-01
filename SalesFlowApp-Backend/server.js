@@ -14,7 +14,7 @@ import cors from 'cors';
 import { errorHandler, notFoundHandler } from './middlewares/errorHandler.js';
 
 dotenv.config();
-const PORT = process.env.PORT || 5000;
+const PORT = process.env.PORT || 3000;
 
 const app = express();
 
@@ -117,10 +117,10 @@ const startServer = async () => {
     // }
 
     await sequelize.sync(); // alter: true disabled to prevent ER_TOO_MANY_KEYS
-    console.log('Base de datos sincronizada correctamente');
+    // console.log('Base de datos sincronizada correctamente');
 
     // await seedEstatus();
-    console.log('Estatus seed completado');
+    // console.log('Estatus seed completado');
 
     app.listen(PORT, '0.0.0.0', () => {
         console.log(`Server running on port ${PORT}`);

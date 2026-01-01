@@ -3,20 +3,21 @@ import dotenv from "dotenv";
 
 dotenv.config();
 
-// ✅ CONNECTION POOLING: Configuración optimizada por entorno
-// Beneficio: Reduce latencia de conexión en 80%, soporta 100+ requests concurrentes
+const env = process.env.NODE_ENV || 'development';
 
+// ✅ POOL CONFIG: Ajustado para Aiven Free Tier (1GB RAM)
+// Evitamos saturar la memoria y las conexiones permitidas por Aiven.
 const poolConfig = {
     development: {
-        max: 5,          // Máximo de conexiones simultáneas
-        min: 1,          // Mínimo de conexiones activas
-        acquire: 30000,  // Tiempo máximo para adquirir conexión (30s)
-        idle: 10000,     // Tiempo antes de liberar conexión inactiva (10s)
-        evict: 1000      // Intervalo de limpieza (1s)
+        max: 5,
+        min: 1,
+        acquire: 30000,
+        idle: 10000,
+        evict: 1000
     },
     production: {
-        max: 20,         // Ajustar según CPU cores del servidor
-        min: 5,
+        max: 8,          // Bajamos de 20 a 8 para ser conservadores con el Free Tier
+        min: 2,
         acquire: 30000,
         idle: 10000,
         evict: 1000
@@ -29,31 +30,30 @@ const poolConfig = {
     }
 };
 
-const env = process.env.NODE_ENV || 'development';
-
 const sequelize = new Sequelize(
     process.env.DB_DATABASE,
     process.env.DB_USERNAME,
     process.env.DB_PASSWORD,
     {
         host: process.env.DB_HOST,
-        dialect: process.env.DB_DIALECT,
-
-        // ✅ Logging optimizado
-        logging: env === 'development' ? console.log : false,
-
-        // ✅ CONNECTION POOL
-        pool: poolConfig[env],
-
-        // ✅ RETRY LOGIC
-        retry: {
-            max: 3,         // Reintentos en caso de fallo
-            timeout: 3000   // Timeout por intento
+        port: process.env.DB_PORT || 16862,
+        dialect: 'mysql',
+        dialectOptions: {
+            ssl: {
+                require: true,
+                rejectUnauthorized: false
+            }
         },
 
-        // ✅ QUERY OPTIMIZATION
-        benchmark: env === 'development', // Medir tiempo de queries
+        logging: env === 'development' ? console.log : false,
+        pool: poolConfig[env],
 
+        retry: {
+            max: 3,
+            timeout: 3000
+        },
+
+        benchmark: env === 'development',
         define: {
             timestamps: false,
             underscored: false
@@ -64,15 +64,14 @@ const sequelize = new Sequelize(
 export const testConnection = async () => {
     try {
         await sequelize.authenticate();
-        console.log("✅ Conexión a la base de datos establecida correctamente.");
+        console.log("✅ Conexión a Aiven MySQL establecida correctamente.");
 
-        // Log pool stats en desarrollo
         if (env === 'development') {
             const pool = sequelize.connectionManager.pool;
-            console.log(`📊 Pool Stats - Max: ${pool.max}, Min: ${pool.min}, Size: ${pool.size}, Available: ${pool.available}`);
+            // console.log(`📊 Pool Stats - Max: ${pool.max}, Size: ${pool.size}, Available: ${pool.available}`);
         }
     } catch (error) {
-        console.log("❌ Error al conectar a la base de datos:", error);
+        console.error("❌ Error de conexión:", error.message);
         throw error;
     }
 }
