@@ -17,16 +17,10 @@ dotenv.config();
 const PORT = process.env.PORT || 3000;
 
 const app = express();
+app.set('trust proxy', 1);
 
 const frontendUrl = process.env.FRONTEND_URL ? process.env.FRONTEND_URL.replace(/\/$/, '') : null;
 const allowedOrigins = [frontendUrl, 'http://localhost:5173', 'http://127.0.0.1:5173'].filter(Boolean);
-
-console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
-console.log('🌐 CONFIGURACIÓN CORS:');
-console.log('   - NODE_ENV:', process.env.NODE_ENV || 'not set (defaulting to development)');
-console.log('   - FRONTEND_URL:', process.env.FRONTEND_URL || 'NOT CONFIGURED');
-console.log('   - Orígenes Permitidos:', allowedOrigins);
-console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
 
 const corsOptions = {
     origin: function (origin, callback) {
