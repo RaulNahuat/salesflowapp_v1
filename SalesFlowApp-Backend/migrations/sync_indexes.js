@@ -1,7 +1,7 @@
 // Sync Database Indexes
 // This script creates partial unique indexes for phone and email
 
-import db from '../config/db.js';
+import db from '../models/index.js';
 
 async function syncIndexes() {
     try {

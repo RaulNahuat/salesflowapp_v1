@@ -1,7 +1,7 @@
 // Migration Runner Script
 // This script executes the partial unique index migration using your existing DB connection
 
-import db from '../config/db.js';
+import db from '../models/index.js';
 
 async function runMigration() {
     try {
