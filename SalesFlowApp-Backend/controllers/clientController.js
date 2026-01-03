@@ -65,14 +65,38 @@ export const createClient = async (req, res) => {
 
         // Handle Sequelize validation errors
         if (error.name === 'SequelizeValidationError') {
-            const validationErrors = error.errors.map(err => ({
-                field: err.path,
-                message: err.message
-            }));
+            const validationErrors = error.errors.map(err => {
+                // Provide user-friendly messages for common validations
+                let message = err.message;
+                if (err.validatorKey === 'isEmail') {
+                    message = `El email "${err.value}" no es válido. Por favor ingresa un email correcto (ej. usuario@ejemplo.com)`;
+                } else if (err.validatorKey === 'notNull') {
+                    message = `El campo ${err.path} es obligatorio`;
+                } else if (err.validatorKey === 'notEmpty') {
+                    message = `El campo ${err.path} no puede estar vacío`;
+                }
+                return {
+                    field: err.path,
+                    message: message
+                };
+            });
+
             return res.status(400).json({
                 success: false,
-                message: "Error de validación",
+                message: validationErrors[0].message, // First error as main message
+                field: validationErrors[0].field,
                 errors: validationErrors
+            });
+        }
+
+        // Handle unique constraint violations
+        if (error.name === 'SequelizeUniqueConstraintError') {
+            const field = error.errors[0]?.path || 'unknown';
+            const value = error.errors[0]?.value || '';
+            return res.status(409).json({
+                success: false,
+                field: field,
+                message: `Ya existe un cliente con ${field === 'phone' ? 'el teléfono' : field === 'email' ? 'el email' : 'este'} ${value}`
             });
         }
 
