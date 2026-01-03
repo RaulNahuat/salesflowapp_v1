@@ -3,7 +3,7 @@ import { useAuth } from '../../context/authContext';
 import { useNavigate, Link } from 'react-router-dom';
 import { toast } from 'react-hot-toast';
 import AuthLayout from '../../layout/AuthLayout';
-import { FaUser, FaEnvelope, FaLock, FaPhone, FaSpinner, FaArrowRight } from 'react-icons/fa';
+import { FaUser, FaEnvelope, FaLock, FaPhone, FaSpinner, FaArrowRight, FaEye, FaEyeSlash } from 'react-icons/fa';
 
 const RegisterForm = () => {
     const [userData, setUserData] = useState({
@@ -17,6 +17,8 @@ const RegisterForm = () => {
     });
     const [error, setError] = useState('');
     const [loading, setLoading] = useState(false);
+    const [showPassword, setShowPassword] = useState(false);
+    const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
     const { registerUser } = useAuth();
     const navigate = useNavigate();
@@ -33,7 +35,6 @@ const RegisterForm = () => {
         e.preventDefault();
         setError('');
 
-        // Validar que las contraseñas coincidan
         if (userData.password !== userData.confirmPassword) {
             setError('Las contraseñas no coinciden');
             toast.error('Las contraseñas no coinciden');
@@ -43,7 +44,6 @@ const RegisterForm = () => {
         setLoading(true);
 
         try {
-            // No enviar confirmPassword al backend
             const { confirmPassword, ...dataToSend } = userData;
             await registerUser(dataToSend);
             toast.success('¡Cuenta creada exitosamente!');
@@ -59,23 +59,24 @@ const RegisterForm = () => {
 
     return (
         <AuthLayout
-            title="Crea tu cuenta"
-            subtitle="Empieza a gestionar tu negocio hoy mismo."
+            title="Crea tu negocio"
+            subtitle="Regístrate en menos de un minuto"
         >
-            <form onSubmit={handleSubmit} className="space-y-5">
+            <form onSubmit={handleSubmit} className="space-y-4 animate-fade-in-content">
                 {error && (
-                    <div className="p-4 rounded-xl bg-red-50 border border-red-100 text-red-600 text-sm font-medium flex items-center animate-shake">
-                        {error}
+                    <div className="p-3 rounded-2xl bg-red-50 border border-red-100 text-red-600 text-[13px] font-bold flex items-center animate-shake leading-tight shadow-sm mb-2">
+                        <span className="mr-2">⚠️</span> {error}
                     </div>
                 )}
 
-                <div className="group">
-                    <label className="block text-sm font-semibold text-gray-700 mb-2 ml-1" htmlFor="businessName">
+                {/* Business Name */}
+                <div className="group space-y-1.5">
+                    <label className="block text-[10px] font-black uppercase tracking-[0.15em] text-slate-400 ml-1" htmlFor="businessName">
                         Nombre del Negocio
                     </label>
                     <div className="relative">
                         <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-                            <FaUser className="text-gray-400 group-focus-within:text-blue-500 transition-colors" />
+                            <FaUser className="text-slate-300 group-focus-within/input:text-blue-500 transition-colors" />
                         </div>
                         <input
                             type="text"
@@ -83,36 +84,32 @@ const RegisterForm = () => {
                             name="businessName"
                             value={userData.businessName}
                             onChange={handleChange}
-                            className="w-full pl-11 pr-4 py-3.5 bg-gray-50 border border-gray-200 rounded-xl focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-100 focus:border-blue-500 transition-all font-medium text-gray-700"
-                            placeholder="Ej: Ventas Juanito"
+                            className="w-full pl-11 pr-4 py-3.5 bg-slate-50/50 border border-slate-200 rounded-[1.25rem] focus:bg-white focus:outline-none focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 transition-all font-bold text-slate-700 placeholder:text-slate-300 placeholder:font-medium text-sm"
+                            placeholder="Ej: Mi Tiendita"
                             required
                         />
                     </div>
                 </div>
 
-                <div className="grid grid-cols-2 gap-4">
-                    <div className="group">
-                        <label className="block text-sm font-semibold text-gray-700 mb-2 ml-1" htmlFor="firstName">
+                {/* Grid for Name & Last Name */}
+                <div className="grid grid-cols-2 gap-3">
+                    <div className="group space-y-1.5">
+                        <label className="block text-[10px] font-black uppercase tracking-[0.15em] text-slate-400 ml-1" htmlFor="firstName">
                             Nombre
                         </label>
-                        <div className="relative">
-                            <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                                <FaUser className="text-gray-400 group-focus-within:text-blue-500 transition-colors text-sm" />
-                            </div>
-                            <input
-                                type="text"
-                                id="firstName"
-                                name="firstName"
-                                value={userData.firstName}
-                                onChange={handleChange}
-                                className="w-full pl-9 pr-3 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-100 focus:border-blue-500 transition-all font-medium text-gray-700 text-sm"
-                                placeholder="Juan"
-                                required
-                            />
-                        </div>
+                        <input
+                            type="text"
+                            id="firstName"
+                            name="firstName"
+                            value={userData.firstName}
+                            onChange={handleChange}
+                            className="w-full px-4 py-3 bg-slate-50/50 border border-slate-200 rounded-[1.25rem] focus:bg-white focus:outline-none focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 transition-all font-bold text-slate-700 placeholder:text-slate-300 placeholder:font-medium text-sm"
+                            placeholder="Juan"
+                            required
+                        />
                     </div>
-                    <div className="group">
-                        <label className="block text-sm font-semibold text-gray-700 mb-2 ml-1" htmlFor="lastName">
+                    <div className="group space-y-1.5">
+                        <label className="block text-[10px] font-black uppercase tracking-[0.15em] text-slate-400 ml-1" htmlFor="lastName">
                             Apellido
                         </label>
                         <input
@@ -121,124 +118,151 @@ const RegisterForm = () => {
                             name="lastName"
                             value={userData.lastName}
                             onChange={handleChange}
-                            className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-100 focus:border-blue-500 transition-all font-medium text-gray-700 text-sm"
+                            className="w-full px-4 py-3 bg-slate-50/50 border border-slate-200 rounded-[1.25rem] focus:bg-white focus:outline-none focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 transition-all font-bold text-slate-700 placeholder:text-slate-300 placeholder:font-medium text-sm"
                             placeholder="Pérez"
                             required
                         />
                     </div>
                 </div>
 
-                <div className="group">
-                    <label className="block text-sm font-semibold text-gray-700 mb-2 ml-1" htmlFor="email">
-                        Correo Electrónico
-                    </label>
-                    <div className="relative">
-                        <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-                            <FaEnvelope className="text-gray-400 group-focus-within:text-blue-500 transition-colors" />
+                {/* Email & Phone Row */}
+                <div className="space-y-4">
+                    <div className="group space-y-1.5">
+                        <label className="block text-[10px] font-black uppercase tracking-[0.15em] text-slate-400 ml-1" htmlFor="email">
+                            Correo
+                        </label>
+                        <div className="relative">
+                            <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                                <FaEnvelope className="text-slate-300 group-focus-within/input:text-blue-500 transition-colors" />
+                            </div>
+                            <input
+                                type="email"
+                                id="email"
+                                name="email"
+                                value={userData.email}
+                                onChange={handleChange}
+                                className="w-full pl-11 pr-4 py-3.5 bg-slate-50/50 border border-slate-200 rounded-[1.25rem] focus:bg-white focus:outline-none focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 transition-all font-bold text-slate-700 placeholder:text-slate-300 placeholder:font-medium text-sm"
+                                placeholder="juan@email.com"
+                                required
+                            />
                         </div>
-                        <input
-                            type="email"
-                            id="email"
-                            name="email"
-                            value={userData.email}
-                            onChange={handleChange}
-                            className="w-full pl-11 pr-4 py-3.5 bg-gray-50 border border-gray-200 rounded-xl focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-100 focus:border-blue-500 transition-all font-medium text-gray-700"
-                            placeholder="juan@negocio.com"
-                            required
-                        />
+                    </div>
+
+                    <div className="group space-y-1.5">
+                        <label className="block text-[10px] font-black uppercase tracking-[0.15em] text-slate-400 ml-1" htmlFor="phone">
+                            Teléfono
+                        </label>
+                        <div className="relative">
+                            <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                                <FaPhone className="text-slate-300 group-focus-within/input:text-blue-500 transition-colors text-xs" />
+                            </div>
+                            <input
+                                type="tel"
+                                id="phone"
+                                name="phone"
+                                value={userData.phone}
+                                onChange={handleChange}
+                                className="w-full pl-11 pr-4 py-3.5 bg-slate-50/50 border border-slate-200 rounded-[1.25rem] focus:bg-white focus:outline-none focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 transition-all font-bold text-slate-700 placeholder:text-slate-300 placeholder:font-medium text-sm"
+                                placeholder="55 1234 5678"
+                                required
+                            />
+                        </div>
                     </div>
                 </div>
 
-                <div className="group">
-                    <label className="block text-sm font-semibold text-gray-700 mb-2 ml-1" htmlFor="phone">
-                        Teléfono
-                    </label>
-                    <div className="relative">
-                        <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-                            <FaPhone className="text-gray-400 group-focus-within:text-blue-500 transition-colors" />
+                {/* Passwords */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <div className="group space-y-1.5">
+                        <label className="block text-[10px] font-black uppercase tracking-[0.15em] text-slate-400 ml-1" htmlFor="password">
+                            Clave
+                        </label>
+                        <div className="relative">
+                            <input
+                                type={showPassword ? "text" : "password"}
+                                id="password"
+                                name="password"
+                                value={userData.password}
+                                onChange={handleChange}
+                                className="w-full pl-4 pr-10 py-3 bg-slate-50/50 border border-slate-200 rounded-[1.25rem] focus:bg-white focus:outline-none focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 transition-all font-bold text-slate-700 placeholder:text-slate-300 placeholder:font-medium text-sm"
+                                placeholder="8+ caracteres"
+                                minLength={8}
+                                required
+                            />
+                            <button
+                                type="button"
+                                onClick={() => setShowPassword(!showPassword)}
+                                className="absolute inset-y-0 right-0 pr-3 flex items-center text-slate-300 hover:text-blue-500 transition-colors focus:outline-none"
+                            >
+                                {showPassword ? <FaEyeSlash size={14} /> : <FaEye size={14} />}
+                            </button>
                         </div>
-                        <input
-                            type="tel"
-                            id="phone"
-                            name="phone"
-                            value={userData.phone}
-                            onChange={handleChange}
-                            className="w-full pl-11 pr-4 py-3.5 bg-gray-50 border border-gray-200 rounded-xl focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-100 focus:border-blue-500 transition-all font-medium text-gray-700"
-                            placeholder="55 1234 5678"
-                            required
-                        />
                     </div>
-                </div>
 
-                <div className="group">
-                    <label className="block text-sm font-semibold text-gray-700 mb-2 ml-1" htmlFor="password">
-                        Contraseña
-                    </label>
-                    <div className="relative">
-                        <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-                            <FaLock className="text-gray-400 group-focus-within:text-blue-500 transition-colors" />
+                    <div className="group space-y-1.5">
+                        <label className="block text-[10px] font-black uppercase tracking-[0.15em] text-slate-400 ml-1" htmlFor="confirmPassword">
+                            Confirmar
+                        </label>
+                        <div className="relative">
+                            <input
+                                type={showConfirmPassword ? "text" : "password"}
+                                id="confirmPassword"
+                                name="confirmPassword"
+                                value={userData.confirmPassword}
+                                onChange={handleChange}
+                                className="w-full pl-4 pr-10 py-3 bg-slate-50/50 border border-slate-200 rounded-[1.25rem] focus:bg-white focus:outline-none focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 transition-all font-bold text-slate-700 placeholder:text-slate-300 placeholder:font-medium text-sm"
+                                placeholder="Repite tu clave"
+                                minLength={8}
+                                required
+                            />
+                            <button
+                                type="button"
+                                onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                                className="absolute inset-y-0 right-0 pr-3 flex items-center text-slate-300 hover:text-blue-500 transition-colors focus:outline-none"
+                            >
+                                {showConfirmPassword ? <FaEyeSlash size={14} /> : <FaEye size={14} />}
+                            </button>
                         </div>
-                        <input
-                            type="password"
-                            id="password"
-                            name="password"
-                            value={userData.password}
-                            onChange={handleChange}
-                            className="w-full pl-11 pr-4 py-3.5 bg-gray-50 border border-gray-200 rounded-xl focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-100 focus:border-blue-500 transition-all font-medium text-gray-700"
-                            placeholder="Mínimo 8 caracteres"
-                            minLength={8}
-                            required
-                        />
-                    </div>
-                </div>
-
-                <div className="group">
-                    <label className="block text-sm font-semibold text-gray-700 mb-2 ml-1" htmlFor="confirmPassword">
-                        Confirmar Contraseña
-                    </label>
-                    <div className="relative">
-                        <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-                            <FaLock className="text-gray-400 group-focus-within:text-blue-500 transition-colors" />
-                        </div>
-                        <input
-                            type="password"
-                            id="confirmPassword"
-                            name="confirmPassword"
-                            value={userData.confirmPassword}
-                            onChange={handleChange}
-                            className="w-full pl-11 pr-4 py-3.5 bg-gray-50 border border-gray-200 rounded-xl focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-100 focus:border-blue-500 transition-all font-medium text-gray-700"
-                            placeholder="Repite tu contraseña"
-                            minLength={8}
-                            required
-                        />
                     </div>
                 </div>
 
                 <button
                     type="submit"
                     disabled={loading}
-                    className="w-full bg-gradient-to-r from-blue-600 to-indigo-600 text-white font-bold py-3.5 rounded-xl shadow-lg shadow-blue-500/30 hover:shadow-blue-500/40 transform hover:-translate-y-0.5 transition-all duration-200 disabled:opacity-70 disabled:cursor-not-allowed disabled:transform-none flex items-center justify-center gap-2 mt-4"
+                    className="relative w-full h-12 bg-gradient-to-r from-blue-600 to-indigo-600 text-white font-black text-[12px] uppercase tracking-[0.2em] rounded-[1.25rem] overflow-hidden shadow-xl shadow-blue-500/20 active:scale-95 transition-all disabled:opacity-70 group mt-4"
                 >
-                    {loading ? (
-                        <>
-                            <FaSpinner className="animate-spin text-lg" /> Creando cuenta...
-                        </>
-                    ) : (
-                        <>
-                            Registrarme <FaArrowRight className="text-sm opacity-80" />
-                        </>
-                    )}
+                    <div className="absolute inset-0 bg-white/10 group-hover:bg-transparent transition-colors"></div>
+                    <div className="relative flex items-center justify-center gap-2">
+                        {loading ? (
+                            <FaSpinner className="animate-spin text-lg" />
+                        ) : (
+                            <>
+                                <span>Registrarme</span>
+                                <FaArrowRight className="text-xs opacity-70 group-hover:translate-x-1 transition-transform" />
+                            </>
+                        )}
+                    </div>
                 </button>
 
-                <div className="text-center pt-2">
-                    <p className="text-gray-500 text-sm">
+                <div className="text-center pt-3">
+                    <p className="text-slate-400 text-[13px] font-medium">
                         ¿Ya tienes cuenta?{' '}
-                        <Link to="/login" className="font-bold text-blue-600 hover:text-blue-700 hover:underline transition-colors">
-                            Inicia Sesión
+                        <Link to="/login" className="font-black text-blue-600 hover:text-blue-700 transition-colors">
+                            Ingresa aquí
                         </Link>
                     </p>
                 </div>
             </form>
+
+            <style dangerouslySetInnerHTML={{
+                __html: `
+                .animate-fade-in-content {
+                    animation: fadeContent 0.8s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+                }
+                @keyframes fadeContent {
+                    from { opacity: 0; transform: translateY(10px); }
+                    to { opacity: 1; transform: translateY(0); }
+                }
+            `}} />
         </AuthLayout>
     );
 };

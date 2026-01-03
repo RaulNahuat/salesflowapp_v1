@@ -14,7 +14,9 @@ import {
     FaAsterisk,
     FaIdCard,
     FaTrash,
-    FaExclamationTriangle
+    FaExclamationTriangle,
+    FaEye,
+    FaEyeSlash
 } from 'react-icons/fa';
 
 const ProfilePage = () => {
@@ -41,6 +43,12 @@ const ProfilePage = () => {
         password: '',
         confirmText: false
     });
+
+    // Password visibility states
+    const [showCurrentPassword, setShowCurrentPassword] = useState(false);
+    const [showNewPassword, setShowNewPassword] = useState(false);
+    const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+    const [showDeletePassword, setShowDeletePassword] = useState(false);
 
     useEffect(() => {
         const fetchProfile = async () => {
@@ -316,14 +324,21 @@ const ProfilePage = () => {
                                         <FaLock size={14} />
                                     </div>
                                     <input
-                                        type="password"
+                                        type={showCurrentPassword ? "text" : "password"}
                                         name="currentPassword"
                                         value={passwordData.currentPassword}
                                         onChange={handlePasswordChange}
                                         required
                                         placeholder="Contraseña vigente"
-                                        className="w-full pl-11 pr-4 py-3 bg-gray-50 border-0 rounded-2xl focus:bg-white focus:ring-2 focus:ring-purple-500/20 focus:outline-none transition-all placeholder:text-gray-300 font-medium text-gray-800"
+                                        className="w-full pl-11 pr-12 py-3 bg-gray-50 border-0 rounded-2xl focus:bg-white focus:ring-1 focus:ring-purple-500 transition-all placeholder:text-gray-300 font-medium text-gray-800"
                                     />
+                                    <button
+                                        type="button"
+                                        onClick={() => setShowCurrentPassword(!showCurrentPassword)}
+                                        className="absolute inset-y-0 right-0 pr-4 flex items-center text-gray-400 hover:text-purple-500 transition-colors focus:outline-none"
+                                    >
+                                        {showCurrentPassword ? <FaEyeSlash size={16} /> : <FaEye size={16} />}
+                                    </button>
                                 </div>
                             </div>
 
@@ -340,15 +355,22 @@ const ProfilePage = () => {
                                         <FaKey size={14} />
                                     </div>
                                     <input
-                                        type="password"
+                                        type={showNewPassword ? "text" : "password"}
                                         name="newPassword"
                                         value={passwordData.newPassword}
                                         onChange={handlePasswordChange}
                                         required
                                         placeholder="8+ caracteres"
                                         minLength={8}
-                                        className="w-full pl-11 pr-4 py-3 bg-gray-50 border-0 rounded-2xl focus:bg-white focus:ring-2 focus:ring-purple-500/20 focus:outline-none transition-all placeholder:text-gray-300 font-medium text-gray-800"
+                                        className="w-full pl-11 pr-12 py-3 bg-gray-50 border-0 rounded-2xl focus:bg-white focus:ring-1 focus:ring-purple-500 transition-all placeholder:text-gray-300 font-medium text-gray-800"
                                     />
+                                    <button
+                                        type="button"
+                                        onClick={() => setShowNewPassword(!showNewPassword)}
+                                        className="absolute inset-y-0 right-0 pr-4 flex items-center text-gray-400 hover:text-purple-500 transition-colors focus:outline-none"
+                                    >
+                                        {showNewPassword ? <FaEyeSlash size={16} /> : <FaEye size={16} />}
+                                    </button>
                                 </div>
                             </div>
 
@@ -359,15 +381,22 @@ const ProfilePage = () => {
                                         <FaKey size={14} />
                                     </div>
                                     <input
-                                        type="password"
+                                        type={showConfirmPassword ? "text" : "password"}
                                         name="confirmPassword"
                                         value={passwordData.confirmPassword}
                                         onChange={handlePasswordChange}
                                         required
                                         minLength={8}
                                         placeholder="Repetir nueva contraseña"
-                                        className="w-full pl-11 pr-4 py-3 bg-gray-50 border-0 rounded-2xl focus:bg-white focus:ring-2 focus:ring-purple-500/20 focus:outline-none transition-all placeholder:text-gray-300 font-medium text-gray-800"
+                                        className="w-full pl-11 pr-12 py-3 bg-gray-50 border-0 rounded-2xl focus:bg-white focus:ring-1 focus:ring-purple-500 transition-all placeholder:text-gray-300 font-medium text-gray-800"
                                     />
+                                    <button
+                                        type="button"
+                                        onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                                        className="absolute inset-y-0 right-0 pr-4 flex items-center text-gray-400 hover:text-purple-500 transition-colors focus:outline-none"
+                                    >
+                                        {showConfirmPassword ? <FaEyeSlash size={16} /> : <FaEye size={16} />}
+                                    </button>
                                 </div>
                             </div>
 
@@ -520,13 +549,20 @@ const ProfilePage = () => {
                                         <FaLock size={14} />
                                     </div>
                                     <input
-                                        type="password"
+                                        type={showDeletePassword ? "text" : "password"}
                                         value={deleteData.password}
                                         onChange={(e) => setDeleteData({ ...deleteData, password: e.target.value })}
                                         placeholder="Tu contraseña actual"
-                                        className="w-full pl-11 pr-4 py-3 bg-gray-50 border-0 rounded-2xl focus:bg-white focus:ring-2 focus:ring-red-500/20 focus:outline-none transition-all placeholder:text-gray-300 font-medium text-gray-800"
+                                        className="w-full pl-11 pr-12 py-3 bg-gray-50 border-0 rounded-2xl focus:bg-white focus:ring-1 focus:ring-red-500 transition-all placeholder:text-gray-300 font-medium text-gray-800"
                                         disabled={deleting}
                                     />
+                                    <button
+                                        type="button"
+                                        onClick={() => setShowDeletePassword(!showDeletePassword)}
+                                        className="absolute inset-y-0 right-0 pr-4 flex items-center text-gray-400 hover:text-red-500 transition-colors focus:outline-none"
+                                    >
+                                        {showDeletePassword ? <FaEyeSlash size={16} /> : <FaEye size={16} />}
+                                    </button>
                                 </div>
                             </div>
 
