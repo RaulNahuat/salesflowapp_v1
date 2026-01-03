@@ -86,7 +86,7 @@ const register = async (userData) => {
         const token = jwt.sign(
             { userId: newUser.id, businessId: newBusiness.id, role: 'owner' },
             process.env.JWT_SECRET,
-            { expiresIn: '24h' }
+            { expiresIn: process.env.JWT_EXPIRES_TIME || '24h' }
         );
 
         return { user: newUser, token, role: 'owner' };
@@ -140,7 +140,7 @@ const login = async (email, password) => {
         const token = jwt.sign(
             payload,
             process.env.JWT_SECRET,
-            { expiresIn: '24h' }
+            { expiresIn: process.env.JWT_EXPIRES_TIME || '24h' }
         );
 
         return {

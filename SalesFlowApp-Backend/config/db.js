@@ -46,7 +46,7 @@ const sequelize = new Sequelize(
     {
         host: process.env.DB_HOST,
         port: process.env.DB_PORT || 16862,
-        dialect: 'mysql',
+        dialect: process.env.DB_DIALECT || 'mysql',
         dialectOptions: {
             ssl: {
                 require: true,
