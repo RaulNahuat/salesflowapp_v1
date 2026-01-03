@@ -24,6 +24,8 @@ const register = async (userData) => {
     if (existingEmail) {
         const error = new Error("Ya existe una cuenta activa con este correo electrónico");
         error.field = 'email';
+        error.type = 'DUPLICATE_ERROR';
+        error.status = 409;
         throw error;
     }
 
@@ -36,6 +38,8 @@ const register = async (userData) => {
         if (existingPhone) {
             const error = new Error("Ya existe una cuenta activa con este número de teléfono");
             error.field = 'phone';
+            error.type = 'DUPLICATE_ERROR';
+            error.status = 409;
             throw error;
         }
     }
@@ -158,12 +162,16 @@ const login = async (email, password) => {
             permissions
         };
     } catch (error) {
-        // ... err handling
-        if (error.message === "Credenciales inválidas" || error.message.includes("desactivada")) {
+        if (error.status === 401 || error.message === "Credenciales inválidas" || error.message.includes("desactivada")) {
+            error.status = error.status || 401;
+            error.type = 'AUTH_ERROR';
             throw error;
         }
         console.error("Login Service Error:", error);
-        throw new Error("Error interno del servidor. Por favor intente más tarde.");
+        const serverError = new Error("Error interno del servidor. Por favor intente más tarde.");
+        serverError.status = 500;
+        serverError.type = 'SERVER_ERROR';
+        throw serverError;
     }
 }
 

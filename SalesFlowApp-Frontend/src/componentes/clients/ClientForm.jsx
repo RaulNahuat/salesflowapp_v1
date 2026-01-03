@@ -67,19 +67,19 @@ const ClientForm = () => {
             }
             navigate('/clients');
         } catch (err) {
-            let msg = 'Error al guardar el cliente';
+            console.error("Client capture error:", err);
+            let msg = err.message || 'Error al guardar el cliente';
 
-            // Handle specific error types
+            // Handle specific status-based feedback if message is not descriptive enough
             if (err.status === 403) {
-                msg = `❌ Permiso denegado: ${err.message}. Contacta al propietario del negocio.`;
-            } else if (err.status === 409 && err.data?.existingClient) {
-                // Duplicate phone error
-                const existing = err.data.existingClient;
-                msg = `El teléfono ${existing.phone} ya está registrado para ${existing.firstName} ${existing.lastName}`;
-            } else if (err.status === 400) {
-                msg = `⚠️ Validación: ${err.message}`;
-            } else {
-                msg = err.message || msg;
+                msg = `❌ Permiso denegado: ${err.message || 'No tienes permisos para esta acción'}`;
+            } else if (err.status === 409) {
+                // If the backend didn't provide a specific duplicate message (unlikely now)
+                if (msg.includes('Validation error') || msg.includes('Sequelize')) {
+                    msg = 'Ya existe un cliente activo con estos datos (teléfono o email).';
+                }
+            } else if (err.status === 400 && !err.message) {
+                msg = '⚠️ Hay errores en los datos ingresados. Por favor revisa el formulario.';
             }
 
             setError(msg);

@@ -12,11 +12,13 @@ const api = axios.create({
 export const getProducts = async () => {
     try {
         const response = await api.get("/");
-        return response.data;
+        // New standard returns { success, products: [] }, legacy returns []
+        return response.data.products || response.data;
     } catch (error) {
         const errorMessage = error.response?.data?.message || error.message || 'Error al obtener productos';
         const errorObj = new Error(errorMessage);
         errorObj.status = error.response?.status;
+        errorObj.data = error.response?.data;
         throw errorObj;
     }
 };
@@ -24,11 +26,13 @@ export const getProducts = async () => {
 export const getProduct = async (id) => {
     try {
         const response = await api.get(`/${id}`);
-        return response.data;
+        // New standard returns { success, product: {} }, legacy returns {}
+        return response.data.product || response.data;
     } catch (error) {
         const errorMessage = error.response?.data?.message || error.message || 'Error al obtener el producto';
         const errorObj = new Error(errorMessage);
         errorObj.status = error.response?.status;
+        errorObj.data = error.response?.data;
         throw errorObj;
     }
 };

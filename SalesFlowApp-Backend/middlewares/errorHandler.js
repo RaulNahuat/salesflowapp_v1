@@ -53,15 +53,23 @@ export class ConflictError extends AppError {
     }
 }
 
-/**
- * Detectar tipo de error de Sequelize y sanitizar mensaje
- */
 const sanitizeSequelizeError = (error) => {
     // Errores de validación de Sequelize
     if (error.name === 'SequelizeValidationError') {
+        const firstError = error.errors?.[0];
+        let message = 'Error de validación en los datos';
+
+        if (firstError?.validatorKey === 'isEmail') {
+            message = `El email "${firstError.value}" no es válido. Ingresa un formato correcto (ej. usuario@ejemplo.com)`;
+        } else if (firstError?.validatorKey === 'notNull' || firstError?.validatorKey === 'notEmpty') {
+            message = `El campo ${firstError.path} es obligatorio`;
+        }
+
         return {
             statusCode: 400,
-            message: 'Error de validación en los datos',
+            type: 'VALIDATION_ERROR',
+            message: message,
+            field: firstError?.path,
             details: error.errors?.map(e => ({
                 field: e.path,
                 message: e.message
@@ -72,9 +80,12 @@ const sanitizeSequelizeError = (error) => {
     // Errores de constraint único (duplicados)
     if (error.name === 'SequelizeUniqueConstraintError') {
         const field = error.errors?.[0]?.path || 'campo';
+        const value = error.errors?.[0]?.value || '';
         return {
             statusCode: 409,
-            message: `Ya existe un registro con ese ${field}`
+            type: 'DUPLICATE_ERROR',
+            field: field,
+            message: `Ya existe un registro con ese ${field === 'phone' ? 'teléfono' : field === 'email' ? 'email' : field}: ${value}`
         };
     }
 
@@ -135,11 +146,15 @@ export const errorHandler = (err, req, res, next) => {
     let statusCode = 500;
     let message = 'Ocurrió un error en el servidor. Por favor intente más tarde.';
     let details = null;
+    let type = 'SERVER_ERROR';
+    let field = null;
 
-    // Errores personalizados de la aplicación
-    if (err instanceof AppError) {
-        statusCode = err.statusCode;
+    // Errores personalizados de la aplicación (instancias de AppError o Errores con status manual)
+    if (err instanceof AppError || err.status || err.statusCode) {
+        statusCode = err.status || err.statusCode || 500;
         message = err.message;
+        type = err.type || err.name || 'APP_ERROR';
+        field = err.field || null;
     }
     // Errores de Sequelize
     else if (err.name && err.name.startsWith('Sequelize')) {
@@ -147,27 +162,36 @@ export const errorHandler = (err, req, res, next) => {
         statusCode = sanitized.statusCode;
         message = sanitized.message;
         details = sanitized.details;
+        type = sanitized.type || 'DATABASE_ERROR';
+        field = sanitized.field || null;
     }
     // Errores de JWT
     else if (err.name === 'JsonWebTokenError') {
         statusCode = 401;
         message = 'Token de autenticación inválido';
+        type = 'AUTH_ERROR';
     }
     else if (err.name === 'TokenExpiredError') {
         statusCode = 401;
         message = 'Token de autenticación expirado';
+        type = 'AUTH_ERROR';
     }
     // Errores de sintaxis JSON
     else if (err instanceof SyntaxError && err.status === 400 && 'body' in err) {
         statusCode = 400;
         message = 'JSON inválido en el cuerpo de la solicitud';
+        type = 'PARSE_ERROR';
     }
 
     // Construir respuesta
     const response = {
         success: false,
+        type: type,
         message: message
     };
+
+    if (field) response.field = field;
+    if (details) response.details = details;
 
     // Incluir detalles solo si existen y estamos en desarrollo
     if (details && process.env.NODE_ENV === 'development') {

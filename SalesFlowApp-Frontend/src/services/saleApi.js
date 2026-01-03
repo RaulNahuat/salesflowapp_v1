@@ -25,7 +25,8 @@ const saleApi = {
                 withCredentials: true,
                 timeout: 10000
             });
-            return response.data;
+            // New standard returns { success: true, sales: [] }
+            return response.data.sales || response.data;
         } catch (error) {
             const errorMessage = error.response?.data?.message || error.message || 'Error obteniendo historial de ventas';
             const errorObj = new Error(errorMessage);
@@ -51,7 +52,8 @@ const saleApi = {
             const response = await axios.get(`${API_URL}/sales/receipt-data/${token}`, {
                 timeout: 10000
             });
-            return response.data;
+            // New standard returns { success: true, data: { ... } }
+            return response.data.data || response.data;
         } catch (error) {
             throw error.response?.data || { message: 'Error recuperando recibo' };
         }
@@ -64,7 +66,8 @@ const saleApi = {
                 withCredentials: true,
                 timeout: 10000
             });
-            return response.data;
+            // New standard returns { success: true, receipts: [] }
+            return response.data.receipts || response.data;
         } catch (error) {
             throw error.response?.data || { message: 'Error obteniendo historial de recibos' };
         }
@@ -77,6 +80,8 @@ const saleApi = {
                 withCredentials: true,
                 timeout: 10000
             });
+            // New standard returns { success: true, summary, salesByDay, products, clients, trend }
+            // We return the whole object as it's a composite result
             return response.data;
         } catch (error) {
             throw error.response?.data || { message: 'Error obteniendo reportes' };

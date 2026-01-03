@@ -11,7 +11,8 @@ const userApi = {
     getProfile: async () => {
         try {
             const res = await api.get("/me");
-            return res.data;
+            // New standard: { success: true, user: {...} }
+            return res.data.user || res.data;
         } catch (error) {
             console.error("Error in getProfile:", error);
             throw error;
@@ -20,7 +21,8 @@ const userApi = {
     updateProfile: async (data) => {
         try {
             const res = await api.put("/update", data);
-            return res.data;
+            // New standard: { success: true, user: {...}, message: "..." }
+            return res.data.user || res.data;
         } catch (error) {
             console.error("Error in updateProfile:", error);
             throw error;

@@ -12,12 +12,13 @@ const api = axios.create({
 export const getClients = async () => {
     try {
         const response = await api.get("/");
-        return response.data;
+        // Return .clients if present (new standard), otherwise the whole response (legacy)
+        return response.data.clients || response.data;
     } catch (error) {
         const errorMessage = error.response?.data?.message || error.message || 'Error al obtener clientes';
         const errorObj = new Error(errorMessage);
         errorObj.status = error.response?.status;
-        errorObj.data = error.response?.data; // Preserve full error data for special cases
+        errorObj.data = error.response?.data;
         throw errorObj;
     }
 };
@@ -25,7 +26,8 @@ export const getClients = async () => {
 export const getClient = async (id) => {
     try {
         const response = await api.get(`/${id}`);
-        return response.data;
+        // Return .client if present (new standard), otherwise the whole response (legacy)
+        return response.data.client || response.data;
     } catch (error) {
         const errorMessage = error.response?.data?.message || error.message || 'Error al obtener el cliente';
         const errorObj = new Error(errorMessage);
