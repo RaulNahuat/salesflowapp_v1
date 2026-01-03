@@ -1,100 +1,71 @@
-# Database Migrations - Consolidated
+# Database Schema - User Soft Delete Strategy
 
-## Overview
+## Cómo Funciona
 
-Los índices y restricciones de la base de datos ahora están **consolidados directamente en los modelos de Sequelize** en lugar de estar dispersos en archivos de migración SQL.
+### Problema
+MySQL no soporta índices parciales (con cláusula `WHERE`), por lo que no podemos tener índices únicos que solo apliquen a usuarios activos.
 
-## Cambios Realizados
+### Solución Implementada
+Cuando un usuario elimina su cuenta:
+1. Se hace soft delete (se establece `deletedAt`)
+2. **El email y phone se modifican** agregando un prefijo con timestamp: `deleted_{timestamp}_{original_value}`
+3. Esto libera el email/phone original para que pueda ser usado por un nuevo usuario
 
-### 1. Modelo User.js
-- ✅ Índices únicos para `email` y `phone` definidos en el modelo
-- ✅ Validación de email agregada
-- ✅ Soft delete (paranoid) habilitado
-- ✅ Lógica de validación de duplicados manejada en `authService.js`
+### Ejemplo
+```javascript
+// Usuario original
+email: "juan@example.com"
+phone: "5551234567"
 
-### 2. Estrategia de Soft Delete
+// Después de eliminar la cuenta
+email: "deleted_1704312000000_juan@example.com"
+phone: "deleted_1704312000000_5551234567"
+deletedAt: "2026-01-03 14:00:00"
 
-**Problema Original:** MySQL no soporta índices parciales con cláusula `WHERE` (esa es una característica de PostgreSQL).
+// Ahora "juan@example.com" y "5551234567" están disponibles para re-registro
+```
 
-**Solución Implementada:**
-- Los índices únicos se mantienen en `email` y `phone`
-- La lógica de negocio en `authService.js` verifica duplicados considerando soft-deletes:
-  ```javascript
-  const existingEmail = await db.User.findOne({
-      where: { email },
-      paranoid: false // Include soft-deleted records
-  });
-  if (existingEmail && !existingEmail.deletedAt) {
-      throw new Error("Ya existe una cuenta con este correo electrónico");
-  }
-  ```
+## Archivos Modificados
 
-### 3. Archivos Obsoletos
+### `models/User.js`
+- Agregado hook `beforeDestroy` que modifica email/phone antes de soft delete
+- Índices únicos normales en email y phone
+- `allowNull: true` para email y phone (permiten NULL en usuarios eliminados)
 
-Los siguientes archivos de migración ya NO son necesarios:
-- ❌ `add_partial_unique_indexes.sql` - Sintaxis no compatible con MySQL
-- ❌ `quick_migration.sql` - Sintaxis no compatible con MySQL
-- ❌ `sync_indexes.js` - Ya no necesario, índices en modelo
-- ❌ `mysql_virtual_sync.js` - Ya no necesario
-- ❌ `MIGRATION_GUIDE.md` - Obsoleto
-
-## Cómo Funciona Ahora
-
-### Registro de Usuario
-1. Usuario intenta registrarse con email/phone
-2. `authService.js` verifica si existe un usuario con ese email/phone (incluyendo soft-deleted)
-3. Si existe y NO está eliminado (`deletedAt IS NULL`), rechaza el registro
-4. Si existe pero SÍ está eliminado (`deletedAt IS NOT NULL`), permite el registro
-5. El nuevo usuario se crea con el mismo email/phone
-
-### Eliminación de Cuenta
-1. Usuario elimina su cuenta desde el perfil
-2. Sequelize hace soft delete (establece `deletedAt` a la fecha actual)
-3. El usuario ya no aparece en consultas normales
-4. El email/phone queda disponible para re-registro
+### `services/authService.js`
+- Simplificada la validación de duplicados
+- Ya no necesita buscar usuarios soft-deleted porque tienen emails/phones modificados
 
 ## Sincronización de Base de Datos
 
-Para aplicar los cambios del modelo a la base de datos:
+Para aplicar los cambios:
 
 ```bash
-# Opción 1: Sync automático (solo desarrollo)
 npm run sync-db
-
-# Opción 2: Manual con Sequelize
-node -e "import db from './models/index.js'; await db.sequelize.sync({ alter: true }); process.exit(0);"
 ```
 
-⚠️ **IMPORTANTE:** En producción, los índices ya deberían existir. Si no existen, Sequelize los creará automáticamente en el primer `sync()`.
+Esto creará los índices únicos necesarios.
 
 ## Verificación
 
-Para verificar que los índices están correctamente creados:
-
 ```sql
+-- Ver índices
 SHOW INDEX FROM users;
+
+-- Probar eliminación y re-registro
+-- 1. Crear usuario con email test@example.com
+-- 2. Eliminar cuenta
+-- 3. Verificar que el email fue modificado
+SELECT email, phone, deletedAt FROM users WHERE email LIKE 'deleted_%';
+
+-- 4. Crear nuevo usuario con test@example.com
+-- 5. Debería funcionar sin errores
 ```
 
-Deberías ver:
-- `users_email_unique` en la columna `email`
-- `users_phone_unique` en la columna `phone`
+## Beneficios
 
-## Migración desde Sistema Anterior
-
-Si ya tienes índices parciales creados con los scripts antiguos, necesitas eliminarlos:
-
-```sql
--- Eliminar índices parciales antiguos (si existen)
-DROP INDEX IF EXISTS users_phone_active_unique ON users;
-DROP INDEX IF EXISTS users_email_active_unique ON users;
-
--- Los índices correctos se crearán automáticamente por Sequelize
-```
-
-## Beneficios de Esta Aproximación
-
-1. ✅ **Todo en un lugar:** Definición de esquema consolidada en modelos
-2. ✅ **Compatible con MySQL:** No usa características de PostgreSQL
-3. ✅ **Mantenible:** Cambios de esquema se hacen en el modelo, no en SQL
-4. ✅ **Funcional:** Permite re-registro después de eliminación de cuenta
-5. ✅ **Seguro:** Previene duplicados en usuarios activos
+1. ✅ Compatible con MySQL (no usa características de PostgreSQL)
+2. ✅ Permite re-registro después de eliminación
+3. ✅ Mantiene integridad de datos únicos en usuarios activos
+4. ✅ No requiere lógica compleja en la aplicación
+5. ✅ Los usuarios eliminados mantienen su historial con email/phone modificado

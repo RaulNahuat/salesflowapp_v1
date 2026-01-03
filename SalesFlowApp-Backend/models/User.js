@@ -11,14 +11,14 @@ export default (sequelize, DataTypes) => {
         lastName: { type: DataTypes.STRING },
         email: {
             type: DataTypes.STRING,
-            allowNull: false,
+            allowNull: true, // Allow null for deleted users
             validate: {
                 isEmail: true
             }
         },
         phone: {
             type: DataTypes.STRING,
-            allowNull: false
+            allowNull: true // Allow null for deleted users
         },
         password: { type: DataTypes.STRING }
     }, {
@@ -37,13 +37,14 @@ export default (sequelize, DataTypes) => {
                 name: 'users_phone_unique'
             }
         ]
-        // Note: Uniqueness validation for soft-deleted records is handled in authService.js
-        // by checking paranoid: false to include soft-deleted records in the query
+        // Note: On deletion, email and phone are set to NULL to allow reuse
+        // This is handled by the beforeDestroy hook below
     });
 
     User.prototype.comparePassword = async function (password) {
         return await bcrypt.compare(password, this.password);
     };
+
     const hashPassword = async (user) => {
         if (user.changed('password')) {
             const salt = await bcrypt.genSalt(10);
@@ -51,8 +52,21 @@ export default (sequelize, DataTypes) => {
         }
     };
 
+    // Clear email and phone on soft delete to allow reuse
+    const clearUniqueFields = async (user) => {
+        // Generate unique suffix using timestamp to avoid conflicts
+        const timestamp = Date.now();
+        await user.update({
+            email: `deleted_${timestamp}_${user.email}`,
+            phone: `deleted_${timestamp}_${user.phone}`
+        }, {
+            paranoid: false // Allow update even though we're deleting
+        });
+    };
+
     User.beforeCreate(hashPassword);
     User.beforeUpdate(hashPassword);
+    User.beforeDestroy(clearUniqueFields);
 
     return User;
 };

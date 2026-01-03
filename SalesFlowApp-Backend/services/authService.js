@@ -16,22 +16,20 @@ const register = async (userData) => {
         throw new Error("La contraseña debe incluir al menos una mayúscula, una minúscula, un número y un símbolo especial (@$!%*?&)");
     }
 
-    // Check for duplicate email (excluding soft-deleted users)
+    // Check for duplicate email
     const existingEmail = await db.User.findOne({
-        where: { email },
-        paranoid: false // Include soft-deleted records
+        where: { email }
     });
-    if (existingEmail && !existingEmail.deletedAt) {
+    if (existingEmail) {
         throw new Error("Ya existe una cuenta con este correo electrónico");
     }
 
-    // Check for duplicate phone (only if phone is provided, excluding soft-deleted users)
+    // Check for duplicate phone (only if phone is provided)
     if (phone) {
         const existingPhone = await db.User.findOne({
-            where: { phone },
-            paranoid: false // Include soft-deleted records
+            where: { phone }
         });
-        if (existingPhone && !existingPhone.deletedAt) {
+        if (existingPhone) {
             throw new Error("Ya existe una cuenta con este número de teléfono");
         }
     }
