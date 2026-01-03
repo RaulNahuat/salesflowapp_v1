@@ -1,13 +1,9 @@
-import axios from 'axios';
-
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
+import api from './api';
 
 const saleApi = {
     createSale: async (saleData) => {
         try {
-            const response = await axios.post(`${API_URL}/sales`, saleData, {
-                withCredentials: true
-            });
+            const response = await api.post('/sales', saleData);
             return response.data;
         } catch (error) {
             const errorMessage = error.response?.data?.message || error.message || 'Error procesando la venta';
@@ -20,11 +16,7 @@ const saleApi = {
 
     getSales: async (params = {}) => {
         try {
-            const response = await axios.get(`${API_URL}/sales`, {
-                params,
-                withCredentials: true,
-                timeout: 10000
-            });
+            const response = await api.get('/sales', { params });
             return response.data;
         } catch (error) {
             const errorMessage = error.response?.data?.message || error.message || 'Error obteniendo historial de ventas';
@@ -36,10 +28,7 @@ const saleApi = {
 
     generateReceiptToken: async (data) => {
         try {
-            const response = await axios.post(`${API_URL}/sales/receipt-token`, data, {
-                withCredentials: true,
-                timeout: 10000
-            });
+            const response = await api.post('/sales/receipt-token', data);
             return response.data;
         } catch (error) {
             throw error.response?.data || { message: 'Error generando link' };
@@ -48,9 +37,8 @@ const saleApi = {
 
     getReceiptData: async (token) => {
         try {
-            const response = await axios.get(`${API_URL}/sales/receipt-data/${token}`, {
-                timeout: 10000
-            });
+            // Recibo es público, pero usamos la instancia central por el baseURL
+            const response = await api.get(`/sales/receipt-data/${token}`);
             return response.data;
         } catch (error) {
             throw error.response?.data || { message: 'Error recuperando recibo' };
@@ -59,12 +47,7 @@ const saleApi = {
 
     getReceiptHistory: async (filters = {}) => {
         try {
-            const response = await axios.get(`${API_URL}/sales/receipt-history`, {
-                params: filters,
-                withCredentials: true,
-                timeout: 10000
-            });
-            // Return full object to include stats and receipts
+            const response = await api.get('/sales/receipt-history', { params: filters });
             return response.data;
         } catch (error) {
             throw error.response?.data || { message: 'Error obteniendo historial de recibos' };
@@ -73,13 +56,7 @@ const saleApi = {
 
     getReports: async (params = {}) => {
         try {
-            const response = await axios.get(`${API_URL}/sales/reports`, {
-                params,
-                withCredentials: true,
-                timeout: 10000
-            });
-            // New standard returns { success: true, summary, salesByDay, products, clients, trend }
-            // We return the whole object as it's a composite result
+            const response = await api.get('/sales/reports', { params });
             return response.data;
         } catch (error) {
             throw error.response?.data || { message: 'Error obteniendo reportes' };

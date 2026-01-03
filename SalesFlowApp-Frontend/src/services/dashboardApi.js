@@ -1,15 +1,10 @@
-import axios from "axios";
+import api from './api';
 
-const API_URL = `${import.meta.env.VITE_API_URL}/dashboard`;
-
-const api = axios.create({
-    baseURL: API_URL,
-    withCredentials: true,
-});
+const DASHBOARD_URL = '/dashboard';
 
 export const getStats = async () => {
     try {
-        const response = await api.get("/stats");
+        const response = await api.get(`${DASHBOARD_URL}/stats`);
         return response.data;
     } catch (error) {
         throw error.response?.data || error;

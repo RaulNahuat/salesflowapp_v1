@@ -1,15 +1,9 @@
-import axios from 'axios';
-
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000/api';
+import api from './api';
 
 const businessApi = {
     getBusiness: async () => {
         try {
-            // 🔒 SECURITY: Request con timeout
-            const response = await axios.get(`${API_URL}/business`, {
-                withCredentials: true,
-                timeout: 10000
-            });
+            const response = await api.get('/business');
             return response.data;
         } catch (error) {
             throw error.response?.data || { message: 'Error al conectar con el servidor' };
@@ -18,10 +12,7 @@ const businessApi = {
 
     updateBusiness: async (data) => {
         try {
-            const response = await axios.put(`${API_URL}/business`, data, {
-                withCredentials: true,
-                timeout: 10000
-            });
+            const response = await api.put('/business', data);
             return response.data;
         } catch (error) {
             throw error.response?.data || { message: 'Error al conectar con el servidor' };

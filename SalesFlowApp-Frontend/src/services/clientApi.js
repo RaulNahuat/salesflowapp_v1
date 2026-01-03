@@ -1,17 +1,10 @@
-import axios from "axios";
+import api from './api';
 
-const API_URL = `${import.meta.env.VITE_API_URL}/clients`;
-
-// 🔒 SECURITY: Configuración de API con timeout
-const api = axios.create({
-    baseURL: API_URL,
-    withCredentials: true,
-    timeout: 10000 // 10 segundos
-});
+const CLIENT_URL = '/clients';
 
 export const getClients = async () => {
     try {
-        const response = await api.get("/");
+        const response = await api.get(`${CLIENT_URL}/`);
         // Return .clients if present (new standard), otherwise the whole response (legacy)
         return response.data.clients || response.data;
     } catch (error) {
@@ -25,7 +18,7 @@ export const getClients = async () => {
 
 export const getClient = async (id) => {
     try {
-        const response = await api.get(`/${id}`);
+        const response = await api.get(`${CLIENT_URL}/${id}`);
         // Return .client if present (new standard), otherwise the whole response (legacy)
         return response.data.client || response.data;
     } catch (error) {
@@ -39,7 +32,7 @@ export const getClient = async (id) => {
 
 export const createClient = async (clientData) => {
     try {
-        const response = await api.post("/", clientData);
+        const response = await api.post(`${CLIENT_URL}/`, clientData);
         return response.data;
     } catch (error) {
         const errorMessage = error.response?.data?.message || error.message || 'Error al crear el cliente';
@@ -52,7 +45,7 @@ export const createClient = async (clientData) => {
 
 export const updateClient = async (id, clientData) => {
     try {
-        const response = await api.put(`/${id}`, clientData);
+        const response = await api.put(`${CLIENT_URL}/${id}`, clientData);
         return response.data;
     } catch (error) {
         const errorMessage = error.response?.data?.message || error.message || 'Error al actualizar el cliente';
@@ -65,7 +58,7 @@ export const updateClient = async (id, clientData) => {
 
 export const deleteClient = async (id) => {
     try {
-        const response = await api.delete(`/${id}`);
+        const response = await api.delete(`${CLIENT_URL}/${id}`);
         return response.data;
     } catch (error) {
         const errorMessage = error.response?.data?.message || error.message || 'Error al eliminar el cliente';

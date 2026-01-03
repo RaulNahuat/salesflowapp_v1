@@ -1,18 +1,11 @@
-import axios from "axios";
+import api from './api';
 
-const API_URL = `${import.meta.env.VITE_API_URL}/auth`;
-
-// 🔒 SECURITY: Configuración de API con timeout
-const api = axios.create({
-    baseURL: API_URL,
-    withCredentials: true,
-    timeout: 10000 // 10 segundos
-});
+const AUTH_URL = '/auth';
 
 
 export const register = async (firstName, lastName, email, phone, password, businessName) => {
     try {
-        const response = await api.post("/register", { firstName, lastName, email, phone, password, businessName });
+        const response = await api.post(`${AUTH_URL}/register`, { firstName, lastName, email, phone, password, businessName });
         return response.data;
     } catch (error) {
         throw error.response?.data || error;
@@ -27,7 +20,7 @@ export const register = async (firstName, lastName, email, phone, password, busi
  */
 export const login = async (email, password) => {
     try {
-        const response = await api.post("/login", { email, password });
+        const response = await api.post(`${AUTH_URL}/login`, { email, password });
         return response.data;
     } catch (error) {
         throw error.response?.data || error;
@@ -40,7 +33,7 @@ export const login = async (email, password) => {
  */
 export const logout = async () => {
     try {
-        await api.post('logout');
+        await api.post(`${AUTH_URL}/logout`);
     } catch (error) {
         console.error('Error al cerrar sesión:', error);
     }
@@ -52,7 +45,7 @@ export const logout = async () => {
  */
 export const verifyToken = async () => {
     try {
-        const response = await api.get('/verify');
+        const response = await api.get(`${AUTH_URL}/verify`);
         return response.data;
     } catch (error) {
         throw error.response?.data || error;
@@ -65,7 +58,7 @@ export const verifyToken = async () => {
  */
 export const forgotPassword = async (email) => {
     try {
-        const response = await api.post('/forgot-password', { email });
+        const response = await api.post(`${AUTH_URL}/forgot-password`, { email });
         return response.data;
     } catch (error) {
         throw error.response?.data || error;
@@ -79,7 +72,7 @@ export const forgotPassword = async (email) => {
  */
 export const resetPassword = async (token, password) => {
     try {
-        const response = await api.post(`/reset-password/${token}`, { password });
+        const response = await api.post(`${AUTH_URL}/reset-password/${token}`, { password });
         return response.data;
     } catch (error) {
         throw error.response?.data || error;
