@@ -5,6 +5,15 @@ dotenv.config();
 
 const env = process.env.NODE_ENV || 'development';
 
+// 🔍 DEBUG: Log database configuration (mask password)
+console.log('🔍 Database Configuration:');
+console.log(`   Environment: ${env}`);
+console.log(`   Host: ${process.env.DB_HOST || 'NOT SET'}`);
+console.log(`   Port: ${process.env.DB_PORT || 'NOT SET'}`);
+console.log(`   Database: ${process.env.DB_DATABASE || 'NOT SET'}`);
+console.log(`   Username: ${process.env.DB_USERNAME || 'NOT SET'}`);
+console.log(`   Password: ${process.env.DB_PASSWORD ? '***' + process.env.DB_PASSWORD.slice(-4) : 'NOT SET'}`);
+
 // ✅ POOL CONFIG: Ajustado para Aiven Free Tier (1GB RAM)
 // Evitamos saturar la memoria y las conexiones permitidas por Aiven.
 const poolConfig = {
@@ -61,18 +70,29 @@ const sequelize = new Sequelize(
     }
 );
 
-export const testConnection = async () => {
-    try {
-        await sequelize.authenticate();
-        console.log("✅ Conexión a Aiven MySQL establecida correctamente.");
+export const testConnection = async (retries = 5, delay = 5000) => {
+    for (let attempt = 1; attempt <= retries; attempt++) {
+        try {
+            await sequelize.authenticate();
+            console.log("✅ Conexión a Aiven MySQL establecida correctamente.");
 
-        if (env === 'development') {
-            const pool = sequelize.connectionManager.pool;
-            // console.log(`📊 Pool Stats - Max: ${pool.max}, Size: ${pool.size}, Available: ${pool.available}`);
+            if (env === 'development') {
+                const pool = sequelize.connectionManager.pool;
+                // console.log(`📊 Pool Stats - Max: ${pool.max}, Size: ${pool.size}, Available: ${pool.available}`);
+            }
+            return; // Conexión exitosa, salir
+        } catch (error) {
+            console.error(`❌ Error de conexión (intento ${attempt}/${retries}):`, error.message);
+
+            if (attempt < retries) {
+                const waitTime = delay * attempt; // Exponential backoff
+                console.log(`⏳ Reintentando en ${waitTime / 1000} segundos...`);
+                await new Promise(resolve => setTimeout(resolve, waitTime));
+            } else {
+                console.error('❌ No se pudo establecer conexión con la base de datos después de múltiples intentos.');
+                throw error;
+            }
         }
-    } catch (error) {
-        console.error("❌ Error de conexión:", error.message);
-        throw error;
     }
 }
 
