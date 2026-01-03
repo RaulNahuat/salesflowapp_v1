@@ -8,24 +8,31 @@ export const createClient = async (req, res) => {
         const { firstName, lastName, email, phone, address, notes, status } = req.body;
         const businessId = req.businessId;
 
-        if (!firstName) {
+        // Validate required fields
+        if (!firstName || firstName.trim() === '') {
             return res.status(400).json({
-                message: "El nombre es obligatorio"
+                success: false,
+                field: 'firstName',
+                message: "El nombre del cliente es obligatorio"
             });
         }
 
-        // Check if phone already exists for this business
-        if (phone) {
+        // Check if phone already exists for this business (only active clients)
+        if (phone && phone.trim() !== '') {
             const existingClient = await Client.findOne({
                 where: {
                     phone: phone,
                     BusinessId: businessId
                 }
+                // paranoid: true is default, excludes soft-deleted clients
             });
 
             if (existingClient) {
                 return res.status(409).json({
-                    message: `Ya existe un cliente con el teléfono ${phone}`,
+                    success: false,
+                    field: 'phone',
+                    message: `Ya existe un cliente activo con el teléfono ${phone}`,
+                    details: `El cliente ${existingClient.firstName} ${existingClient.lastName || ''} ya tiene este número registrado`,
                     existingClient: {
                         id: existingClient.id,
                         firstName: existingClient.firstName,
@@ -48,10 +55,30 @@ export const createClient = async (req, res) => {
             createdById: req.user.userId // Track who created the client
         });
 
-        res.status(201).json(client);
+        res.status(201).json({
+            success: true,
+            message: "Cliente creado exitosamente",
+            client
+        });
     } catch (error) {
+        console.error('Error creating client:', error);
+
+        // Handle Sequelize validation errors
+        if (error.name === 'SequelizeValidationError') {
+            const validationErrors = error.errors.map(err => ({
+                field: err.path,
+                message: err.message
+            }));
+            return res.status(400).json({
+                success: false,
+                message: "Error de validación",
+                errors: validationErrors
+            });
+        }
+
         res.status(500).json({
-            message: error.message || "Error al crear el cliente"
+            success: false,
+            message: error.message || "Error al crear el cliente. Por favor intenta nuevamente."
         });
     }
 };
@@ -119,19 +146,23 @@ export const updateClient = async (req, res) => {
     try {
         const { phone } = req.body;
 
-        // Check if phone already exists for another client in this business
-        if (phone) {
+        // Check if phone already exists for another active client in this business
+        if (phone && phone.trim() !== '') {
             const existingClient = await Client.findOne({
                 where: {
                     phone: phone,
                     BusinessId: businessId,
                     id: { [db.Sequelize.Op.ne]: id } // Exclude current client
                 }
+                // paranoid: true is default, excludes soft-deleted clients
             });
 
             if (existingClient) {
                 return res.status(409).json({
-                    message: `Ya existe otro cliente con el teléfono ${phone}`,
+                    success: false,
+                    field: 'phone',
+                    message: `Ya existe otro cliente activo con el teléfono ${phone}`,
+                    details: `El cliente ${existingClient.firstName} ${existingClient.lastName || ''} ya tiene este número registrado`,
                     existingClient: {
                         id: existingClient.id,
                         firstName: existingClient.firstName,
@@ -148,16 +179,34 @@ export const updateClient = async (req, res) => {
 
         if (num == 1) {
             res.json({
-                message: "Cliente actualizado correctamente."
+                success: true,
+                message: "Cliente actualizado correctamente"
             });
         } else {
-            res.json({
-                message: `No se puede actualizar id=${id}.`
+            res.status(404).json({
+                success: false,
+                message: "No se encontró el cliente o no tienes permisos para actualizarlo"
             });
         }
     } catch (error) {
+        console.error('Error updating client:', error);
+
+        // Handle Sequelize validation errors
+        if (error.name === 'SequelizeValidationError') {
+            const validationErrors = error.errors.map(err => ({
+                field: err.path,
+                message: err.message
+            }));
+            return res.status(400).json({
+                success: false,
+                message: "Error de validación",
+                errors: validationErrors
+            });
+        }
+
         res.status(500).json({
-            message: "Error actualizando cliente"
+            success: false,
+            message: error.message || "Error al actualizar el cliente. Por favor intenta nuevamente."
         });
     }
 };
@@ -174,16 +223,20 @@ export const deleteClient = async (req, res) => {
 
         if (num == 1) {
             res.json({
-                message: "Cliente eliminado correctamente!"
+                success: true,
+                message: "Cliente eliminado correctamente"
             });
         } else {
-            res.json({
-                message: `No se puede eliminar id=${id}.`
+            res.status(404).json({
+                success: false,
+                message: "No se encontró el cliente o no tienes permisos para eliminarlo"
             });
         }
     } catch (error) {
+        console.error('Error deleting client:', error);
         res.status(500).json({
-            message: "No se pudo eliminar el cliente"
+            success: false,
+            message: "No se pudo eliminar el cliente. Por favor intenta nuevamente."
         });
     }
 };

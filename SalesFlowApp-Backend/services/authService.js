@@ -22,7 +22,9 @@ const register = async (userData) => {
         // paranoid: true is default, so this only finds active users
     });
     if (existingEmail) {
-        throw new Error("Ya existe una cuenta con este correo electrónico");
+        const error = new Error("Ya existe una cuenta activa con este correo electrónico");
+        error.field = 'email';
+        throw error;
     }
 
     // Check for duplicate phone (only among active users)
@@ -32,7 +34,9 @@ const register = async (userData) => {
             // paranoid: true is default, so this only finds active users
         });
         if (existingPhone) {
-            throw new Error("Ya existe una cuenta con este número de teléfono");
+            const error = new Error("Ya existe una cuenta activa con este número de teléfono");
+            error.field = 'phone';
+            throw error;
         }
     }
 

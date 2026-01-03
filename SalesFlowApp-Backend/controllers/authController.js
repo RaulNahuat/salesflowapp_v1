@@ -29,6 +29,7 @@ const register = async (req, res) => {
         // Determine status code based on error type
         let statusCode = 400;
         let errorMessage = error.message;
+        let field = error.field || null;
 
         // Check for duplicate/conflict errors
         if (error.message.includes("Ya existe una cuenta")) {
@@ -38,12 +39,19 @@ const register = async (req, res) => {
         // Extract specific Sequelize validation message if available
         if (error.errors && error.errors.length > 0) {
             errorMessage = error.errors[0].message;
+            field = error.errors[0].path;
         }
 
-        res.status(statusCode).json({
+        const response = {
             success: false,
             message: errorMessage
-        });
+        };
+
+        if (field) {
+            response.field = field;
+        }
+
+        res.status(statusCode).json(response);
     }
 };
 
