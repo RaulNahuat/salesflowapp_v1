@@ -5,15 +5,6 @@ dotenv.config();
 
 const env = process.env.NODE_ENV || 'development';
 
-// 🔍 DEBUG: Log database configuration (mask password)
-console.log('🔍 Database Configuration:');
-console.log(`   Environment: ${env}`);
-console.log(`   Host: ${process.env.DB_HOST || 'NOT SET'}`);
-console.log(`   Port: ${process.env.DB_PORT || 'NOT SET'}`);
-console.log(`   Database: ${process.env.DB_DATABASE || 'NOT SET'}`);
-console.log(`   Username: ${process.env.DB_USERNAME || 'NOT SET'}`);
-console.log(`   Password: ${process.env.DB_PASSWORD ? '***' + process.env.DB_PASSWORD.slice(-4) : 'NOT SET'}`);
-
 // ✅ POOL CONFIG: Ajustado para Aiven Free Tier (1GB RAM)
 // Evitamos saturar la memoria y las conexiones permitidas por Aiven.
 const poolConfig = {

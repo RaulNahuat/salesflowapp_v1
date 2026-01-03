@@ -11,23 +11,34 @@ export default (sequelize, DataTypes) => {
         lastName: { type: DataTypes.STRING },
         email: {
             type: DataTypes.STRING,
-            // Uniqueness enforced by partial index at database level (users_email_active_unique)
-            // Allows email reuse after account deletion (soft delete)
+            allowNull: false,
+            validate: {
+                isEmail: true
+            }
         },
         phone: {
             type: DataTypes.STRING,
-            allowNull: false,
-            // Uniqueness enforced by partial index at database level (users_phone_active_unique)
-            // Allows phone reuse after account deletion (soft delete)
+            allowNull: false
         },
         password: { type: DataTypes.STRING }
     }, {
         tableName: 'users',
         timestamps: true,
-        paranoid: true
-        // Note: Partial uniqueness for phone/email is handled at the DB level 
-        // using virtual columns and unique indexes (see migrations/quick_migration.sql)
-        // to ensure compatibility with MySQL 5.7+ / 8.0
+        paranoid: true, // Enables soft delete (deletedAt column)
+        indexes: [
+            {
+                unique: true,
+                fields: ['email'],
+                name: 'users_email_unique'
+            },
+            {
+                unique: true,
+                fields: ['phone'],
+                name: 'users_phone_unique'
+            }
+        ]
+        // Note: Uniqueness validation for soft-deleted records is handled in authService.js
+        // by checking paranoid: false to include soft-deleted records in the query
     });
 
     User.prototype.comparePassword = async function (password) {
