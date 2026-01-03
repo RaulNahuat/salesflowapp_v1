@@ -1,0 +1,47 @@
+{
+  "totalSales": 2,
+  "salesWithToken": 2,
+  "totalTokens": 2,
+  "lastSales": [
+    {
+      "id": "e9f0fec1-bd60-4a31-8699-44eada1ae3f3",
+      "total": "112.00",
+      "receiptTokenId": "5f6e6218-3121-4faa-89ba-3a626ae71efd",
+      "BusinessId": "46202308-0147-47ee-9c7c-ba4e25360eee",
+      "createdAt": "2026-01-03T22:41:34.000Z"
+    },
+    {
+      "id": "d68003d4-f102-4aa9-9512-60735598251a",
+      "total": "280.00",
+      "receiptTokenId": "24e6dd92-e2e1-48bc-9caf-d8c08e066504",
+      "BusinessId": "46202308-0147-47ee-9c7c-ba4e25360eee",
+      "createdAt": "2026-01-03T22:31:59.000Z"
+    }
+  ],
+  "lastTokens": [
+    {
+      "id": "5f6e6218-3121-4faa-89ba-3a626ae71efd",
+      "parameters": {
+        "total": 112,
+        "saleId": "e9f0fec1-bd60-4a31-8699-44eada1ae3f3",
+        "businessId": "46202308-0147-47ee-9c7c-ba4e25360eee",
+        "clientName": "Cliente Casual"
+      },
+      "expiresAt": "2026-02-02T22:41:35.000Z",
+      "viewCount": 0,
+      "lastViewedAt": null
+    },
+    {
+      "id": "24e6dd92-e2e1-48bc-9caf-d8c08e066504",
+      "parameters": {
+        "total": 280,
+        "saleId": "d68003d4-f102-4aa9-9512-60735598251a",
+        "businessId": "46202308-0147-47ee-9c7c-ba4e25360eee",
+        "clientName": "Jose cafe"
+      },
+      "expiresAt": "2026-02-02T22:31:59.000Z",
+      "viewCount": 2,
+      "lastViewedAt": "2026-01-03T22:36:37.000Z"
+    }
+  ]
+}

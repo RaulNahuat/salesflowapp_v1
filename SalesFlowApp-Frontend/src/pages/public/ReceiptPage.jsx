@@ -19,7 +19,7 @@ const ReceiptPage = () => {
         const fetchData = async () => {
             try {
                 const result = await saleApi.getReceiptData(token);
-                setData(result);
+                setData(result.data);
             } catch (err) {
                 setError(err.message || 'Error al cargar el recibo');
             } finally {

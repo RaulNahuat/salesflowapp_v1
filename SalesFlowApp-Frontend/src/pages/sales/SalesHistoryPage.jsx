@@ -35,7 +35,7 @@ const SalesHistoryPage = () => {
                     saleApi.getSales({ limit: 100 }),
                     businessApi.getBusiness()
                 ]);
-                setSales(salesData);
+                setSales(salesData.sales || []);
                 setBusinessSlug(businessData.slug || '');
                 setBusinessName(businessData.name || 'SalesFlow');
             } catch (error) {

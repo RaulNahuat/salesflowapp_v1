@@ -44,7 +44,7 @@ const Dashboard = () => {
                     raffles: statsData.raffleCount || 0,
                     clients: statsData.clientCount || 0
                 });
-                setRecentSales(salesData);
+                setRecentSales(salesData.sales || []);
             } catch (error) {
                 console.error("Error loading dashboard stats", error);
             } finally {

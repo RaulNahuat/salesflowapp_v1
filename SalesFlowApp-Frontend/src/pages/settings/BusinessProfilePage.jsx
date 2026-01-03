@@ -322,9 +322,27 @@ const BusinessProfilePage = () => {
                     <div className="w-full h-px bg-slate-50"></div>
 
                     <section>
-                        <h3 className="text-[10px] font-bold text-emerald-600 uppercase tracking-[0.3em] mb-8 flex items-center gap-3">
-                            <div className="w-1.5 h-1.5 rounded-full bg-emerald-600"></div> Días de Operación Especial (Live)
-                        </h3>
+                        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8">
+                            <h3 className="text-[10px] font-bold text-blue-600 uppercase tracking-[0.3em] flex items-center gap-3">
+                                <div className="w-1.5 h-1.5 rounded-full bg-blue-600"></div> Días de Operación Especial (Live)
+                            </h3>
+                            <div className="flex items-center gap-2">
+                                <button
+                                    type="button"
+                                    onClick={() => setBusiness(prev => ({ ...prev, liveDays: [0, 1, 2, 3, 4, 5, 6] }))}
+                                    className="px-3 py-1.5 rounded-lg bg-slate-50 text-[9px] font-bold text-slate-500 uppercase tracking-widest hover:bg-blue-50 hover:text-blue-600 transition-colors"
+                                >
+                                    Todos
+                                </button>
+                                <button
+                                    type="button"
+                                    onClick={() => setBusiness(prev => ({ ...prev, liveDays: [] }))}
+                                    className="px-3 py-1.5 rounded-lg bg-slate-50 text-[9px] font-bold text-slate-500 uppercase tracking-widest hover:bg-rose-50 hover:text-rose-600 transition-colors"
+                                >
+                                    Limpiar
+                                </button>
+                            </div>
+                        </div>
                         <div className="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-7 gap-3">
                             {[
                                 { val: 0, l: 'Dom' },
@@ -334,22 +352,35 @@ const BusinessProfilePage = () => {
                                 { val: 4, l: 'Jue' },
                                 { val: 5, l: 'Vie' },
                                 { val: 6, l: 'Sáb' }
-                            ].map(day => (
-                                <button
-                                    key={day.val}
-                                    type="button"
-                                    onClick={() => handleLiveDayToggle(day.val)}
-                                    className={`h-14 rounded-2xl flex flex-col items-center justify-center transition-all border ${(business.liveDays || []).includes(day.val)
-                                        ? 'bg-emerald-600 border-emerald-500 text-white shadow-lg shadow-emerald-100'
-                                        : 'bg-white border-slate-100 text-slate-400 hover:border-emerald-200 hover:text-emerald-500'
-                                        }`}
-                                >
-                                    <FaCalendarCheck size={14} className="mb-1" />
-                                    <span className="text-[9px] font-bold uppercase tracking-widest leading-none">{day.l}</span>
-                                </button>
-                            ))}
+                            ].map(day => {
+                                const isSelected = (business.liveDays || []).includes(day.val);
+                                return (
+                                    <button
+                                        key={day.val}
+                                        type="button"
+                                        onClick={() => handleLiveDayToggle(day.val)}
+                                        className={`h-16 rounded-2xl flex flex-col items-center justify-center transition-all duration-300 border-2 ${isSelected
+                                            ? 'bg-blue-600 border-blue-500 text-white shadow-lg shadow-blue-500/20 scale-[1.02]'
+                                            : 'bg-white border-slate-100 text-slate-300 hover:border-blue-100 hover:text-blue-400'
+                                            }`}
+                                    >
+                                        <div className={`mb-1 transition-transform duration-300 ${isSelected ? 'scale-110' : 'scale-100'}`}>
+                                            {isSelected ? <FaCalendarCheck size={16} /> : <FaCalendarCheck size={14} className="opacity-30" />}
+                                        </div>
+                                        <span className={`text-[10px] font-black uppercase tracking-[0.1em] leading-none ${isSelected ? 'opacity-100' : 'opacity-60'}`}>{day.l}</span>
+                                    </button>
+                                );
+                            })}
                         </div>
-                        <p className="text-[10px] font-bold text-slate-400 mt-4 italic">Selecciona los días en los que realizas dinámicas de venta en vivo para segmentar tus reportes.</p>
+                        <div className="mt-6 p-4 rounded-2xl bg-slate-50/50 border border-slate-100 flex items-start gap-3">
+                            <div className="w-5 h-5 rounded-full bg-blue-100 flex items-center justify-center flex-shrink-0 mt-0.5">
+                                <FaCalendarCheck size={10} className="text-blue-600" />
+                            </div>
+                            <p className="text-[10px] font-bold text-slate-500 leading-relaxed italic">
+                                Selecciona los días en los que realizas dinámicas de venta en vivo. <br />
+                                <span className="text-slate-400 font-medium">Esto nos permite segmentar tus reportes y darte estadísticas más precisas sobre tus eventos especiales.</span>
+                            </p>
+                        </div>
                     </section>
 
                     <div className="w-full h-px bg-slate-50"></div>
