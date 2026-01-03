@@ -89,17 +89,6 @@ export const createClient = async (req, res) => {
             });
         }
 
-        // Handle unique constraint violations
-        if (error.name === 'SequelizeUniqueConstraintError') {
-            const field = error.errors[0]?.path || 'unknown';
-            const value = error.errors[0]?.value || '';
-            return res.status(409).json({
-                success: false,
-                field: field,
-                message: `Ya existe un cliente con ${field === 'phone' ? 'el teléfono' : field === 'email' ? 'el email' : 'este'} ${value}`
-            });
-        }
-
         res.status(500).json({
             success: false,
             message: error.message || "Error al crear el cliente. Por favor intenta nuevamente."
