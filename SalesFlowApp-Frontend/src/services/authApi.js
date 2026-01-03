@@ -58,3 +58,30 @@ export const verifyToken = async () => {
         throw error.response?.data || error;
     }
 };
+
+/**
+ * Request password reset instructions
+ * @param {string} email 
+ */
+export const forgotPassword = async (email) => {
+    try {
+        const response = await api.post('/forgot-password', { email });
+        return response.data;
+    } catch (error) {
+        throw error.response?.data || error;
+    }
+};
+
+/**
+ * Set new password using token
+ * @param {string} token 
+ * @param {string} password 
+ */
+export const resetPassword = async (token, password) => {
+    try {
+        const response = await api.post(`/reset-password/${token}`, { password });
+        return response.data;
+    } catch (error) {
+        throw error.response?.data || error;
+    }
+};

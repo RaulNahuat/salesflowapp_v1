@@ -81,9 +81,9 @@ const LoginForm = () => {
                             <label className="text-[11px] font-black uppercase tracking-[0.15em] text-slate-400" htmlFor="password">
                                 Contraseña
                             </label>
-                            <a href="#" className="text-[10px] font-bold text-blue-500 hover:text-blue-600 hover:underline tracking-tight">
+                            <Link to="/forgot-password" className="text-[10px] font-bold text-blue-500 hover:text-blue-600 hover:underline tracking-tight">
                                 Olvidé mi clave
-                            </a>
+                            </Link>
                         </div>
                         <div className="relative">
                             <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">

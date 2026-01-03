@@ -20,7 +20,15 @@ export default (sequelize, DataTypes) => {
             type: DataTypes.STRING,
             allowNull: false
         },
-        password: { type: DataTypes.STRING }
+        password: { type: DataTypes.STRING },
+        resetPasswordToken: {
+            type: DataTypes.STRING,
+            allowNull: true
+        },
+        resetPasswordExpires: {
+            type: DataTypes.DATE,
+            allowNull: true
+        }
     }, {
         tableName: 'users',
         timestamps: true,

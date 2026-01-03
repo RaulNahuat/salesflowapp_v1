@@ -26,6 +26,8 @@ import ReceiptPage from '../pages/public/ReceiptPage';
 import ReceiptHistoryPage from '../pages/ReceiptHistoryPage';
 import ReportsPage from '../pages/ReportsPage';
 import ProfilePage from '../pages/settings/ProfilePage';
+import ForgotPasswordPage from '../pages/auth/ForgotPasswordPage';
+import ResetPasswordPage from '../pages/auth/ResetPasswordPage';
 
 const ProtectedLayout = ({ children }) => {
     return (
@@ -57,6 +59,8 @@ const AppRouter = () => {
                 {/* Rutas Públicas */}
                 <Route path="/login" element={<PublicRoute><LoginForm /></PublicRoute>} />
                 <Route path="/register" element={<PublicRoute><RegisterForm /></PublicRoute>} />
+                <Route path="/forgot-password" element={<PublicRoute><ForgotPasswordPage /></PublicRoute>} />
+                <Route path="/reset-password/:token" element={<PublicRoute><ResetPasswordPage /></PublicRoute>} />
                 {/* Support both generic and branded URLs */}
                 <Route path="/r/:token" element={<ReceiptPage />} />
                 <Route path="/:slug/r/:token" element={<ReceiptPage />} />
