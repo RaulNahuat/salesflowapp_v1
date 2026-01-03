@@ -6,8 +6,14 @@ import crypto from "crypto";
 const register = async (userData) => {
     const { firstName, lastName, email, phone, password, businessName } = userData;
 
+    // 🔒 SECURITY: Validación de complejidad de contraseña
     if (!password || password.length < 8) {
         throw new Error("La contraseña debe tener al menos 8 caracteres");
+    }
+
+    const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/;
+    if (!passwordRegex.test(password)) {
+        throw new Error("La contraseña debe incluir al menos una mayúscula, una minúscula, un número y un símbolo especial (@$!%*?&)");
     }
 
     // Check for duplicate email (excluding soft-deleted users)

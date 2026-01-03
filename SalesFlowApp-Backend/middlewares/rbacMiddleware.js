@@ -13,6 +13,8 @@
  *   router.delete('/products/:id', protect, authorize(['owner', 'admin']), deleteProduct);
  */
 
+import { logAccessDenied } from '../utils/securityLogger.js';
+
 /**
  * Mapeo de permisos RBAC a permisos de empleado
  * Traduce los permisos del sistema RBAC a las claves de permisos personalizados de empleados
@@ -93,6 +95,14 @@ export const authorize = (allowedRoles = [], permissionKey = null) => {
                 return next();
             }
         }
+
+        // 🔒 SECURITY: Loguear acceso denegado
+        logAccessDenied(
+            req.user.userId,
+            req.originalUrl,
+            req.method,
+            req.ip
+        );
 
         // Acceso denegado
         return res.status(403).json({

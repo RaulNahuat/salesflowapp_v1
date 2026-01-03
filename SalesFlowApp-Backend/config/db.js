@@ -45,7 +45,7 @@ const sequelize = new Sequelize(
             }
         },
 
-        logging: console.log, // Temporalmente habilitado para Debug
+        // 🔒 SECURITY: Deshabilitar logging SQL en producción\n        logging: process.env.NODE_ENV === 'development' ? console.log : false,
         pool: poolConfig[env],
 
         retry: {

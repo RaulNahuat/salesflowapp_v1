@@ -83,10 +83,22 @@ export const createSale = async (req, res) => {
             });
         }
 
-        // Validate Total (Allow 0.5 difference for rounding issues)
+        // 🔒 SECURITY: Validate Total (Allow only 0.01 difference for rounding)
         const submittedTotal = parseFloat(total);
-        if (Math.abs(submittedTotal - calculatedTotal) > 0.50) {
-            throw new Error(`Discrepancia de precios detectada.Total Frontend: ${submittedTotal}, Total Real: ${calculatedTotal} `);
+        const tolerance = 0.01; // Reducido de 0.50 a 0.01 para mayor seguridad
+
+        if (Math.abs(submittedTotal - calculatedTotal) > tolerance) {
+            // Loguear discrepancia para auditoría de seguridad
+            console.warn('⚠️ SECURITY: Discrepancia de precio detectada:', {
+                submittedTotal,
+                calculatedTotal,
+                difference: Math.abs(submittedTotal - calculatedTotal),
+                businessId,
+                userId: req.user.userId,
+                timestamp: new Date().toISOString()
+            });
+
+            throw new Error(`Discrepancia de precios detectada. Total Frontend: ${submittedTotal}, Total Real: ${calculatedTotal}`);
         }
 
         // 2. Create Sale Record with Verified Total

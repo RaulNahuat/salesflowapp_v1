@@ -22,7 +22,8 @@ const saleApi = {
         try {
             const response = await axios.get(`${API_URL}/sales`, {
                 params,
-                withCredentials: true
+                withCredentials: true,
+                timeout: 10000
             });
             return response.data;
         } catch (error) {
@@ -35,7 +36,10 @@ const saleApi = {
 
     generateReceiptToken: async (data) => {
         try {
-            const response = await axios.post(`${API_URL}/sales/receipt-token`, data, { withCredentials: true });
+            const response = await axios.post(`${API_URL}/sales/receipt-token`, data, {
+                withCredentials: true,
+                timeout: 10000
+            });
             return response.data;
         } catch (error) {
             throw error.response?.data || { message: 'Error generando link' };
@@ -44,7 +48,9 @@ const saleApi = {
 
     getReceiptData: async (token) => {
         try {
-            const response = await axios.get(`${API_URL}/sales/receipt-data/${token}`);
+            const response = await axios.get(`${API_URL}/sales/receipt-data/${token}`, {
+                timeout: 10000
+            });
             return response.data;
         } catch (error) {
             throw error.response?.data || { message: 'Error recuperando recibo' };
@@ -55,7 +61,8 @@ const saleApi = {
         try {
             const response = await axios.get(`${API_URL}/sales/receipt-history`, {
                 params: filters,
-                withCredentials: true
+                withCredentials: true,
+                timeout: 10000
             });
             return response.data;
         } catch (error) {
@@ -67,7 +74,8 @@ const saleApi = {
         try {
             const response = await axios.get(`${API_URL}/sales/reports`, {
                 params,
-                withCredentials: true
+                withCredentials: true,
+                timeout: 10000
             });
             return response.data;
         } catch (error) {

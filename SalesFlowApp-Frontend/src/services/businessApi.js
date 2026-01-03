@@ -5,8 +5,10 @@ const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000/api';
 const businessApi = {
     getBusiness: async () => {
         try {
+            // 🔒 SECURITY: Request con timeout
             const response = await axios.get(`${API_URL}/business`, {
-                withCredentials: true
+                withCredentials: true,
+                timeout: 10000
             });
             return response.data;
         } catch (error) {
@@ -17,7 +19,8 @@ const businessApi = {
     updateBusiness: async (data) => {
         try {
             const response = await axios.put(`${API_URL}/business`, data, {
-                withCredentials: true
+                withCredentials: true,
+                timeout: 10000
             });
             return response.data;
         } catch (error) {

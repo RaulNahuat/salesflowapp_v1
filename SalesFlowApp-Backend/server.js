@@ -14,6 +14,14 @@ import cors from 'cors';
 import { errorHandler, notFoundHandler } from './middlewares/errorHandler.js';
 
 dotenv.config();
+
+// 🔒 SECURITY: Validar JWT_SECRET al inicio
+if (!process.env.JWT_SECRET || process.env.JWT_SECRET.length < 32) {
+    console.error('❌ ERROR CRÍTICO: JWT_SECRET debe tener al menos 32 caracteres');
+    console.error('Genera un secreto fuerte con: node -e "console.log(require(\'crypto\').randomBytes(64).toString(\'hex\'))"');
+    process.exit(1);
+}
+
 const PORT = process.env.PORT || 3000;
 
 const app = express();
@@ -22,9 +30,16 @@ app.set('trust proxy', 1);
 const frontendUrl = process.env.FRONTEND_URL ? process.env.FRONTEND_URL.replace(/\/$/, '') : null;
 const allowedOrigins = [frontendUrl, 'http://localhost:5173', 'http://127.0.0.1:5173'].filter(Boolean);
 
+// 🔒 SECURITY: CORS configurado con validación estricta
 const corsOptions = {
     origin: function (origin, callback) {
-        // Allow requests with no origin (like mobile apps or curl requests)
+        // 🔒 SECURITY: En producción, rechazar requests sin origin header
+        if (!origin && process.env.NODE_ENV === 'production') {
+            console.warn('⚠️ SECURITY: Request sin Origin header rechazado en producción');
+            return callback(new Error('Origin header required in production'));
+        }
+
+        // Permitir requests sin origin solo en desarrollo (curl, Postman)
         if (!origin) return callback(null, true);
 
         const isAllowed = allowedOrigins.includes(origin);
@@ -34,7 +49,7 @@ const corsOptions = {
             return callback(null, true);
         }
 
-        console.warn(`⚠️  Bloqueado por CORS: El origen '${origin}' no está en la lista permitida.`);
+        console.warn(`⚠️ SECURITY: Bloqueado por CORS: El origen '${origin}' no está en la lista permitida.`);
         return callback(new Error('Not allowed by CORS'));
     },
     credentials: true,
@@ -46,11 +61,41 @@ const corsOptions = {
 app.use(cors(corsOptions));
 app.use(express.json());
 app.use(cookieParser());
-app.use(helmet());
+// 🔒 SECURITY: Helmet con CSP y configuraciones avanzadas
+app.use(helmet({
+    contentSecurityPolicy: {
+        directives: {
+            defaultSrc: ["'self'"],
+            scriptSrc: ["'self'"],
+            styleSrc: ["'self'", "'unsafe-inline'"],
+            imgSrc: ["'self'", "data:", "https:"],
+            connectSrc: ["'self'", process.env.FRONTEND_URL || 'http://localhost:5173'],
+            fontSrc: ["'self'"],
+            objectSrc: ["'none'"],
+            upgradeInsecureRequests: process.env.NODE_ENV === 'production' ? [] : null
+        }
+    },
+    hsts: {
+        maxAge: 31536000,
+        includeSubDomains: true,
+        preload: true
+    },
+    referrerPolicy: { policy: 'same-origin' }
+}));
 
+// 🔒 SECURITY: Rate limiter específico para autenticación (más estricto)
+const authLimiter = rateLimit({
+    windowMs: 15 * 60 * 1000,
+    max: 5,
+    message: 'Demasiados intentos de inicio de sesión. Por favor intente más tarde.',
+    standardHeaders: true,
+    legacyHeaders: false,
+});
+
+// 🔒 SECURITY: Rate limiter general (reducido para mejor seguridad)
 const limiter = rateLimit({
     windowMs: 15 * 60 * 1000,
-    max: 1000, // Increased from 100 to 1000 to prevent issues with frequent reloads/SPA polling
+    max: 100, // Reducido de 1000 a 100 para prevenir abuso
     message: 'Demasiadas solicitudes desde esta IP, por favor inténtalo de nuevo después de 15 minutos',
     standardHeaders: true,
     legacyHeaders: false,
@@ -66,6 +111,10 @@ app.use(express.static('public'));
 app.get('/', (req, res) => {
     res.send('<h1> Bienvenido a la API de SalesFlowApp</h1>');
 });
+
+// Aplicar rate limiter estricto a rutas de autenticación
+app.use('/api/auth/login', authLimiter);
+app.use('/api/auth/register', authLimiter);
 
 app.use('/api/auth', authRoutes);
 

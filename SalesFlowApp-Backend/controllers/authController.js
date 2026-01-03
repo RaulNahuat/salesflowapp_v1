@@ -1,4 +1,5 @@
 import authService from "../services/authService.js";
+import { logAuthFailure, logAuthSuccess } from '../utils/securityLogger.js';
 
 const register = async (req, res) => {
     try {
@@ -74,7 +75,13 @@ const login = async (req, res) => {
                 businessName: user.businessName
             }
         });
+
+        // 🔒 SECURITY: Loguear autenticación exitosa
+        logAuthSuccess(user.id, user.email, req.ip);
     } catch (error) {
+        // 🔒 SECURITY: Loguear intento fallido
+        logAuthFailure(req.body.email || 'unknown', req.ip, error.message);
+
         res.status(401).json({
             success: false,
             message: error.message
