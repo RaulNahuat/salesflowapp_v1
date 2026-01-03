@@ -11,34 +11,23 @@ export default (sequelize, DataTypes) => {
         lastName: { type: DataTypes.STRING },
         email: {
             type: DataTypes.STRING,
-            allowNull: true, // Allow null for deleted users
+            allowNull: false,
             validate: {
                 isEmail: true
             }
         },
         phone: {
             type: DataTypes.STRING,
-            allowNull: true // Allow null for deleted users
+            allowNull: false
         },
         password: { type: DataTypes.STRING }
     }, {
         tableName: 'users',
         timestamps: true,
-        paranoid: true, // Enables soft delete (deletedAt column)
-        indexes: [
-            {
-                unique: true,
-                fields: ['email'],
-                name: 'users_email_unique'
-            },
-            {
-                unique: true,
-                fields: ['phone'],
-                name: 'users_phone_unique'
-            }
-        ]
-        // Note: On deletion, email and phone are set to NULL to allow reuse
-        // This is handled by the beforeDestroy hook below
+        paranoid: true // Enables soft delete (deletedAt column)
+        // Note: Uniqueness is enforced in application logic (authService.js)
+        // to allow email/phone reuse after account deletion while preserving
+        // historical data integrity. No database-level unique constraints.
     });
 
     User.prototype.comparePassword = async function (password) {
@@ -52,21 +41,8 @@ export default (sequelize, DataTypes) => {
         }
     };
 
-    // Clear email and phone on soft delete to allow reuse
-    const clearUniqueFields = async (user) => {
-        // Generate unique suffix using timestamp to avoid conflicts
-        const timestamp = Date.now();
-        await user.update({
-            email: `deleted_${timestamp}_${user.email}`,
-            phone: `deleted_${timestamp}_${user.phone}`
-        }, {
-            paranoid: false // Allow update even though we're deleting
-        });
-    };
-
     User.beforeCreate(hashPassword);
     User.beforeUpdate(hashPassword);
-    User.beforeDestroy(clearUniqueFields);
 
     return User;
 };
