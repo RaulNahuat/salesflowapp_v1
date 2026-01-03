@@ -7,6 +7,7 @@
   "scripts": {
     "dev": "node --watch server.js",
     "sync-db": "node migrations/sync-db.js",
+    "clean-db": "node scripts/clean-database.js",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "keywords": [
