@@ -68,7 +68,7 @@ app.use(helmet({
             defaultSrc: ["'self'"],
             scriptSrc: ["'self'"],
             styleSrc: ["'self'", "'unsafe-inline'"],
-            imgSrc: ["'self'", "data:", "https:"],
+            imgSrc: ["'self'", "data:", "https:", "https://www.transparenttextures.com"],
             connectSrc: ["'self'", "https:", "http:"],
             fontSrc: ["'self'"],
             objectSrc: ["'none'"],
@@ -86,7 +86,7 @@ app.use(helmet({
 // 🔒 SECURITY: Rate limiter específico para autenticación (más estricto)
 const authLimiter = rateLimit({
     windowMs: 15 * 60 * 1000,
-    max: 20, // Aumentado de 5 a 20 para evitar bloqueos accidentales
+    max: 100, // Aumentado de 20 a 100 para evitar bloqueos durante pruebas y uso normal
     message: 'Demasiados intentos de inicio de sesión. Por favor intente más tarde.',
     standardHeaders: true,
     legacyHeaders: false,
@@ -95,7 +95,7 @@ const authLimiter = rateLimit({
 // 🔒 SECURITY: Rate limiter general (reducido para mejor seguridad)
 const limiter = rateLimit({
     windowMs: 15 * 60 * 1000,
-    max: 100, // Reducido de 1000 a 100 para prevenir abuso
+    max: 2000, // Aumentado significativamente para evitar bloqueos de API
     message: 'Demasiadas solicitudes desde esta IP, por favor inténtalo de nuevo después de 15 minutos',
     standardHeaders: true,
     legacyHeaders: false,

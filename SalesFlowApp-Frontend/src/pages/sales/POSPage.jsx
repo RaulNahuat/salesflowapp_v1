@@ -215,9 +215,15 @@ const POSPage = () => {
         const item = cart.find(i => i.cartItemId === cartItemId);
         if (!item) return;
 
-        if (valStr === '') return; // Ignore empty for now to avoid complexity
+        // Allow empty string to let user delete content
+        if (valStr === '') {
+            setCart(prev => prev.map(i => i.cartItemId === cartItemId ? { ...i, quantity: '' } : i));
+            return;
+        }
 
         const newQty = parseInt(valStr, 10);
+
+        // Prevent negative or zero if not empty
         if (isNaN(newQty) || newQty < 1) return;
 
         if (newQty > item.maxStock) {
@@ -227,6 +233,16 @@ const POSPage = () => {
         }
 
         setCart(prev => prev.map(i => i.cartItemId === cartItemId ? { ...i, quantity: newQty } : i));
+    };
+
+    const handleInputBlur = (cartItemId) => {
+        const item = cart.find(i => i.cartItemId === cartItemId);
+        if (!item) return;
+
+        // Reset to 1 if empty or invalid on blur
+        if (item.quantity === '' || item.quantity < 1) {
+            setCart(prev => prev.map(i => i.cartItemId === cartItemId ? { ...i, quantity: 1 } : i));
+        }
     };
 
     const handleCheckout = async () => {
@@ -599,6 +615,7 @@ const POSPage = () => {
                                                             max={item.maxStock}
                                                             value={item.quantity}
                                                             onChange={(e) => handleManualQuantityChange(item.cartItemId, e.target.value)}
+                                                            onBlur={() => handleInputBlur(item.cartItemId)}
                                                             className="w-full text-center font-bold bg-transparent outline-none p-0 appearance-none m-0"
                                                             style={{ MozAppearance: 'textfield' }}
                                                         />
