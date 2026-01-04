@@ -68,6 +68,24 @@ const POSPage = () => {
         fetchData();
     }, []);
 
+    // --- POLLING STOCK UPDATES (Every 10s) ---
+    useEffect(() => {
+        const interval = setInterval(async () => {
+            // Don't refresh if user is in the middle of a transaction or modal is open
+            if (processing || modalConfig.isOpen) return;
+
+            try {
+                const productsData = await productApi.getProducts();
+                // Update products to reflect real-time stock
+                setProducts(productsData.filter(p => p.stock > 0));
+            } catch (error) {
+                console.error("Background stock update failed", error);
+            }
+        }, 10000); // 10 seconds
+
+        return () => clearInterval(interval);
+    }, [processing, modalConfig.isOpen]);
+
     // --- COMPUTED ---
     const filteredProducts = useMemo(() => {
         return products.filter(p =>
@@ -191,6 +209,24 @@ const POSPage = () => {
         setCart(prev => prev.map(i =>
             i.cartItemId === cartItemId ? { ...i, quantity: newQty } : i
         ));
+    };
+
+    const handleManualQuantityChange = (cartItemId, valStr) => {
+        const item = cart.find(i => i.cartItemId === cartItemId);
+        if (!item) return;
+
+        if (valStr === '') return; // Ignore empty for now to avoid complexity
+
+        const newQty = parseInt(valStr, 10);
+        if (isNaN(newQty) || newQty < 1) return;
+
+        if (newQty > item.maxStock) {
+            toast.error(`Solo hay ${item.maxStock} disponibles`);
+            setCart(prev => prev.map(i => i.cartItemId === cartItemId ? { ...i, quantity: item.maxStock } : i));
+            return;
+        }
+
+        setCart(prev => prev.map(i => i.cartItemId === cartItemId ? { ...i, quantity: newQty } : i));
     };
 
     const handleCheckout = async () => {
@@ -556,7 +592,17 @@ const POSPage = () => {
                                                     <button onClick={() => handleUpdateQuantity(item.cartItemId, -1)} className="w-8 h-8 flex items-center justify-center text-slate-400 hover:text-slate-800 active:scale-75 transition-all">
                                                         <FaMinus size={10} />
                                                     </button>
-                                                    <span className="w-8 text-center font-bold text-sm text-slate-800">{item.quantity}</span>
+                                                    <span className="w-12 text-center text-sm text-slate-800">
+                                                        <input
+                                                            type="number"
+                                                            min="1"
+                                                            max={item.maxStock}
+                                                            value={item.quantity}
+                                                            onChange={(e) => handleManualQuantityChange(item.cartItemId, e.target.value)}
+                                                            className="w-full text-center font-bold bg-transparent outline-none p-0 appearance-none m-0"
+                                                            style={{ MozAppearance: 'textfield' }}
+                                                        />
+                                                    </span>
                                                     <button onClick={() => handleUpdateQuantity(item.cartItemId, 1)} className="w-8 h-8 flex items-center justify-center text-slate-400 hover:text-blue-600 active:scale-75 transition-all">
                                                         <FaPlus size={10} />
                                                     </button>
