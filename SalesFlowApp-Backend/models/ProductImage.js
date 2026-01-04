@@ -6,7 +6,7 @@ export default (sequelize, DataTypes) => {
             primaryKey: true
         },
         imageUrl: {
-            type: DataTypes.STRING,
+            type: DataTypes.TEXT,
             allowNull: false
         },
         isPrimary: {

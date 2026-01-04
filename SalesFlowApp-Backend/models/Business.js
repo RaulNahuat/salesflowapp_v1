@@ -15,7 +15,7 @@ export default (sequelize, DataTypes) => {
             unique: true
         },
         logoURL: {
-            type: DataTypes.STRING
+            type: DataTypes.TEXT
         },
         settings: {
             type: DataTypes.JSON,
