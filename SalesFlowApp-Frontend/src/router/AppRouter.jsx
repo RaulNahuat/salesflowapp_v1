@@ -3,6 +3,7 @@ import { Routes, Route, Navigate } from 'react-router-dom';
 import { useAuth } from '../context/authContext';
 import LoginForm from '../componentes/auth/LoginForm';
 import RegisterForm from '../componentes/auth/RegisterForm';
+import WelcomePage from '../pages/public/WelcomePage';
 import PublicRoute from './PublicRoute';
 import ProtectedRoute from './ProtectedRoute';
 import RequirePermission from './RequirePermission'; // Import new component
@@ -208,8 +209,8 @@ const AppRouter = () => {
                 } />
 
                 {/* Redirecciones por defecto */}
-                <Route path="/" element={<Navigate to="/dashboard" replace />} />
-                <Route path="*" element={<Navigate to="/dashboard" replace />} />
+                <Route path="/" element={<PublicRoute><WelcomePage /></PublicRoute>} />
+                <Route path="*" element={<Navigate to="/" replace />} />
             </Routes>
         </>
     );
